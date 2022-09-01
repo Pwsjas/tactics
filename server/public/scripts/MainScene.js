@@ -3,14 +3,19 @@ export default class MainScene extends Phaser.Scene {
     super('MainScene');
   }
 
-  preload() {
-    console.log('preload');
-    // this.load.image("char_walk_right", "../images/char_walk_right.gif");
-  }
+  preload()
+    {
+		this.load.image('tiles', 'assets/Isometric-tiles.png')
+		this.load.tilemapTiledJSON('tilemap', 'assets/tilemap.json')
+    }
 
-  create() {
-    console.log('create');
-
+    create()
+    {
+		const map = this.make.tilemap({ key: 'tilemap' })
+		const tileset = map.addTilesetImage('punyTiles', 'tiles', 32, 32, 0, 0)
+		
+		map.createLayer('Tile Layer 1', tileset, 640, 360)
+    // const layer1 = map.createStaticLayer('Tile Layer 1', tileset, 0, 0);
     // this.player = this.add.sprite(200,150, "char_walk_right");
     // this.player.setScale(2)
 

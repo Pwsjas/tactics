@@ -9,12 +9,11 @@ const app = express();
 // middleware setup
 app.use(morgan(enviroment));
 app.use(bodyParser.json());
-app.use(express.static("./views"));
-app.use(express.static("./scripts"));
+app.use(express.static(__dirname + '/public'));
 
 
 app.get('/', (req, res) => {
-	res.sendFile("views/index.html");
+	res.sendFile(__dirname + '/index.html');
 })
 
 app.listen(PORT, () => console.log(`Server is listening on port ${PORT}`));
