@@ -1,5 +1,24 @@
 import MainScene from "./MainScene.js";
 
+// class CharacterGameObject extends Phaser.GameObjects.Image {
+//   constructor (scene, x, y) {
+//     super(scene, x, y, 'character');
+//   }
+// }
+
+// class CharacterPlugin extends Phaser.Plugins.BasePlugin {
+//   constructor(pluginManager){
+//     super(pluginManager);
+
+//     //register Game Object type
+//     pluginManager.registerGameObject('character', this.createCharacter);
+//   }
+
+//   createCharacter(x,y) {
+//     return this.displayList.add(new CharacterGameObject(this.scene,x,y));
+//   }
+// }
+
 const config = {
   width: 1280,
   height: 720,
@@ -8,7 +27,7 @@ const config = {
   parent: 'game',
   scene: [MainScene],
   scale: {
-    zoom: 2,
+    zoom: 1,
   },
   physics: {
     default: 'arcade',

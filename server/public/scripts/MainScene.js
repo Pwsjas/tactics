@@ -5,9 +5,11 @@ export default class MainScene extends Phaser.Scene {
 
   preload()
     {
+      //Preload images / tilemaps
 		this.load.image('tiles', 'assets/Isometric-tiles.png')
 		this.load.tilemapTiledJSON('tilemap', 'assets/tilemap.json')
     this.load.image("cursor", "assets/cursor.png");
+    this.load.image("character", "assets/cursor.png");
     }
 
     create()
@@ -18,6 +20,8 @@ export default class MainScene extends Phaser.Scene {
 		map.createLayer('Tile Layer 1', tileset, 640, 360)
     // const layer1 = map.createStaticLayer('Tile Layer 1', tileset, 0, 0);
     this.player = this.add.sprite(544,432, "cursor");
+    const thing = this.physics.add.sprite(100,100, 'cursor');
+    // this.add.character(100,100)
     // this.player.setScale(2)
 
     this.inputKeys = this.input.keyboard.addKeys({
@@ -26,10 +30,13 @@ export default class MainScene extends Phaser.Scene {
       left: Phaser.Input.Keyboard.KeyCodes.A,
       right: Phaser.Input.Keyboard.KeyCodes.D,
     })
+
+    //this.physics.world.step(0);
   }
 
   update() {
     console.log('upload');
+    console.log(this.thingy);
 
     if(Phaser.Input.Keyboard.JustDown(this.inputKeys.up)) {
       this.player.y -=8;
@@ -48,6 +55,10 @@ export default class MainScene extends Phaser.Scene {
       this.player.y -= 8;
     }
 
+    var closest = this.physics.closest(this.player);
+    closest.x +=0.5;
+    closest.y +=0.9;
+    console.log(closest);
 
     // if (this.inputKeys.up.JustDown) {
     //   this.player.y -= 16;
