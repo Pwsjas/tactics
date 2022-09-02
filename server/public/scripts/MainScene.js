@@ -10,7 +10,7 @@ export default class MainScene extends Phaser.Scene {
     //Preload images / tilemaps
     this.load.image('tiles', 'assets/Isometric-tiles.png')
     this.load.tilemapTiledJSON('tilemap16', 'assets/tilemap16.json')
-    this.load.image("cursor", "assets/movement-tile.png");
+    this.load.image("cursor", "assets/cursor.png");
     this.load.image("character", "assets/cursor.png");
     this.load.spritesheet("dragon_knight_downright_idle", "assets/dragon-knight/dragon-knight-downright-idle.png", {frameWidth: 32,frameHeight: 32});
     this.load.spritesheet("dragon_knight_downleft_idle", "assets/dragon-knight/dragon-knight-downleft-idle.png", {frameWidth: 32,frameHeight: 32});
@@ -34,7 +34,7 @@ export default class MainScene extends Phaser.Scene {
 
       for (let i = 0; i < size; i++) {
         for (let j = 0; j < size; j++) {
-          output[i].push({x: (x + 16 + (i * 16)) + (j * -16),y: (y + 16 + (i * 8)) + (j * 8)});
+          output[i].push({x: (x + 16 + (i * 16)) + (j * -16),y: (y + (i * 8)) + (j * 8)});
         }
       }
 
@@ -45,27 +45,30 @@ export default class MainScene extends Phaser.Scene {
     console.log(test);
 
     // const layer1 = map.createStaticLayer('Tile Layer 1', tileset, 0, 0);
-    this.player = this.add.sprite(test[7][7].x, test[7][7].y, "cursor");
+    this.player = this.add.sprite(test[0][0].x, test[0][0].y, "cursor");
     const thing = this.physics.add.sprite(100, 100, 'cursor');
     this.dragon_knight = this.physics.add.sprite(test[2][1].x, test[2][1].y, "dragon_knight_downright_idle");
     this.dragon_knight2 = this.physics.add.sprite(test[11][2].x, test[11][2].y, "dragon_knight_downleft_idle");
-    this.dragon_knight.setData({direction: 'left'});
+    this.dragon_knight.setData({
+      direction: 'left',
+      turn: true,
+      selected: false,
+      state: null,
+      movement: 3,
+    });
+    this.dragon_knight2.setData({
+      direction: 'left',
+      turn: true,
+      selected: false,
+      state: null,
+      movement: 3,
+    });
     console.log(this.dragon_knight);
 
-    this.allies = {
-      dragon_knight: {
-       id: this.dragon_knight,
-       direction: 'right',
-       turn: true,
-       selected: false,
-      },
-      dragon_knight2: {
-        id: this.dragon_knight2,
-        direction: 'left',
-        turn: true,
-        selected: false,
-      },
-    };
+    // this.allies = {
+    //   dragon_knight,
+    //   dragon_knight2
+    // };
 
     this.anims.create({
       key: "dragon_knight_anim1",
@@ -84,7 +87,6 @@ export default class MainScene extends Phaser.Scene {
     this.dragon_knight.play("dragon_knight_anim1");
     this.dragon_knight2.play("dragon_knight_anim1");
 
-
     this.inputKeys = this.input.keyboard.addKeys({
       up: Phaser.Input.Keyboard.KeyCodes.W,
       down: Phaser.Input.Keyboard.KeyCodes.S,
@@ -98,7 +100,6 @@ export default class MainScene extends Phaser.Scene {
 
   update() {
     var closest = this.physics.closest(this.player, Phaser.GameObject);
-
 
     if (Phaser.Input.Keyboard.JustDown(this.inputKeys.up)) {
       this.player.x -= 16;
@@ -120,17 +121,17 @@ export default class MainScene extends Phaser.Scene {
     // console.log("x: ", this.player.x, closest.x);
     // console.log("y: ", this.player.y, closest.y);
 
-    if (this.player.x === closest.x + 16 && this.player.y === closest.y + 32) {
+    if (this.player.x === closest.x + 16 && this.player.y === closest.y + 16) {
 
       if (Phaser.Input.Keyboard.JustDown(this.inputKeys.q)) {
-        closest.x += 16;
-        closest.y += 8;
-        closest.gameObject.setData({direction: 'right'});
+        // closest.x += 16;
+        // closest.y += 8;
+        // closest.gameObject.setData({direction: 'right'});
+        closest.gameObject.setData({selected: true})
       }
   
-      if (closest.gameObject.getData('direction') === 'right') {
-        closest.gameObject.play("dragon_knight_anim2");
-        closest.gameObject.setData({direction: 'left'});
+      if (closest.gameObject.getData('selected')) {
+        closest.gameObject.setdata({direction: ''})
       }
     }
 
