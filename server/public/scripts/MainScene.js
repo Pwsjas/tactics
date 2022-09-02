@@ -1,6 +1,9 @@
 export default class MainScene extends Phaser.Scene {
   constructor() {
     super('MainScene');
+
+    let allies;
+    let enemies;
   }
 
   preload() {
@@ -25,6 +28,21 @@ export default class MainScene extends Phaser.Scene {
     const thing = this.physics.add.sprite(100, 100, 'cursor');
     this.dragon_knight = this.physics.add.sprite(544, 416, "dragon_knight_downright_idle");
     this.dragon_knight2 = this.physics.add.sprite(560, 424, "dragon_knight_downleft_idle");
+    this.dragon_knight.setData({direction: 'left'});
+    console.log(this.dragon_knight);
+
+    this.allies = {
+      dragon_knight: {
+       id: this.dragon_knight,
+       direction: 'right',
+       turn: true 
+      },
+      dragon_knight2: {
+        id: this.dragon_knight2,
+        direction: 'left',
+        turn: true
+      },
+    }
 
     this.anims.create({
       key: "dragon_knight_anim1",
@@ -32,7 +50,7 @@ export default class MainScene extends Phaser.Scene {
       frameRate: 4,
       repeat: -1
     });
-    
+
     this.anims.create({
       key: "dragon_knight_anim2",
       frames: this.anims.generateFrameNumbers("dragon_knight_downleft_idle"),
@@ -42,6 +60,7 @@ export default class MainScene extends Phaser.Scene {
 
     this.dragon_knight.play("dragon_knight_anim1");
     this.dragon_knight2.play("dragon_knight_anim1");
+
 
     this.inputKeys = this.input.keyboard.addKeys({
       up: Phaser.Input.Keyboard.KeyCodes.W,
@@ -55,7 +74,7 @@ export default class MainScene extends Phaser.Scene {
   }
 
   update() {
-    var closest = this.physics.closest(this.player);
+    var closest = this.physics.closest(this.player, Phaser.GameObject);
 
     if (Phaser.Input.Keyboard.JustDown(this.inputKeys.up)) {
       this.player.x -= 16;
@@ -76,7 +95,15 @@ export default class MainScene extends Phaser.Scene {
     if (Phaser.Input.Keyboard.JustDown(this.inputKeys.q)) {
       closest.x += 16;
       closest.y += 8;
+      closest.gameObject.setData({direction: 'right'});
     }
+
+    if (closest.gameObject.getData('direction') === 'right') {
+      closest.gameObject.play("dragon_knight_anim2");
+      closest.gameObject.setData({direction: 'left'});
+    }
+
+
 
     // if (this.inputKeys.up.JustDown) {
     //   this.player.y -= 16;
