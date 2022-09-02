@@ -27,7 +27,7 @@ const config = {
   parent: 'game',
   scene: [MainScene],
   scale: {
-    zoom: 1,
+    zoom: 2,
   },
   physics: {
     default: 'arcade',
