@@ -4,13 +4,17 @@ export default class MainScene extends Phaser.Scene {
 
     let allies;
     let enemies;
+    let coordinateGrid;
+    let selectedUnit;
+    let movementGrid = [];
   }
 
   preload() {
     //Preload images / tilemaps
-    this.load.image('tiles', 'assets/Isometric-tiles.png')
-    this.load.tilemapTiledJSON('tilemap16', 'assets/tilemap16.json')
+    this.load.image('tiles', 'assets/Isometric-tiles.png');
+    this.load.tilemapTiledJSON('tilemap16', 'assets/tilemap16.json');
     this.load.image("cursor", "assets/cursor.png");
+    this.load.image("movement-tile", "assets/movement-tile.png");
     this.load.image("character", "assets/cursor.png");
     this.load.spritesheet("dragon_knight_downright_idle", "assets/dragon-knight/dragon-knight-downright-idle.png", {frameWidth: 32,frameHeight: 32});
     this.load.spritesheet("dragon_knight_downleft_idle", "assets/dragon-knight/dragon-knight-downleft-idle.png", {frameWidth: 32,frameHeight: 32});
@@ -41,20 +45,23 @@ export default class MainScene extends Phaser.Scene {
       return output;
     }
 
-    const test = createTileArray(362, 79, 16)
-    console.log(test);
+    this.coordinateGrid = createTileArray(362, 79, 16)
 
     // const layer1 = map.createStaticLayer('Tile Layer 1', tileset, 0, 0);
-    this.player = this.add.sprite(test[0][0].x, test[0][0].y, "cursor");
+    this.player = this.add.sprite(this.coordinateGrid[1][0].x, this.coordinateGrid[1][0].y, "cursor");
     const thing = this.physics.add.sprite(100, 100, 'cursor');
-    this.dragon_knight = this.physics.add.sprite(test[2][1].x, test[2][1].y, "dragon_knight_downright_idle");
-    this.dragon_knight2 = this.physics.add.sprite(test[11][2].x, test[11][2].y, "dragon_knight_downleft_idle");
+    this.dragon_knight = this.physics.add.sprite(this.coordinateGrid[2][1].x, this.coordinateGrid[2][1].y, "dragon_knight_downright_idle");
+    this.dragon_knight2 = this.physics.add.sprite(this.coordinateGrid[11][3].x, this.coordinateGrid[11][3].y, "dragon_knight_downleft_idle");
     this.dragon_knight.setData({
       direction: 'left',
       turn: true,
       selected: false,
       state: null,
       movement: 3,
+      hasMoved: false,
+      hasMovementTiles: false,
+      coordX: 2,
+      coordY: 1
     });
     this.dragon_knight2.setData({
       direction: 'left',
@@ -62,6 +69,10 @@ export default class MainScene extends Phaser.Scene {
       selected: false,
       state: null,
       movement: 3,
+      hasMoved: false,
+      hasMovementTiles: false,
+      coordX: 11,
+      coordY: 3
     });
     console.log(this.dragon_knight);
 
@@ -100,6 +111,8 @@ export default class MainScene extends Phaser.Scene {
 
   update() {
     var closest = this.physics.closest(this.player, Phaser.GameObject);
+    console.log(this.selectedUnit);
+    this.movementGrid = [];
 
     if (Phaser.Input.Keyboard.JustDown(this.inputKeys.up)) {
       this.player.x -= 16;
@@ -127,11 +140,39 @@ export default class MainScene extends Phaser.Scene {
         // closest.x += 16;
         // closest.y += 8;
         // closest.gameObject.setData({direction: 'right'});
-        closest.gameObject.setData({selected: true})
+        //closest.gameObject.setData({selected: true})
+        this.selectedUnit = closest;
       }
   
-      if (closest.gameObject.getData('selected')) {
-        closest.gameObject.setdata({direction: ''})
+      // if (closest.gameObject.getData('selected')) {
+      //   closest.gameObject.setdata({direction: ''})
+      // }
+    }
+
+    if (this.selectedUnit) {
+      //check if unit has moved this turn
+      if (!this.selectedUnit.gameObject.getData("hasMoved")) {
+        //check if unit has movement tiles rendered around them
+        if (!this.selectedUnit.gameObject.getData("hasMovementTiles")) {
+          for (let i = 0; i < 25; i++) {
+            const relationsX = [3, 2, 2, 2, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -2, -2, -2, -3]
+            const relationsY = [0, 1, 0, -1, 2, 1, 0, -1, -2, 3, 2, 1, 0, -1, -2, -3, 2, 1, 0, -1, -2, 1, 0, -1, 0]
+          
+            //Check out of bounds
+            if (this.selectedUnit.gameObject.getData('coordX') + relationsX[i] < 0 
+            || this.selectedUnit.gameObject.getData('coordX') + relationsX[i] > 15
+            || this.selectedUnit.gameObject.getData('coordY') + relationsY[i] < 0 
+            || this.selectedUnit.gameObject.getData('coordY') + relationsY[i] > 15) {
+
+            } else {
+              this.movementGrid.push(this.add.sprite(
+                this.coordinateGrid[this.selectedUnit.gameObject.getData('coordX') + relationsX[i]][this.selectedUnit.gameObject.getData('coordY') + relationsY[i]].x,
+                this.coordinateGrid[this.selectedUnit.gameObject.getData('coordX') + relationsX[i]][this.selectedUnit.gameObject.getData('coordY') + relationsY[i]].y + 16,
+                'movement-tile'))
+            }
+          }
+          this.selectedUnit.gameObject.setData({hasMovementTiles: true})
+        }
       }
     }
 
