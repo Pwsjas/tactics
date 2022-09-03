@@ -1,3 +1,5 @@
+import * as helpers from "./helpers/testing.js";
+
 export default class MainScene extends Phaser.Scene {
   constructor() {
     super('MainScene');
@@ -7,6 +9,7 @@ export default class MainScene extends Phaser.Scene {
     let coordinateGrid;
     let selectedUnit;
     let movementGrid = [];
+    let legalMovement = [];
   }
 
   preload() {
@@ -28,6 +31,7 @@ export default class MainScene extends Phaser.Scene {
 
     map.createLayer('Tile Layer 1', tileset, 362, 79); //640, 360
 
+    //Create an array of tile coordinates relating tile number to pixel values
     const createTileArray = (x, y, size) => {
       const output = []
 
@@ -48,7 +52,11 @@ export default class MainScene extends Phaser.Scene {
     this.coordinateGrid = createTileArray(362, 79, 16)
 
     // const layer1 = map.createStaticLayer('Tile Layer 1', tileset, 0, 0);
-    this.player = this.add.sprite(this.coordinateGrid[1][0].x, this.coordinateGrid[1][0].y, "cursor");
+    this.player = this.physics.add.sprite(this.coordinateGrid[0][0].x, this.coordinateGrid[0][0].y, "cursor");
+    this.player.setData({
+      coordX: 0,
+      coordY: 0
+    })
     const thing = this.physics.add.sprite(100, 100, 'cursor');
     this.dragon_knight = this.physics.add.sprite(this.coordinateGrid[2][1].x, this.coordinateGrid[2][1].y, "dragon_knight_downright_idle");
     this.dragon_knight2 = this.physics.add.sprite(this.coordinateGrid[11][3].x, this.coordinateGrid[11][3].y, "dragon_knight_downleft_idle");
@@ -110,25 +118,28 @@ export default class MainScene extends Phaser.Scene {
   }
 
   update() {
+    console.log(this.player.getData("coordX"), this.player.getData("coordY"));
     var closest = this.physics.closest(this.player, Phaser.GameObject);
-    console.log(this.selectedUnit);
-    this.movementGrid = [];
 
     if (Phaser.Input.Keyboard.JustDown(this.inputKeys.up)) {
       this.player.x -= 16;
       this.player.y -= 8;
+      this.player.setData({coordX: this.player.getData("coordX") - 1})
     };
     if (Phaser.Input.Keyboard.JustDown(this.inputKeys.left)) {
       this.player.x -= 16;
       this.player.y += 8;
+      this.player.setData({coordY: this.player.getData("coordY") + 1})
     };
     if (Phaser.Input.Keyboard.JustDown(this.inputKeys.down)) {
       this.player.x += 16;
       this.player.y += 8;
+      this.player.setData({coordX: this.player.getData("coordX") + 1})
     };
     if (Phaser.Input.Keyboard.JustDown(this.inputKeys.right)) {
       this.player.x += 16;
       this.player.y -= 8;
+      this.player.setData({coordY: this.player.getData("coordY") - 1})
     };
 
     // console.log("x: ", this.player.x, closest.x);
@@ -154,6 +165,8 @@ export default class MainScene extends Phaser.Scene {
       if (!this.selectedUnit.gameObject.getData("hasMoved")) {
         //check if unit has movement tiles rendered around them
         if (!this.selectedUnit.gameObject.getData("hasMovementTiles")) {
+          this.movementGrid = [];
+          this.legalMovement = [];
           for (let i = 0; i < 25; i++) {
             const relationsX = [3, 2, 2, 2, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, -1, -1, -1, -1, -1, -2, -2, -2, -3]
             const relationsY = [0, 1, 0, -1, 2, 1, 0, -1, -2, 3, 2, 1, 0, -1, -2, -3, 2, 1, 0, -1, -2, 1, 0, -1, 0]
@@ -164,15 +177,42 @@ export default class MainScene extends Phaser.Scene {
             || this.selectedUnit.gameObject.getData('coordY') + relationsY[i] < 0 
             || this.selectedUnit.gameObject.getData('coordY') + relationsY[i] > 15) {
 
+              //Add movement tile sprites
             } else {
               this.movementGrid.push(this.add.sprite(
                 this.coordinateGrid[this.selectedUnit.gameObject.getData('coordX') + relationsX[i]][this.selectedUnit.gameObject.getData('coordY') + relationsY[i]].x,
                 this.coordinateGrid[this.selectedUnit.gameObject.getData('coordX') + relationsX[i]][this.selectedUnit.gameObject.getData('coordY') + relationsY[i]].y + 16,
                 'movement-tile'))
+
+              //Create legal movement array
+              this.legalMovement.push({x: this.selectedUnit.gameObject.getData('coordX') + relationsX[i], y: this.selectedUnit.gameObject.getData('coordY') + relationsY[i]}) 
             }
           }
+          console.log(this.legalMovement);
+          console.log(this.movementGrid);
           this.selectedUnit.gameObject.setData({hasMovementTiles: true})
         }
+        //Check for movement input
+        if (Phaser.Input.Keyboard.JustDown(this.inputKeys.q)) {
+          //Confirm movement is valid
+          if (this.legalMovement.filter(coords => coords.x === this.player.getData('coordX') && coords.y === this.player.getData('coordY')).length > 0) {
+
+            //Move selectedUnit
+            this.selectedUnit.gameObject.x = this.coordinateGrid[this.player.getData('coordX')][this.player.getData('coordY')].x;
+            this.selectedUnit.gameObject.y = this.coordinateGrid[this.player.getData('coordX')][this.player.getData('coordY')].y;
+            this.selectedUnit.gameObject.setData({hasMoved: true});
+
+            //Set new Coordinates
+            this.selectedUnit.gameObject.setData({coordX: this.player.getData('coordX')})
+            this.selectedUnit.gameObject.setData({coordY: this.player.getData('coordY')})
+
+            //Cleanup movement grid
+            for(const sprite of this.movementGrid) {
+              sprite.destroy();
+            }
+          }
+        };
+
       }
     }
 
