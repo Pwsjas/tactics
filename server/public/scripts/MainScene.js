@@ -14,6 +14,9 @@ export default class MainScene extends Phaser.Scene {
 
   // Preload assets into the game engine.
   preload() {
+    // Preload the background
+    this.load.image('background', 'assets/background.png');
+
     // Preload the tiles for the map, and the layout of the map itself in a JSON object.
     this.load.image("tiles", "assets/Isometric-tiles.png");
     this.load.tilemapTiledJSON("tilemap16", "assets/tilemap16.json");
@@ -50,13 +53,18 @@ export default class MainScene extends Phaser.Scene {
 
   // Create objects in the game engine based on assets.
   create() {
+    this.cameras.main.zoom = 2;
+
+    //Create the background
+    this.add.image(0,0, 'background').setOrigin(0,0).setScale(1.7);
+
     // Create the tile map based on assets.
     const map = this.make.tilemap({ key: "tilemap16" });
     const tileset = map.addTilesetImage("punyTiles", "tiles", 32, 32, 0, 0);
 
     // Function that determines position of the tile map on the screen, and renders the cursor over it.
     // Accepts the x and y coords of the map, as well as the size of the map in tiles. (Only works for square maps, has to be the same number of tiles on both sides.)
-    map.createLayer("Tile Layer 1", tileset, 320, 130); // 640, 360
+    map.createLayer("Tile Layer 1", tileset, 624, 232); // 640, 360
 
     //Create an array of tile coordinates relating tile number to pixel values
     const createTileArray = (x, y, size) => {
@@ -78,7 +86,7 @@ export default class MainScene extends Phaser.Scene {
       return output;
     };
 
-    this.coordinateGrid = createTileArray(320, 130, 16);
+    this.coordinateGrid = createTileArray(624, 232, 16);
 
     // const layer1 = map.createStaticLayer('Tile Layer 1', tileset, 0, 0);
 
@@ -94,7 +102,7 @@ export default class MainScene extends Phaser.Scene {
     });
 
     // Assign manipulatable data to the dragon_knight game object.
-    const thing = this.physics.add.sprite(100, 100, "cursor");
+    const thing = this.physics.add.sprite(624, 360, "cursor");
     this.dragon_knight = this.physics.add.sprite(
       this.coordinateGrid[2][1].x,
       this.coordinateGrid[2][1].y,
@@ -172,6 +180,7 @@ export default class MainScene extends Phaser.Scene {
   }
 
   update() {
+
     console.log(this.player.getData("coordX"), this.player.getData("coordY"));
     let closest = this.physics.closest(this.player, Phaser.GameObject);
 
@@ -219,20 +228,13 @@ export default class MainScene extends Phaser.Scene {
         this.ui.setText(["This guy is knocked out"]);
       } else {
         this.ui.setText([
-          "HP: " +
-            this.selectedUnit.gameObject.getData("hit_points") +
-            "/" +
-            this.selectedUnit.gameObject.getData("total_hit_points"),
+          "HP: " + this.selectedUnit.gameObject.getData("hit_points") + "/" + this.selectedUnit.gameObject.getData("total_hit_points"),
         ]);
       }
       if (Phaser.Input.Keyboard.JustDown(this.inputKeys.h)) {
-        this.selectedUnit.gameObject.setData({
-          hit_points: this.selectedUnit.gameObject.getData("hit_points") - 50,
-        });
+        this.selectedUnit.gameObject.setData({ hit_points: this.selectedUnit.gameObject.getData("hit_points") - 50 });
         this.ui.setText([
-          `HP: ${this.selectedUnit.gameObject.getData(
-            "hit_points"
-          )}/${this.selectedUnit.gameObject.getData("total_hit_points")}`,
+          `HP: ${this.selectedUnit.gameObject.getData("hit_points")}/${this.selectedUnit.gameObject.getData("total_hit_points")}`
         ]);
         if (this.selectedUnit.gameObject.getData("hit_points") === 0) {
           // console.log('She dead gurl')
