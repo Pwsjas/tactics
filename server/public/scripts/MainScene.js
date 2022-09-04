@@ -249,7 +249,6 @@ export default class MainScene extends Phaser.Scene {
     }
 
     if (this.selectedUnit) {
-
       //check if unit has moved this turn
       if (!this.selectedUnit.gameObject.getData("hasMoved")) {
         //check if unit has movement tiles rendered around them
@@ -358,10 +357,10 @@ export default class MainScene extends Phaser.Scene {
           "HP: " + this.selectedUnit.gameObject.getData("hit_points") + "/" + this.selectedUnit.gameObject.getData("total_hit_points"),
           "Movement: " + this.selectedUnit.gameObject.getData("movement"),
         ]);
+        this.setMeterPercentage(this.selectedUnit.gameObject.getData("hit_points"));
       }
       if (Phaser.Input.Keyboard.JustDown(this.inputKeys.h)) {
-        const damage = 25;
-        this.selectedUnit.gameObject.setData({ hit_points: this.selectedUnit.gameObject.getData("hit_points") - damage });
+        this.selectedUnit.gameObject.setData({ hit_points: this.selectedUnit.gameObject.getData("hit_points") - 25 });
         this.setMeterPercentage(this.selectedUnit.gameObject.getData("hit_points"));
         this.uiText.setText([
           `HP: ${this.selectedUnit.gameObject.getData("hit_points")}/${this.selectedUnit.gameObject.getData("total_hit_points")}`
