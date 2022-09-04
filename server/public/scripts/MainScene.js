@@ -18,7 +18,11 @@ export default class MainScene extends Phaser.Scene {
     this.load.image('background', 'assets/background.png');
 
     //Preload UI
-    this.load.image('ui', 'assets/ui.png');
+    this.load.image('ui1', 'assets/ui1.png');
+
+    // Images for the empty
+    this.load.image('health-bar', 'assets/ui-health-bar.png')
+    this.load.image('health-bar-empty', 'assets/ui-empty-health-bar.png')
 
     // Preload the tiles for the map, and the layout of the map itself in a JSON object.
     this.load.image("tiles", "assets/Isometric-tiles.png");
@@ -54,6 +58,7 @@ export default class MainScene extends Phaser.Scene {
 
   // Create objects in the game engine based on assets.
   create() {
+    // Camera that zooms in on the main level.
     this.cameras.main.zoom = 2;
 
     //Create the background
@@ -103,7 +108,6 @@ export default class MainScene extends Phaser.Scene {
     });
 
     // Assign manipulatable data to the dragon_knight game object.
-    const thing = this.physics.add.sprite(624, 360, "cursor");
     this.dragon_knight = this.physics.add.sprite(
       this.coordinateGrid[2][1].x,
       this.coordinateGrid[2][1].y,
@@ -116,12 +120,31 @@ export default class MainScene extends Phaser.Scene {
     );
 
     // Add HUD for holding the UI
+    this.uiBackground = this.add.sprite(395, 304, "ui1").setScale(0.5);
+    
+    // Assign a floating sprite as a character portrait and a health bar within the UI
+    this.dragon_knight_portrait = this.add.sprite(394, 236, "dragon_knight_downright_idle").setScale(1.5);
+    
+    const x = 344;
+    const y = 260;
+    
+    // Background shadow for the health bar
+	  this.healthBarEmpty = this.add.image(x, y, 'health-bar-empty').setOrigin(0, 0.5).setScale(0.4);
+	  this.healthBarEmpty.displayWidth = 100;
+
+    // Actual health bar that changes
+    this.healthBar = this.add.image(x, y, 'health-bar').setOrigin(0, 0.5).setScale(0.4);
+    
+	  this.setMeterPercentage(100);
 
     // Create text for the character UI
-    this.uiBackground = this.add.sprite(440, 220, "ui").setScale(0.55);
-    this.uiText = this.add.text(360, 210, "", { color: 'black' });
+    this.uiText = this.add.text(342, 274, "", { color: 'white' });
 
+    // Set UI to invisible until a unit is selected.
     this.uiBackground.visible = false;
+    this.dragon_knight_portrait.visible = false;
+    this.healthBarEmpty.visible = false;
+    this.healthBar.visible = false;
 
     this.dragon_knight.setData({
       direction: "left",
@@ -138,7 +161,7 @@ export default class MainScene extends Phaser.Scene {
     });
 
     this.dragon_knight2.setData({
-      direction: "left",
+      direction: "right",
       turn: true,
       selected: false,
       state: null,
@@ -168,7 +191,8 @@ export default class MainScene extends Phaser.Scene {
 
     // Play those animations.
     this.dragon_knight.play("dragon_knight_anim1");
-    this.dragon_knight2.play("dragon_knight_anim1");
+    this.dragon_knight2.play("dragon_knight_anim2");
+    this.dragon_knight_portrait.play("dragon_knight_anim1")
 
     // Add keyboard input.
     this.inputKeys = this.input.keyboard.addKeys({
@@ -181,7 +205,12 @@ export default class MainScene extends Phaser.Scene {
     });
 
     this.physics.world.step(0);
-  }
+  };
+
+  setMeterPercentage(percent = 100) {
+    const width = 100 * percent / 100;
+	  this.healthBar.displayWidth = width;
+  };
 
   update() {
 
@@ -215,16 +244,8 @@ export default class MainScene extends Phaser.Scene {
     // Coordinates adjustment to target individual character sprites on the map.
     if (this.player.x === closest.x + 16 && this.player.y === closest.y + 16) {
       if (Phaser.Input.Keyboard.JustDown(this.inputKeys.q)) {
-        // closest.x += 16;
-        // closest.y += 8;
-        // this.selectedUnit.gameObject.setData({direction: 'right'});
-        //this.selectedUnit.gameObject.setData({selected: true})
         this.selectedUnit = closest;
       }
-
-      // if (this.selectedUnit.gameObject.getData('selected')) {
-      //   this.selectedUnit.gameObject.setdata({direction: ''})
-      // }
     }
 
     if (this.selectedUnit) {
@@ -324,25 +345,33 @@ export default class MainScene extends Phaser.Scene {
           }
         }
       }
-      //load ui
+      // Load ui
       this.uiBackground.visible = true;
+      this.dragon_knight_portrait.visible = true;
+      this.healthBarEmpty.visible = true;
+      this.healthBar.visible = true;
 
       if (this.selectedUnit.gameObject.getData("hit_points") <= 0) {
         this.uiText.setText(["This guy is knocked out"]);
       } else {
         this.uiText.setText([
           "HP: " + this.selectedUnit.gameObject.getData("hit_points") + "/" + this.selectedUnit.gameObject.getData("total_hit_points"),
+          "Movement: " + this.selectedUnit.gameObject.getData("movement"),
         ]);
       }
       if (Phaser.Input.Keyboard.JustDown(this.inputKeys.h)) {
-        this.selectedUnit.gameObject.setData({ hit_points: this.selectedUnit.gameObject.getData("hit_points") - 50 });
+        const damage = 25;
+        this.selectedUnit.gameObject.setData({ hit_points: this.selectedUnit.gameObject.getData("hit_points") - damage });
+        this.setMeterPercentage(this.selectedUnit.gameObject.getData("hit_points"));
         this.uiText.setText([
           `HP: ${this.selectedUnit.gameObject.getData("hit_points")}/${this.selectedUnit.gameObject.getData("total_hit_points")}`
         ]);
         if (this.selectedUnit.gameObject.getData("hit_points") === 0) {
-          this.uiText.setText(["This guy is knocked out"]);
           // Set their sprite to dead
-          console.log(this.selectedUnit.gameObject);
+          this.uiText.setText([
+            "HP: 0/" + this.selectedUnit.gameObject.getData("total_hit_points"),
+            "Movement: " + this.selectedUnit.gameObject.getData("movement"),
+          ]);
           this.selectedUnit.gameObject.destroy();
           this.selectedUnit = undefined;
         }
