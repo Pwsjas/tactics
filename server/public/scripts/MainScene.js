@@ -17,6 +17,9 @@ export default class MainScene extends Phaser.Scene {
     // Preload the background
     this.load.image('background', 'assets/background.png');
 
+    //Preload UI
+    this.load.image('ui', 'assets/ui.png');
+
     // Preload the tiles for the map, and the layout of the map itself in a JSON object.
     this.load.image("tiles", "assets/Isometric-tiles.png");
     this.load.tilemapTiledJSON("tilemap16", "assets/tilemap16.json");
@@ -25,8 +28,6 @@ export default class MainScene extends Phaser.Scene {
     this.load.image("cursor", "assets/cursor.png");
     this.load.image("movement-tile", "assets/movement-tile.png");
     this.load.image("character", "assets/cursor.png");
-
-    // Asset for the UI
 
     // Preload the spritesheets and animations for the dragon_knight character
     this.load.spritesheet(
@@ -56,7 +57,7 @@ export default class MainScene extends Phaser.Scene {
     this.cameras.main.zoom = 2;
 
     //Create the background
-    this.add.image(0,0, 'background').setOrigin(0,0).setScale(1.7);
+    this.add.image(0, 0, 'background').setOrigin(0, 0).setScale(1.7);
 
     // Create the tile map based on assets.
     const map = this.make.tilemap({ key: "tilemap16" });
@@ -117,7 +118,10 @@ export default class MainScene extends Phaser.Scene {
     // Add HUD for holding the UI
 
     // Create text for the character UI
-    this.ui = this.add.text(100, 100, "");
+    this.uiBackground = this.add.sprite(440, 220, "ui").setScale(0.55);
+    this.uiText = this.add.text(360, 210, "", { color: 'black' });
+
+    this.uiBackground.visible = false;
 
     this.dragon_knight.setData({
       direction: "left",
@@ -224,25 +228,6 @@ export default class MainScene extends Phaser.Scene {
     }
 
     if (this.selectedUnit) {
-      if (this.selectedUnit.gameObject.getData("hit_points") <= 0) {
-        this.ui.setText(["This guy is knocked out"]);
-      } else {
-        this.ui.setText([
-          "HP: " + this.selectedUnit.gameObject.getData("hit_points") + "/" + this.selectedUnit.gameObject.getData("total_hit_points"),
-        ]);
-      }
-      if (Phaser.Input.Keyboard.JustDown(this.inputKeys.h)) {
-        this.selectedUnit.gameObject.setData({ hit_points: this.selectedUnit.gameObject.getData("hit_points") - 50 });
-        this.ui.setText([
-          `HP: ${this.selectedUnit.gameObject.getData("hit_points")}/${this.selectedUnit.gameObject.getData("total_hit_points")}`
-        ]);
-        if (this.selectedUnit.gameObject.getData("hit_points") === 0) {
-          // console.log('She dead gurl')
-          // Set their texture to dead
-          this.ui.setText(["This guy is knocked out"]);
-          this.selectedUnit.gameObject.setActive(false);
-        }
-      }
 
       //check if unit has moved this turn
       if (!this.selectedUnit.gameObject.getData("hasMoved")) {
@@ -263,31 +248,26 @@ export default class MainScene extends Phaser.Scene {
             //Check out of bounds
             if (
               this.selectedUnit.gameObject.getData("coordX") + relationsX[i] <
-                0 ||
+              0 ||
               this.selectedUnit.gameObject.getData("coordX") + relationsX[i] >
-                15 ||
+              15 ||
               this.selectedUnit.gameObject.getData("coordY") + relationsY[i] <
-                0 ||
+              0 ||
               this.selectedUnit.gameObject.getData("coordY") + relationsY[i] >
-                15
+              15
             ) {
               //Add movement tile sprites
             } else {
               this.movementGrid.push(
-                this.add.sprite(
+                this.add.sprite(this.coordinateGrid[
+                  this.selectedUnit.gameObject.getData("coordX") + relationsX[i]
+                ][
+                  this.selectedUnit.gameObject.getData("coordY") + relationsY[i]
+                ].x,
                   this.coordinateGrid[
-                    this.selectedUnit.gameObject.getData("coordX") +
-                      relationsX[i]
+                    this.selectedUnit.gameObject.getData("coordX") + relationsX[i]
                   ][
-                    this.selectedUnit.gameObject.getData("coordY") +
-                      relationsY[i]
-                  ].x,
-                  this.coordinateGrid[
-                    this.selectedUnit.gameObject.getData("coordX") +
-                      relationsX[i]
-                  ][
-                    this.selectedUnit.gameObject.getData("coordY") +
-                      relationsY[i]
+                    this.selectedUnit.gameObject.getData("coordY") + relationsY[i]
                   ].y + 16,
                   "movement-tile"
                 )
@@ -342,6 +322,29 @@ export default class MainScene extends Phaser.Scene {
               sprite.destroy();
             }
           }
+        }
+      }
+      //load ui
+      this.uiBackground.visible = true;
+
+      if (this.selectedUnit.gameObject.getData("hit_points") <= 0) {
+        this.uiText.setText(["This guy is knocked out"]);
+      } else {
+        this.uiText.setText([
+          "HP: " + this.selectedUnit.gameObject.getData("hit_points") + "/" + this.selectedUnit.gameObject.getData("total_hit_points"),
+        ]);
+      }
+      if (Phaser.Input.Keyboard.JustDown(this.inputKeys.h)) {
+        this.selectedUnit.gameObject.setData({ hit_points: this.selectedUnit.gameObject.getData("hit_points") - 50 });
+        this.uiText.setText([
+          `HP: ${this.selectedUnit.gameObject.getData("hit_points")}/${this.selectedUnit.gameObject.getData("total_hit_points")}`
+        ]);
+        if (this.selectedUnit.gameObject.getData("hit_points") === 0) {
+          this.uiText.setText(["This guy is knocked out"]);
+          // Set their sprite to dead
+          console.log(this.selectedUnit.gameObject);
+          this.selectedUnit.gameObject.destroy();
+          this.selectedUnit = undefined;
         }
       }
     }
