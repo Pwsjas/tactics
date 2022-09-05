@@ -1,0 +1,48 @@
+{ "compressionlevel":-1,
+ "height":8,
+ "infinite":false,
+ "layers":[
+        {
+         "data":[8, 8, 8, 6, 6, 6, 6, 6,
+            8, 8, 8, 6, 6, 6, 6, 6,
+            8, 8, 8, 6, 6, 6, 6, 6,
+            6, 6, 6, 6, 6, 6, 6, 6,
+            6, 6, 6, 6, 6, 6, 6, 6,
+            6, 6, 6, 6, 6, 6, 6, 8,
+            6, 6, 6, 6, 6, 6, 8, 8,
+            6, 6, 6, 6, 6, 8, 8, 8],
+         "height":8,
+         "id":1,
+         "name":"Tile Layer 1",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":8,
+         "x":0,
+         "y":0
+        }],
+ "nextlayerid":2,
+ "nextobjectid":1,
+ "orientation":"isometric",
+ "renderorder":"right-down",
+ "tiledversion":"1.9.1",
+ "tileheight":16,
+ "tilesets":[
+        {
+         "columns":4,
+         "firstgid":1,
+         "image":"..\/..\/..\/tiles\/PUNY_CHARACTERS_v2.1\/PUNY CHARACTERS\/Tiled-Maps\/Isometric\/Isometric-tiles.png",
+         "imageheight":96,
+         "imagewidth":128,
+         "margin":0,
+         "name":"punyTiles",
+         "spacing":0,
+         "tilecount":12,
+         "tileheight":32,
+         "tilewidth":32
+        }],
+ "tilewidth":32,
+ "type":"map",
+ "version":"1.9",
+ "width":8
+}
