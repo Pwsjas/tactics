@@ -11,6 +11,7 @@ export default class MainScene extends Phaser.Scene {
     let movementGrid = [];
     let legalMovement = [];
     let invalidTiles = [];
+    let pathingArray = [];
   }
 
   // Preload assets into the game engine.
@@ -200,7 +201,227 @@ export default class MainScene extends Phaser.Scene {
     this.physics.world.step(0);
   }
 
+
+
   update() {
+    const moveTracker = (direction) => {
+      if (direction === 'left') {
+        this.tracker.setData({coordX: this.tracker.getData("coordX"), coordY: this.tracker.getData("coordY") + 1})
+        if (this.tracker.getData('coordX') >= 0 && this.tracker.getData('coordX') <= 15 && this.tracker.getData('coordY') >= 0 && this.tracker.getData('coordY') <= 15) {
+          this.tracker.x = this.coordinateGrid[this.tracker.getData('coordX')][this.tracker.getData('coordY')].x;
+          this.tracker.y = this.coordinateGrid[this.tracker.getData('coordX')][this.tracker.getData('coordY')].y;
+        }
+      }
+      if (direction === 'right') {
+        this.tracker.setData({coordX: this.tracker.getData("coordX"), coordY: this.tracker.getData("coordY") - 1})
+        if (this.tracker.getData('coordX') >= 0 && this.tracker.getData('coordX') <= 15 && this.tracker.getData('coordY') >= 0 && this.tracker.getData('coordY') <= 15) {
+          this.tracker.x = this.coordinateGrid[this.tracker.getData('coordX')][this.tracker.getData('coordY')].x;
+          this.tracker.y = this.coordinateGrid[this.tracker.getData('coordX')][this.tracker.getData('coordY')].y;
+        }
+      }
+      if (direction === 'up') {
+        this.tracker.setData({coordX: this.tracker.getData("coordX") - 1, coordY: this.tracker.getData("coordY")})
+        if (this.tracker.getData('coordX') >= 0 && this.tracker.getData('coordX') <= 15 && this.tracker.getData('coordY') >= 0 && this.tracker.getData('coordY') <= 15) {
+          this.tracker.x = this.coordinateGrid[this.tracker.getData('coordX')][this.tracker.getData('coordY')].x;
+          this.tracker.y = this.coordinateGrid[this.tracker.getData('coordX')][this.tracker.getData('coordY')].y;
+        }
+      }
+      if (direction === 'down') {
+        this.tracker.setData({coordX: this.tracker.getData("coordX") + 1, coordY: this.tracker.getData("coordY")})
+        if (this.tracker.getData('coordX') >= 0 && this.tracker.getData('coordX') <= 15 && this.tracker.getData('coordY') >= 0 && this.tracker.getData('coordY') <= 15) {
+          this.tracker.x = this.coordinateGrid[this.tracker.getData('coordX')][this.tracker.getData('coordY')].x;
+          this.tracker.y = this.coordinateGrid[this.tracker.getData('coordX')][this.tracker.getData('coordY')].y;
+        }
+      }
+    }
+
+    const findDirection = (destination, location) => {
+      console.log(destination, location)
+      if (destination.x - location.x > 0 && destination.y - location.y > 0) {
+        return 'left';
+      } else if (destination.x - location.x > 0 && destination.y - location.y < 0) {
+        return 'down';
+      } else if (destination.x - location.x < 0 && destination.y - location.y > 0) {
+        return 'up';
+      } else if (destination.x - location.x < 0 && destination.y - location.y < 0) {
+        return 'right';
+      } else if (destination.x - location.x === 0 && destination.y - location.y > 0) {
+        return 'left';
+      } else if (destination.x - location.x > 0 && destination.y - location.y === 0) {
+        return 'down';
+      } else if (destination.x - location.x === 0 && destination.y - location.y < 0) {
+        return 'right';
+      } else if (destination.x - location.x < 0 && destination.y - location.y === 0) {
+        return 'up';
+      }
+    }
+
+    //Find shortest path from selectedUnit to destination(cursor), return array of tiles leading from A to B
+    const findMovementPath = (prevDirection, moveCount, totalMoves, destination) => {
+      console.log("I looped!");
+      console.log(`
+      Tracker position
+      ${this.tracker.getData('coordX')}, 
+      ${this.tracker.getData('coordY')}
+      `)
+      
+      if (moveCount === totalMoves) {
+        moveTracker(prevDirection);
+        return;
+      }
+
+      //Check if destination has been reached
+      if (this.tracker.getData("coordX") === destination.x && this.tracker.getData("coordY") === destination.y) {
+        console.log("FOUND DESTINATION")
+        this.pathingArray.push({x: this.tracker.getData('coordX'), y: this.tracker.getData('coordY')});
+        moveTracker(prevDirection);
+        return true
+      }
+
+      //calculate direction
+      let direction = findDirection(destination, {x: this.tracker.getData('coordX'), y: this.tracker.getData('coordY')}); 
+      console.log(direction);
+
+      //Check valid tile
+      if (this.legalMovement.filter((coords) => coords.x === this.tracker.getData("coordX") && coords.y === this.tracker.getData("coordY")).length <= 0) {
+        console.log("INVALID");
+        //set tracker to prevDirection
+        if (prevDirection === 'left') {
+          moveTracker('left');
+        }
+        if (prevDirection === 'right') {
+          moveTracker('right');
+        }
+        if (prevDirection === 'up') {
+          moveTracker('up');
+        }
+        if (prevDirection === 'down') {
+          moveTracker('down');
+        }
+        return;
+      }
+
+      //Call findMovementPath based on direction
+      if (direction === 'up') {
+        //check up
+        moveTracker('up');
+        if (findMovementPath('down', moveCount + 1, totalMoves, destination)) {
+          this.pathingArray.push({x: this.tracker.getData('coordX'), y: this.tracker.getData('coordY')});
+          moveTracker(prevDirection);
+          return true
+        }
+        //check left
+        moveTracker('left');
+        if (findMovementPath('right', moveCount + 1, totalMoves, destination)) {
+          this.pathingArray.push({x: this.tracker.getData('coordX'), y: this.tracker.getData('coordY')})
+          moveTracker(prevDirection);;
+          return true
+        }
+        moveTracker('down');
+        if (findMovementPath('up', moveCount + 1, totalMoves, destination)) {
+          this.pathingArray.push({x: this.tracker.getData('coordX'), y: this.tracker.getData('coordY')});
+          moveTracker(prevDirection);
+          return true
+        }
+        moveTracker('right');
+        if (findMovementPath('left', moveCount + 1, totalMoves, destination)) {
+          this.pathingArray.push({x: this.tracker.getData('coordX'), y: this.tracker.getData('coordY')});
+          moveTracker(prevDirection);
+          return true
+        }
+      }
+
+      if (direction === 'left') {
+        //check left
+        moveTracker('left');
+        if (findMovementPath('right', moveCount + 1, totalMoves, destination)) {
+          this.pathingArray.push({x: this.tracker.getData('coordX'), y: this.tracker.getData('coordY')});
+          moveTracker(prevDirection);
+          return true
+        }
+        //check down
+        moveTracker('down');
+        if (findMovementPath('up', moveCount + 1, totalMoves, destination)) {
+          this.pathingArray.push({x: this.tracker.getData('coordX'), y: this.tracker.getData('coordY')});
+          moveTracker(prevDirection);
+          return true
+        }
+        moveTracker('left');
+        if (findMovementPath('right', moveCount + 1, totalMoves, destination)) {
+          this.pathingArray.push({x: this.tracker.getData('coordX'), y: this.tracker.getData('coordY')});
+          moveTracker(prevDirection);
+          return true
+        }
+        moveTracker('up');
+        if (findMovementPath('down', moveCount + 1, totalMoves, destination)) {
+          this.pathingArray.push({x: this.tracker.getData('coordX'), y: this.tracker.getData('coordY')});
+          moveTracker(prevDirection);
+          return true
+        }
+      }
+
+      if (direction === 'down') {
+        //check down
+        moveTracker('down');
+        if (findMovementPath('up', moveCount + 1, totalMoves, destination)) {
+          this.pathingArray.push({x: this.tracker.getData('coordX'), y: this.tracker.getData('coordY')});
+          moveTracker(prevDirection);
+          return true
+        }
+        //check right
+        moveTracker('right');
+        if (findMovementPath('left', moveCount + 1, totalMoves, destination)) {
+          this.pathingArray.push({x: this.tracker.getData('coordX'), y: this.tracker.getData('coordY')});
+          moveTracker(prevDirection);
+          return true
+        }
+        moveTracker('up');
+        if (findMovementPath('down', moveCount + 1, totalMoves, destination)) {
+          this.pathingArray.push({x: this.tracker.getData('coordX'), y: this.tracker.getData('coordY')});
+          moveTracker(prevDirection);
+          return true
+        }
+        moveTracker('left');
+        if (findMovementPath('right', moveCount + 1, totalMoves, destination)) {
+          this.pathingArray.push({x: this.tracker.getData('coordX'), y: this.tracker.getData('coordY')});
+          moveTracker(prevDirection);
+          return true
+        }
+      }
+
+      if (direction === 'right') {
+        //check right
+        moveTracker('right');
+        if (findMovementPath('left', moveCount + 1, totalMoves, destination)) {
+          this.pathingArray.push({x: this.tracker.getData('coordX'), y: this.tracker.getData('coordY')});
+          moveTracker(prevDirection);
+          return true
+        }
+        //check up
+        moveTracker('up');
+        if (findMovementPath('down', moveCount + 1, totalMoves, destination)) {
+          this.pathingArray.push({x: this.tracker.getData('coordX'), y: this.tracker.getData('coordY')});
+          moveTracker(prevDirection);
+          return true
+        }
+        moveTracker('down');
+        if (findMovementPath('up', moveCount + 1, totalMoves, destination)) {
+          this.pathingArray.push({x: this.tracker.getData('coordX'), y: this.tracker.getData('coordY')});
+          moveTracker(prevDirection);
+          return true
+        }
+        moveTracker('left');
+        if (findMovementPath('right', moveCount + 1, totalMoves, destination)) {
+          this.pathingArray.push({x: this.tracker.getData('coordX'), y: this.tracker.getData('coordY')});
+          moveTracker(prevDirection);
+          return true
+        }
+      }
+
+      moveTracker(prevDirection);
+      return;
+    }
+
     console.log(this.player.getData("coordX"), this.player.getData("coordY"));
     let closest = this.physics.closest(this.player, Phaser.GameObject);
     let closestTracker = this.physics.closest(this.tracker, Phaser.GameObject);
@@ -259,38 +480,6 @@ export default class MainScene extends Phaser.Scene {
             this.tracker.y = this.player.y;
             this.legalMovement = [];
             this.movementGrid = [];
-    
-            //MOVE TRACKER FUNCTION
-            const moveTracker = (direction) => {
-              if (direction === 'left') {
-                this.tracker.setData({coordX: this.tracker.getData("coordX"), coordY: this.tracker.getData("coordY") + 1})
-                if (this.tracker.getData('coordX') >= 0 && this.tracker.getData('coordX') <= 15 && this.tracker.getData('coordY') >= 0 && this.tracker.getData('coordY') <= 15) {
-                  this.tracker.x = this.coordinateGrid[this.tracker.getData('coordX')][this.tracker.getData('coordY')].x;
-                  this.tracker.y = this.coordinateGrid[this.tracker.getData('coordX')][this.tracker.getData('coordY')].y;
-                }
-              }
-              if (direction === 'right') {
-                this.tracker.setData({coordX: this.tracker.getData("coordX"), coordY: this.tracker.getData("coordY") - 1})
-                if (this.tracker.getData('coordX') >= 0 && this.tracker.getData('coordX') <= 15 && this.tracker.getData('coordY') >= 0 && this.tracker.getData('coordY') <= 15) {
-                  this.tracker.x = this.coordinateGrid[this.tracker.getData('coordX')][this.tracker.getData('coordY')].x;
-                  this.tracker.y = this.coordinateGrid[this.tracker.getData('coordX')][this.tracker.getData('coordY')].y;
-                }
-              }
-              if (direction === 'up') {
-                this.tracker.setData({coordX: this.tracker.getData("coordX") - 1, coordY: this.tracker.getData("coordY")})
-                if (this.tracker.getData('coordX') >= 0 && this.tracker.getData('coordX') <= 15 && this.tracker.getData('coordY') >= 0 && this.tracker.getData('coordY') <= 15) {
-                  this.tracker.x = this.coordinateGrid[this.tracker.getData('coordX')][this.tracker.getData('coordY')].x;
-                  this.tracker.y = this.coordinateGrid[this.tracker.getData('coordX')][this.tracker.getData('coordY')].y;
-                }
-              }
-              if (direction === 'down') {
-                this.tracker.setData({coordX: this.tracker.getData("coordX") + 1, coordY: this.tracker.getData("coordY")})
-                if (this.tracker.getData('coordX') >= 0 && this.tracker.getData('coordX') <= 15 && this.tracker.getData('coordY') >= 0 && this.tracker.getData('coordY') <= 15) {
-                  this.tracker.x = this.coordinateGrid[this.tracker.getData('coordX')][this.tracker.getData('coordY')].x;
-                  this.tracker.y = this.coordinateGrid[this.tracker.getData('coordX')][this.tracker.getData('coordY')].y;
-                }
-              }
-            }
     
             const findPath = (prevDirection, moveCount, totalMoves) => {
               closestTracker = this.physics.closest(this.tracker, Phaser.GameObject);
@@ -411,16 +600,16 @@ export default class MainScene extends Phaser.Scene {
             }
             let temporaryTracker = {x: this.tracker.getData('coordX'), y: this.tracker.getData('coordY')}
             moveTracker('up');
-            findPath('down', 0, 10);
+            findPath('down', 0, 5);
     
             moveTracker('down');
-            findPath('up', 0, 10);
+            findPath('up', 0, 5);
     
             moveTracker('right');
-            findPath('left', 0, 10); 
+            findPath('left', 0, 5); 
     
             moveTracker('left');
-            findPath('right', 0, 10);
+            findPath('right', 0, 5);
 
             this.selectedUnit.gameObject.setData({hasMovementTiles: true});
           }
@@ -435,6 +624,57 @@ export default class MainScene extends Phaser.Scene {
                     coords.y === this.player.getData("coordY")
                 ).length > 0
               ) {
+                //findMovementPath
+                this.pathingArray = [];
+                let direction = findDirection({x: this.player.getData('coordX'), y: this.player.getData('coordY')}, {x: this.selectedUnit.gameObject.getData('coordX'), y: this.selectedUnit.gameObject.getData('coordY')})
+                //Decide the starting direction of the findMovementPath algorithm
+                console.log('TRACKER', this.tracker.getData('coordX'), this.tracker.getData('coordY'))
+                console.log(direction);
+                const decideOrientation = () => {
+                  if (direction === 'up') {
+                    moveTracker('up');
+                    if (findMovementPath('down', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                    moveTracker('left');
+                    if (findMovementPath('right', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                    moveTracker('down');
+                    if (findMovementPath('up', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                    moveTracker('right');
+                    if (findMovementPath('left', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                  }
+                  if (direction === 'down') {
+                    moveTracker('down');
+                    if (findMovementPath('up', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                    moveTracker('right');
+                    if (findMovementPath('left', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                    moveTracker('up');
+                    if (findMovementPath('down', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                    moveTracker('left');
+                    if (findMovementPath('right', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                  }
+                  if (direction === 'right') {
+                    moveTracker('right');
+                    if (findMovementPath('left', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                    moveTracker('up');
+                    if (findMovementPath('down', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                    moveTracker('left');
+                    if (findMovementPath('right', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                    moveTracker('down');
+                    if (findMovementPath('up', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                  }
+                  if (direction === 'left') {
+                    moveTracker('left');
+                    if (findMovementPath('right', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                    moveTracker('down');
+                    if (findMovementPath('up', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                    moveTracker('right');
+                    if (findMovementPath('left', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                    moveTracker('up');
+                    if (findMovementPath('down', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                  }
+                }
+                decideOrientation();
+                console.log(this.pathingArray);
+
                 //Move selectedUnit
                 this.selectedUnit.gameObject.x =
                   this.coordinateGrid[this.player.getData("coordX")][
