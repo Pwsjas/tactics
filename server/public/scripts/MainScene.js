@@ -18,11 +18,11 @@ export default class MainScene extends Phaser.Scene {
     this.load.image('background', 'assets/background.png');
 
     //Preload UI
-    this.load.image('ui1', 'assets/ui1.png');
+    this.load.image('ui1', 'assets/ui/ui1.png');
 
     // Images for the empty
-    this.load.image('health-bar', 'assets/ui-health-bar.png')
-    this.load.image('health-bar-empty', 'assets/ui-empty-health-bar.png')
+    this.load.image('health-bar', 'assets/ui/ui-health-bar.png')
+    this.load.image('health-bar-empty', 'assets/ui/ui-empty-health-bar.png')
 
     // Preload the tiles for the map, and the layout of the map itself in a JSON object.
     this.load.image("tiles", "assets/Isometric-tiles.png");
@@ -52,6 +52,108 @@ export default class MainScene extends Phaser.Scene {
     this.load.spritesheet(
       "dragon_knight_upleft_idle",
       "assets/dragon-knight/dragon-knight-upleft-idle.png",
+      { frameWidth: 32, frameHeight: 32 }
+    );
+    this.load.spritesheet(
+      "dragon_knight_downright_attacking",
+      "assets/dragon-knight/dragon-knight-downright-attacking.png",
+      { frameWidth: 32, frameHeight: 32 }
+    );
+    this.load.spritesheet(
+      "dragon_knight_downleft_attacking",
+      "assets/dragon-knight/dragon-knight-downleft-attacking.png",
+      { frameWidth: 32, frameHeight: 32 }
+    );
+    this.load.spritesheet(
+      "dragon_knight_upright_attacking",
+      "assets/dragon-knight/dragon-knight-upright-attacking.png",
+      { frameWidth: 32, frameHeight: 32 }
+    );
+    this.load.spritesheet(
+      "dragon_knight_upleft_attacking",
+      "assets/dragon-knight/dragon-knight-upleft-attacking.png",
+      { frameWidth: 32, frameHeight: 32 }
+    );
+    this.load.spritesheet(
+      "dragon_knight_downright_damage",
+      "assets/dragon-knight/dragon-knight-downright-damage.png",
+      { frameWidth: 32, frameHeight: 32 }
+    );
+    this.load.spritesheet(
+      "dragon_knight_downleft_damage",
+      "assets/dragon-knight/dragon-knight-downleft-damage.png",
+      { frameWidth: 32, frameHeight: 32 }
+    );
+    this.load.spritesheet(
+      "dragon_knight_upright_damage",
+      "assets/dragon-knight/dragon-knight-upright-damage.png",
+      { frameWidth: 32, frameHeight: 32 }
+    );
+    this.load.spritesheet(
+      "dragon_knight_upleft_damage",
+      "assets/dragon-knight/dragon-knight-upleft-damage.png",
+      { frameWidth: 32, frameHeight: 32 }
+    );
+    this.load.spritesheet(
+      "dragon_knight_downright_laying_down",
+      "assets/dragon-knight/dragon-knight-downright-laying-down.png",
+      { frameWidth: 32, frameHeight: 32 }
+    );
+    this.load.spritesheet(
+      "dragon_knight_downleft_laying_down",
+      "assets/dragon-knight/dragon-knight-downleft-laying-down.png",
+      { frameWidth: 32, frameHeight: 32 }
+    );
+    this.load.spritesheet(
+      "dragon_knight_upright_laying_down",
+      "assets/dragon-knight/dragon-knight-upright-laying-down.png",
+      { frameWidth: 32, frameHeight: 32 }
+    );
+    this.load.spritesheet(
+      "dragon_knight_upleft_laying_down",
+      "assets/dragon-knight/dragon-knight-upleft-laying-down.png",
+      { frameWidth: 32, frameHeight: 32 }
+    );
+
+    // Preload the spritesheets and animations for the skeleton character
+    this.load.spritesheet(
+      "skeleton_downright_idle",
+      "assets/skeleton/skeleton-downright-idle.png",
+      { frameWidth: 32, frameHeight: 32 }
+    );
+    this.load.spritesheet(
+      "skeleton_downleft_idle",
+      "assets/skeleton/skeleton-downleft-idle.png",
+      { frameWidth: 32, frameHeight: 32 }
+    );
+    // this.load.spritesheet(
+    //   "skeleton_upright_idle",
+    //   "assets/skeleton/skeleton-upright-idle.png",
+    //   { frameWidth: 32, frameHeight: 32 }
+    // );
+    // this.load.spritesheet(
+    //   "skeleton_upright_idle",
+    //   "assets/skeleton/skeleton-upright-idle.png",
+    //   { frameWidth: 32, frameHeight: 32 }
+    // );
+    this.load.spritesheet(
+      "skeleton_downright_damage",
+      "assets/skeleton/skeleton-downright-damage.png",
+      { frameWidth: 32, frameHeight: 32 }
+    );
+    this.load.spritesheet(
+      "skeleton_downleft_damage",
+      "assets/skeleton/skeleton-downleft-damage.png",
+      { frameWidth: 32, frameHeight: 32 }
+    );
+    this.load.spritesheet(
+      "skeleton_downright_laying_dowm",
+      "assets/skeleton/skeleton-downright-laying-down.png",
+      { frameWidth: 32, frameHeight: 32 }
+    );
+    this.load.spritesheet(
+      "skeleton_downleft_laying_down",
+      "assets/skeleton/skeleton-downleft-laying-down.png",
       { frameWidth: 32, frameHeight: 32 }
     );
   }
@@ -107,7 +209,7 @@ export default class MainScene extends Phaser.Scene {
       coordY: 0,
     });
 
-    // Assign manipulatable data to the dragon_knight game object.
+    // Assign placement for dragon_knight game object on the map.
     this.dragon_knight = this.physics.add.sprite(
       this.coordinateGrid[2][1].x,
       this.coordinateGrid[2][1].y,
@@ -117,6 +219,19 @@ export default class MainScene extends Phaser.Scene {
       this.coordinateGrid[11][3].x,
       this.coordinateGrid[11][3].y,
       "dragon_knight_downleft_idle"
+    );
+
+    // Assign placement for skeleton game object on the map.
+    this.skeleton_soldier = this.physics.add.sprite(
+      this.coordinateGrid[8][2].x,
+      this.coordinateGrid[8][2].y,
+      "skeleton_downright_idle"
+    );
+
+    this.skeleton_soldier2 = this.physics.add.sprite(
+      this.coordinateGrid[3][4].x,
+      this.coordinateGrid[3][4].y,
+      "skeleton_downleft_idle"
     );
 
     // Add HUD for holding the UI
@@ -146,6 +261,7 @@ export default class MainScene extends Phaser.Scene {
     this.healthBarEmpty.visible = false;
     this.healthBar.visible = false;
 
+    // Assign data to the dragon_knight game object.
     this.dragon_knight.setData({
       direction: "left",
       turn: true,
@@ -174,25 +290,113 @@ export default class MainScene extends Phaser.Scene {
       coordY: 3,
     });
 
-    // Create animations for the sprites based on the spritesheet.
+    // Create animations for the sprites based on the spritesheet for the dragon knight.
     this.anims.create({
-      key: "dragon_knight_anim1",
+      key: "dragon_knight_idle_anim1",
       frames: this.anims.generateFrameNumbers("dragon_knight_downright_idle"),
-      frameRate: 4,
+      frameRate: 5,
       repeat: -1,
     });
 
     this.anims.create({
-      key: "dragon_knight_anim2",
+      key: "dragon_knight_idle_anim2",
       frames: this.anims.generateFrameNumbers("dragon_knight_downleft_idle"),
-      frameRate: 4,
+      frameRate: 5,
       repeat: -1,
     });
+
+    this.anims.create({
+      key: "dragon_knight_idle_anim3",
+      frames: this.anims.generateFrameNumbers("dragon_knight_upright_idle"),
+      frameRate: 5,
+      repeat: -1,
+    });
+
+    this.anims.create({
+      key: "dragon_knight_idle_anim4",
+      frames: this.anims.generateFrameNumbers("dragon_knight_upleft_idle"),
+      frameRate: 5,
+      repeat: -1,
+    });
+
+    this.anims.create({
+      key: "dragon_knight_attacking_anim1",
+      frames: this.anims.generateFrameNumbers("dragon_knight_downright_attacking"),
+      frameRate: 5,
+      repeat: 0,
+    });
+
+    this.anims.create({
+      key: "dragon_knight_attacking_anim2",
+      frames: this.anims.generateFrameNumbers("dragon_knight_downleft_attacking"),
+      frameRate: 5,
+      repeat: 0,
+    });
+
+    this.anims.create({
+      key: "dragon_knight_attacking_anim3",
+      frames: this.anims.generateFrameNumbers("dragon_knight_upright_attacking"),
+      frameRate: 5,
+      repeat: 0,
+    });
+
+    this.anims.create({
+      key: "dragon_knight_attacking_anim4",
+      frames: this.anims.generateFrameNumbers("dragon_knight_upleft_attacking"),
+      frameRate: 5,
+      repeat: -1,
+    });
+
+    this.anims.create({
+      key: "dragon_knight_damage_anim1",
+      frames: this.anims.generateFrameNumbers("dragon_knight_downright_damage"),
+      frameRate: 5,
+      repeat: 0,
+    });
+
+    this.anims.create({
+      key: "dragon_knight_damage_anim2",
+      frames: this.anims.generateFrameNumbers("dragon_knight_downleft_damage"),
+      frameRate: 5,
+      repeat: 0,
+    });
+
+    this.anims.create({
+      key: "dragon_knight_laying_down_anim1",
+      frames: this.anims.generateFrameNumbers("dragon_knight_downright_laying_down"),
+      frameRate: 5,
+      repeat: 0,
+    });
+
+    this.anims.create({
+      key: "dragon_knight_laying_down_anim2",
+      frames: this.anims.generateFrameNumbers("dragon_knight_downleft_laying_down"),
+      frameRate: 5,
+      repeat: 0,
+    });
+
+    // Create animations for the sprites based on the spritesheet for the skeleton.
+    this.anims.create({
+      key: "skeleton_anim1",
+      frames: this.anims.generateFrameNumbers("skeleton_downright_idle"),
+      frameRate: 5,
+      repeat: -1,
+    });
+
+    this.anims.create({
+      key: "skeleton_anim2",
+      frames: this.anims.generateFrameNumbers("skeleton_downleft_idle"),
+      frameRate: 5,
+      repeat: -1,
+    });
+
 
     // Play those animations.
-    this.dragon_knight.play("dragon_knight_anim1");
-    this.dragon_knight2.play("dragon_knight_anim2");
-    this.dragon_knight_portrait.play("dragon_knight_anim1")
+    this.dragon_knight.play("dragon_knight_idle_anim1");
+    this.dragon_knight2.play("dragon_knight_idle_anim2");
+    this.skeleton_soldier.play("skeleton_anim1");
+    this.skeleton_soldier2.play("skeleton_anim2");
+    this.dragon_knight_portrait.play("dragon_knight_idle_anim1");
 
     // Add keyboard input.
     this.inputKeys = this.input.keyboard.addKeys({
@@ -204,9 +408,15 @@ export default class MainScene extends Phaser.Scene {
       h: Phaser.Input.Keyboard.KeyCodes.H,
     });
 
+    this.allies = [this.dragon_knight, this.dragon_knight2];
+    this.enemies = [this.skeleton_soldier, this.skeleton_soldier2];
+
+    console.log(this.allies.includes(this.dragon_knight));
+
     this.physics.world.step(0);
   };
 
+  // Function that determines the length of the health bar.
   setMeterPercentage(percent = 100) {
     const width = 100 * percent / 100;
 	  this.healthBar.displayWidth = width;
@@ -242,7 +452,7 @@ export default class MainScene extends Phaser.Scene {
     // console.log("y: ", this.player.y, closest.y);
 
     // Coordinates adjustment to target individual character sprites on the map.
-    if (this.player.x === closest.x + 16 && this.player.y === closest.y + 16) {
+    if (this.player.x === closest.x + 16 && this.player.y === closest.y + 16 && this.allies.includes(closest.gameObject)) {
       if (Phaser.Input.Keyboard.JustDown(this.inputKeys.q)) {
         this.selectedUnit = closest;
       }
@@ -344,6 +554,7 @@ export default class MainScene extends Phaser.Scene {
           }
         }
       }
+
       // Load ui
       this.uiBackground.visible = true;
       this.dragon_knight_portrait.visible = true;
@@ -351,7 +562,10 @@ export default class MainScene extends Phaser.Scene {
       this.healthBar.visible = true;
 
       if (this.selectedUnit.gameObject.getData("hit_points") <= 0) {
-        this.uiText.setText(["This guy is knocked out"]);
+        this.uiText.setText([
+          "HP: 0/" + this.selectedUnit.gameObject.getData("total_hit_points"),
+          "Movement: " + this.selectedUnit.gameObject.getData("movement"),
+        ]);
       } else {
         this.uiText.setText([
           "HP: " + this.selectedUnit.gameObject.getData("hit_points") + "/" + this.selectedUnit.gameObject.getData("total_hit_points"),
@@ -360,18 +574,20 @@ export default class MainScene extends Phaser.Scene {
         this.setMeterPercentage(this.selectedUnit.gameObject.getData("hit_points"));
       }
       if (Phaser.Input.Keyboard.JustDown(this.inputKeys.h)) {
+        this.selectedUnit.gameObject.play("dragon_knight_damage_anim1");
+        this.selectedUnit.gameObject.playAfterRepeat("dragon_knight_idle_anim1");
         this.selectedUnit.gameObject.setData({ hit_points: this.selectedUnit.gameObject.getData("hit_points") - 25 });
         this.setMeterPercentage(this.selectedUnit.gameObject.getData("hit_points"));
         this.uiText.setText([
           `HP: ${this.selectedUnit.gameObject.getData("hit_points")}/${this.selectedUnit.gameObject.getData("total_hit_points")}`
         ]);
         if (this.selectedUnit.gameObject.getData("hit_points") === 0) {
-          // Set their sprite to dead
+          this.selectedUnit.gameObject.play("dragon_knight_damage_anim1");
+          this.selectedUnit.gameObject.playAfterRepeat("dragon_knight_laying_down_anim1");
           this.uiText.setText([
             "HP: 0/" + this.selectedUnit.gameObject.getData("total_hit_points"),
             "Movement: " + this.selectedUnit.gameObject.getData("movement"),
           ]);
-          this.selectedUnit.gameObject.destroy();
           this.selectedUnit = undefined;
         }
       }
