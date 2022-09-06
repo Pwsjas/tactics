@@ -1049,42 +1049,42 @@ export default class MainScene extends Phaser.Scene {
             // Play the attack animation, reduce hit points of skeleton.
         }
 
-          if (this.enemies.includes(closest.gameObject) && closest.gameObject.getData('hasUiOpen') && Phaser.Input.Keyboard.JustDown(this.inputKeys.l)) {
-            for (const sprite of this.attackGrid) {
-              sprite.destroy();
-            }
-            this.selectedUnit.gameObject.play("dragon_knight_attacking_anim1");
-            this.selectedUnit.gameObject.playAfterRepeat("dragon_knight_idle_anim1");
-            closest.gameObject.play("skeleton_damage_anim1");
-            closest.gameObject.setData({ hit_points: closest.gameObject.getData('hit_points') - 25 });
-            this.uiText2.setText([
-              `HP: ${closest.gameObject.getData("hit_points")}/${closest.gameObject.getData("total_hit_points")}`,
-              "Movement: " + this.skeleton_soldier.getData("movement"),
-            ]);
-            this.setMeterPercentage2(closest.gameObject.getData("hit_points"));
-            if (closest.gameObject.getData("hit_points") === 0) {
-              closest.gameObject.play("skeleton_damage_anim1");
-              closest.gameObject.playAfterRepeat("skeleton_laying_down_anim1");
-              this.uiText2.setText([
-                "HP: 0/" + closest.gameObject.getData("total_hit_points"),
-                "Movement: " + closest.gameObject.getData("movement"),
-              ]);
-              this.time.addEvent({
-                delay: 2000,
-                callback: () => {
-                  this.selectedUnit.gameObject.setData({ hasAttacked: true });
-                  this.selectedUnit.gameObject.setData({ hasAttackTiles: false });
-                  this.selectedUnit.gameObject.setData({ turn: false });
-                  closest.gameObject.setData({ hasUiOpen: false });
-                  this.uiBackground2.visible = false;
-                  this.skeleton_soldier_portrait.visible = false;
-                  this.healthBarEmpty2.visible = false;
-                  this.healthBar2.visible = false;
-                  this.uiText2.setText([""]);
-                }
-              });
-            }
+        if (this.enemies.includes(closest.gameObject) && closest.gameObject.getData('hasUiOpen') && Phaser.Input.Keyboard.JustDown(this.inputKeys.l)) {
+          for (const sprite of this.attackGrid) {
+            sprite.destroy();
           }
+          this.selectedUnit.gameObject.play("dragon_knight_attacking_anim1");
+          this.selectedUnit.gameObject.playAfterRepeat("dragon_knight_idle_anim1");
+          closest.gameObject.play("skeleton_damage_anim1");
+          closest.gameObject.setData({ hit_points: closest.gameObject.getData('hit_points') - 25 });
+          this.uiText2.setText([
+            `HP: ${closest.gameObject.getData("hit_points")}/${closest.gameObject.getData("total_hit_points")}`,
+            "Movement: " + this.skeleton_soldier.getData("movement"),
+          ]);
+          this.setMeterPercentage2(closest.gameObject.getData("hit_points"));
+          if (closest.gameObject.getData("hit_points") === 0) {
+            closest.gameObject.play("skeleton_damage_anim1");
+            closest.gameObject.playAfterRepeat("skeleton_laying_down_anim1");
+            this.uiText2.setText([
+              "HP: 0/" + closest.gameObject.getData("total_hit_points"),
+              "Movement: " + closest.gameObject.getData("movement"),
+            ]);
+            this.time.addEvent({
+              delay: 2000,
+              callback: () => {
+                this.selectedUnit.gameObject.setData({ hasAttacked: true });
+                this.selectedUnit.gameObject.setData({ hasAttackTiles: false });
+                this.selectedUnit.gameObject.setData({ turn: false });
+                closest.gameObject.setData({ hasUiOpen: false });
+                this.uiBackground2.visible = false;
+                this.skeleton_soldier_portrait.visible = false;
+                this.healthBarEmpty2.visible = false;
+                this.healthBar2.visible = false;
+                this.uiText2.setText([""]);
+              }
+            });
+          }
+        }
       }
 
       // //check if unit has moved this turn
