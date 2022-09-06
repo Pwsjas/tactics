@@ -153,7 +153,7 @@ export default class MainScene extends Phaser.Scene {
       { frameWidth: 32, frameHeight: 32 }
     );
     this.load.spritesheet(
-      "skeleton_downright_laying_dowm",
+      "skeleton_downright_laying_down",
       "assets/skeleton/skeleton-downright-laying-down.png",
       { frameWidth: 32, frameHeight: 32 }
     );
@@ -270,13 +270,13 @@ export default class MainScene extends Phaser.Scene {
 	  this.healthBarEmpty1 = this.add.image(344, 260, 'health-bar-empty').setOrigin(0, 0.5).setScale(0.4);
 	  this.healthBarEmpty1.displayWidth = 100;
 
-    this.healthBarEmpty2 = this.add.image(836, 260, 'health-bar-empty').setOrigin(0, 0.5).setScale(0.4);
+    this.healthBarEmpty2 = this.add.image(839, 260, 'health-bar-empty').setOrigin(0, 0.5).setScale(0.4);
     this.healthBarEmpty2.displayWidth = 100;
 
     // Actual health bar that changes
     this.healthBar1 = this.add.image(344, 260, 'health-bar').setOrigin(0, 0.5).setScale(0.4);
 
-    this.healthBar2 = this.add.image(836, 260, 'health-bar').setOrigin(0, 0.5).setScale(0.4);
+    this.healthBar2 = this.add.image(839, 260, 'health-bar').setOrigin(0, 0.5).setScale(0.4);
     
 	  this.setMeterPercentage1(100);
     this.setMeterPercentage2(100);
@@ -287,12 +287,13 @@ export default class MainScene extends Phaser.Scene {
 
     // Set UI to invisible until a unit is selected.
     this.uiBackground1.visible = false;
-    this.uiBackground2.visible = true;
+    this.uiBackground2.visible = false;
     this.dragon_knight_portrait.visible = false;
+    this.skeleton_soldier_portrait.visible = false;
     this.healthBarEmpty1.visible = false;
     this.healthBar1.visible = false;
-    this.healthBarEmpty2.visible = true;
-    this.healthBar2.visible = true;
+    this.healthBarEmpty2.visible = false;
+    this.healthBar2.visible = false;
 
     // Assign data to the dragon_knight game object.
     this.dragon_knight.setData({
@@ -305,6 +306,7 @@ export default class MainScene extends Phaser.Scene {
       hasMovementTiles: false,
       hasAttacked: false,
       hasAttackTiles: false,
+      hasUiOpen: false,
       coordX: 3,
       coordY: 3,
     });
@@ -319,6 +321,7 @@ export default class MainScene extends Phaser.Scene {
       hasMovementTiles: false,
       hasAttacked: false,
       hasAttackTiles: false,
+      hasUiOpen: false,
       coordX: 1,
       coordY: 6,
     });
@@ -329,6 +332,7 @@ export default class MainScene extends Phaser.Scene {
       movement: 3,
       total_hit_points: 75,
       hit_points: 75,
+      hasUiOpen: false,
       coordX: 8,
       coordY: 2,
     });
@@ -339,6 +343,7 @@ export default class MainScene extends Phaser.Scene {
       movement: 3,
       total_hit_points: 75,
       hit_points: 75,
+      hasUiOpen: false,
       coordX: 3,
       coordY: 4,
     });
@@ -443,19 +448,27 @@ export default class MainScene extends Phaser.Scene {
       repeat: -1,
     });
 
+    this.anims.create({
+      key: "skeleton_damage_anim1",
+      frames: this.anims.generateFrameNumbers("skeleton_downright_damage"),
+      frameRate: 5,
+      repeat: 0,
+    });
 
-    // Play those animations.
+    this.anims.create({
+      key: "skeleton_laying_down_anim1",
+      frames: this.anims.generateFrameNumbers("skeleton_downright_laying_down"),
+      frameRate: 5,
+      repeat: 0,
+    });
+
+    // Play default idle animations.
     this.dragon_knight.play("dragon_knight_idle_anim1");
     this.dragon_knight2.play("dragon_knight_idle_anim2");
     this.skeleton_soldier.play("skeleton_idle_anim1");
     this.skeleton_soldier2.play("skeleton_idle_anim2");
     this.dragon_knight_portrait.play("dragon_knight_idle_anim1");
     this.skeleton_soldier_portrait.play("skeleton_idle_anim2");
-
-    this.uiText2.setText([
-      "HP: " + this.skeleton_soldier.getData("hit_points") + "/" + this.skeleton_soldier.getData("total_hit_points"),
-      "Movement: " + this.skeleton_soldier.getData("movement"),
-    ]);
 
     // Add keyboard input.
     this.inputKeys = this.input.keyboard.addKeys({
@@ -467,6 +480,7 @@ export default class MainScene extends Phaser.Scene {
       h: Phaser.Input.Keyboard.KeyCodes.H,
       p: Phaser.Input.Keyboard.KeyCodes.P,
       k: Phaser.Input.Keyboard.KeyCodes.K,
+      l: Phaser.Input.Keyboard.KeyCodes.L,
     });
 
     this.allies = [this.dragon_knight, this.dragon_knight2];
@@ -736,6 +750,7 @@ export default class MainScene extends Phaser.Scene {
     if (this.player.x === closest.x + 16 && this.player.y === closest.y + 16 && this.allies.includes(closest.gameObject)) {
       if (Phaser.Input.Keyboard.JustDown(this.inputKeys.q)) {
         this.selectedUnit = closest;
+        this.selectedUnit.gameObject.setData({ hasUiOpen: true });
       }
     }
 
@@ -977,9 +992,8 @@ export default class MainScene extends Phaser.Scene {
       // Attacking
 
       // Check if unit has moved
-      } else if (this.selectedUnit.gameObject.getData('hasMoved')) {
+      } else if (this.selectedUnit.gameObject.getData('hasMoved') && !this.selectedUnit.gameObject.getData('hasAttacked')) {
         if (!this.selectedUnit.gameObject.getData("hasAttackTiles")) {
-        console.log("I moved!");
         // If yes, check if the surrounding tiles are valid to put the red tiles on. Generate red tiles based on previous check.
         const x1 = [1, 0, -1, 0];
         const y1 = [0, 1, 0, -1];
@@ -991,53 +1005,87 @@ export default class MainScene extends Phaser.Scene {
         this.attackGrid = [];
         
         for (let i in x1) {
-          console.log("In the loop.")
           // Do this by calling invalidTiles array. Check whether the tiles are OOB also.
           if (this.invalidTiles.filter(
             (coords) =>
-            coords.x === this.selectedUnit.gameObject.getData("coordX") + x1[i] &&
-            coords.y === this.selectedUnit.gameObject.getData("coordY") + y1[i]
+              coords.x === this.selectedUnit.gameObject.getData("coordX") + x1[i] &&
+              coords.y === this.selectedUnit.gameObject.getData("coordY") + y1[i]
             ).length === 0 && 
             this.selectedUnit.gameObject.getData("coordX") + x1[i] >= 0 &&
             this.selectedUnit.gameObject.getData("coordX") + x1[i] <= 15 &&
             this.selectedUnit.gameObject.getData("coordY") + y1[i] >= 0 &&
             this.selectedUnit.gameObject.getData("coordY") + y1[i] <= 15) {
-              // If yes, generate red tiles and make the enemy targetable.
-              console.log("Adding Sprites");
+              // If no, generate red tiles and make the enemy targetable.
               this.attackGrid.push(this.add.sprite(
                 this.coordinateGrid[this.selectedUnit.gameObject.getData('coordX') + x1[i]][this.selectedUnit.gameObject.getData('coordY') + y1[i]].x, 
                 this.coordinateGrid[this.selectedUnit.gameObject.getData('coordX') + x1[i]][this.selectedUnit.gameObject.getData('coordY') + y1[i]].y + 16,
                 "attack-tile",
               ));
-             this.attackTiles.push({ x: this.selectedUnit.gameObject.getData('coordX') + x1[i], y: this.selectedUnit.gameObject.getData('coordY') + y1[i] });
+             this.attackTiles.push({ x: this.selectedUnit.gameObject.getData('coordX') + x1[i], y: this.selectedUnit.gameObject.getData('coordY') + y1[i]});
             }
           }
           this.selectedUnit.gameObject.setData({ hasAttackTiles: true });
+          console.log("Attack Grid: ", this.attackTiles);
         }
         if (Phaser.Input.Keyboard.JustDown(this.inputKeys.k)) {
-          if (this.enemies.includes(closest.gameObject) && this.attackTiles.filter(
+          if (this.player.x === closest.x + 16 && this.player.y === closest.y + 16 && this.enemies.includes(closest.gameObject) && this.attackTiles.filter(
             (coords) =>
-              coords.x === this.player.getData("coordX") &&
-              coords.y === this.player.getData("coordY")
-          ).length > 0) {
-            // Open the enemy UI, and then attack. Check the UI is open, and then confirm attack.
-            // Play the attack animation,
-            // Play the damage animation,
-            // Deal damage.
-            closest.gameObject.setData({ hit_points: closest.gameObject.getData('hit_points') - 25 });
+            coords.x === this.player.getData("coordX") &&
+            coords.y === this.player.getData("coordY")
+            ).length > 0) {
+              // Open the enemy UI, check the UI is open.
+              closest.gameObject.setData({ hasUiOpen: true });
+              console.log("is UI open? ", closest.gameObject.getData('hasUiOpen'));
+              this.uiBackground2.visible = true;
+              this.skeleton_soldier_portrait.visible = true;
+              this.healthBarEmpty2.visible = true;
+              this.healthBar2.visible = true;
+              this.uiText2.setText([
+                "HP: " + this.skeleton_soldier.getData("hit_points") + "/" + this.skeleton_soldier.getData("total_hit_points"),
+                "Movement: " + this.skeleton_soldier.getData("movement"),
+              ]);
+          }
+            // Click a button to confirm your attack and launch an attack on the enemy. It should only work if you select a valid tile.
+            // Play the attack animation, reduce hit points of skeleton.
+        }
+
+          if (this.enemies.includes(closest.gameObject) && closest.gameObject.getData('hasUiOpen') && Phaser.Input.Keyboard.JustDown(this.inputKeys.l)) {
             for (const sprite of this.attackGrid) {
               sprite.destroy();
             }
+            this.selectedUnit.gameObject.play("dragon_knight_attacking_anim1");
+            this.selectedUnit.gameObject.playAfterRepeat("dragon_knight_idle_anim1");
+            closest.gameObject.play("skeleton_damage_anim1");
+            closest.gameObject.setData({ hit_points: closest.gameObject.getData('hit_points') - 25 });
+            this.uiText2.setText([
+              `HP: ${closest.gameObject.getData("hit_points")}/${closest.gameObject.getData("total_hit_points")}`,
+              "Movement: " + this.skeleton_soldier.getData("movement"),
+            ]);
+            this.setMeterPercentage2(closest.gameObject.getData("hit_points"));
+            if (closest.gameObject.getData("hit_points") === 0) {
+              closest.gameObject.play("skeleton_damage_anim1");
+              closest.gameObject.playAfterRepeat("skeleton_laying_down_anim1");
+              this.uiText2.setText([
+                "HP: 0/" + closest.gameObject.getData("total_hit_points"),
+                "Movement: " + closest.gameObject.getData("movement"),
+              ]);
+              this.time.addEvent({
+                delay: 2000,
+                callback: () => {
+                  this.selectedUnit.gameObject.setData({ hasAttacked: true });
+                  this.selectedUnit.gameObject.setData({ hasAttackTiles: false });
+                  this.selectedUnit.gameObject.setData({ turn: false });
+                  closest.gameObject.setData({ hasUiOpen: false });
+                  this.uiBackground2.visible = false;
+                  this.skeleton_soldier_portrait.visible = false;
+                  this.healthBarEmpty2.visible = false;
+                  this.healthBar2.visible = false;
+                  this.uiText2.setText([""]);
+                }
+              });
+            }
           }
-        
-            // Click a button to confirm your attack and launch an attack on the enemy. It should only work if you select a valid tile.
-              // Play the attack animation, reduce hit points of skeleton.
-        }
-            // After attack, end turn for the selected unit.
-          // If no, end the unit's turn.
       }
-          // Before animation, UI.
-          // After this, animation time.
 
       // //check if unit has moved this turn
       // if (!this.selectedUnit.gameObject.getData("hasMoved")) {
