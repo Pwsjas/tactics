@@ -231,18 +231,6 @@ export default class MainScene extends Phaser.Scene {
       coordY: 0,
     });
 
-    // Assign placement for dragon_knight game object on the map.
-    this.dragon_knight = this.physics.add.sprite(
-      this.coordinateGrid[3][3].x,
-      this.coordinateGrid[3][3].y,
-      "dragon_knight_downright_idle"
-    );
-    this.dragon_knight2 = this.physics.add.sprite(
-      this.coordinateGrid[1][6].x,
-      this.coordinateGrid[1][6].y,
-      "dragon_knight_downleft_idle"
-    );
-
     // Assign placement for skeleton game object on the map.
     this.skeleton_soldier = this.physics.add.sprite(
       this.coordinateGrid[8][2].x,
@@ -282,41 +270,6 @@ export default class MainScene extends Phaser.Scene {
     this.dragon_knight_portrait.visible = false;
     this.healthBarEmpty.visible = false;
     this.healthBar.visible = false;
-
-    // Assign data to the dragon_knight game object.
-    this.dragon_knight.setData({
-      direction: "left",
-      turn: true,
-      selected: false,
-      state: null,
-      movement: 3,
-      total_hit_points: 100,
-      hit_points: 100,
-      hasMoved: false,
-      hasMovementTiles: false,
-      coordX: 3,
-      coordY: 3,
-      animations: {
-        down: "dragon_knight_idle_anim1",
-        left: "dragon_knight_idle_anim2",
-        right: "dragon_knight_idle_anim3",
-        up: "dragon_knight_idle_anim4"
-      }
-    });
-
-    this.dragon_knight2.setData({
-      direction: "right",
-      turn: true,
-      selected: false,
-      state: null,
-      movement: 3,
-      total_hit_points: 100,
-      hit_points: 100,
-      hasMoved: false,
-      hasMovementTiles: false,
-      coordX: 1,
-      coordY: 6,
-    });
 
     // Create animations for the sprites based on the spritesheet for the dragon knight.
     this.anims.create({
@@ -420,8 +373,6 @@ export default class MainScene extends Phaser.Scene {
 
 
     // Play those animations.
-    this.dragon_knight.play("dragon_knight_idle_anim1");
-    this.dragon_knight2.play("dragon_knight_idle_anim2");
     this.skeleton_soldier.play("skeleton_anim1");
     this.skeleton_soldier2.play("skeleton_anim2");
     this.dragon_knight_portrait.play("dragon_knight_idle_anim1");
@@ -437,12 +388,46 @@ export default class MainScene extends Phaser.Scene {
       p: Phaser.Input.Keyboard.KeyCodes.P
     });
 
-    this.allies = [this.dragon_knight, this.dragon_knight2];
     this.enemies = [this.skeleton_soldier, this.skeleton_soldier2];
 
-    console.log(this.allies.includes(this.dragon_knight));
-
     this.physics.world.step(0);
+
+    //Generate allied and enemy units
+    const generateUnit = (unitType, x, y) => {
+      const newUnit = this.physics.add.sprite(
+        this.coordinateGrid[x][y].x,
+        this.coordinateGrid[x][y].y,
+        `${unitType}_downright_idle`
+      );
+
+      newUnit.setData({
+        direction: "left",
+        turn: true,
+        selected: false,
+        state: null,
+        movement: 3,
+        total_hit_points: 100,
+        hit_points: 100,
+        hasMoved: false,
+        hasMovementTiles: false,
+        coordX: x,
+        coordY: y,
+        animations: {
+          down: `${unitType}_idle_anim1`,
+          left: `${unitType}_idle_anim2`,
+          right: `${unitType}_idle_anim3`,
+          up: `${unitType}_idle_anim4`
+        }
+      });
+      newUnit.play(newUnit.data.values.animations.down);
+
+      return newUnit;
+    }
+    this.dragon_knight1 = generateUnit('dragon_knight', 5, 2);
+    this.dragon_knight2 = generateUnit('dragon_knight', 3, 8);
+    this.dragon_knight3 = generateUnit('dragon_knight', 1, 1);
+    this.dragon_knight4 = generateUnit('dragon_knight', 12, 12);
+    this.allies = [this.dragon_knight1, this.dragon_knight2, this.dragon_knight3, this.dragon_knight4]
   };
 
   // Function that determines the length of the health bar.
@@ -750,22 +735,11 @@ export default class MainScene extends Phaser.Scene {
               closestTracker = this.physics.closest(this.tracker, Phaser.GameObject);
               //return if moveCount reached
               if (moveCount === totalMoves) {
-                if (prevDirection === 'left') {
-                  moveTracker('left');
-                }
-                if (prevDirection === 'right') {
-                  moveTracker('right');
-                }
-                if (prevDirection === 'up') {
-                  moveTracker('up');
-                }
-                if (prevDirection === 'down') {
-                  moveTracker('down');
-                }
+                moveTracker(prevDirection);
                 return;
               }
     
-              //Check if new location is valid ???
+              //Check if new location is invalid
               if ((
                 this.tracker.x === closestTracker.gameObject.x && this.tracker.y === closestTracker.gameObject.y)
                 ||
@@ -774,20 +748,13 @@ export default class MainScene extends Phaser.Scene {
                 this.tracker.getData('coordX') < 0
                 ||
                 this.tracker.getData('coordY') < 0
+                ||
+                this.tracker.getData('coordX') > 15
+                ||
+                this.tracker.getData('coordY') > 15
                 )) {
                 //set tracker to prevDirection
-                if (prevDirection === 'left') {
-                  moveTracker('left');
-                }
-                if (prevDirection === 'right') {
-                  moveTracker('right');
-                }
-                if (prevDirection === 'up') {
-                  moveTracker('up');
-                }
-                if (prevDirection === 'down') {
-                  moveTracker('down');
-                }
+                moveTracker(prevDirection);
                 return;
               }
     
@@ -833,18 +800,7 @@ export default class MainScene extends Phaser.Scene {
                 findPath('up', moveCount + 1, totalMoves);
               }
               //Set Tracker to prevDirection
-              if (prevDirection === 'left') {
-                moveTracker('left');
-              }
-              if (prevDirection === 'right') {
-                moveTracker('right');
-              }
-              if (prevDirection === 'up') {
-                moveTracker('up');
-              }
-              if (prevDirection === 'down') {
-                moveTracker('down');
-              }
+              moveTracker(prevDirection);
               
               //Check if sprite already exists
               if (this.legalMovement.filter((coords) => coords.x === this.tracker.getData("coordX") && coords.y === this.tracker.getData("coordY")).length > 0) {
@@ -855,6 +811,8 @@ export default class MainScene extends Phaser.Scene {
               this.legalMovement.push({x: this.tracker.getData('coordX'), y: this.tracker.getData('coordY')});
     
               //Render sprite and add it to this.movementGrid
+              console.log(this.tracker.getData('coordX'), this.tracker.getData('coordY'))
+              console.log(this.coordinateGrid[this.tracker.getData('coordX')][this.tracker.getData('coordY')].x, this.coordinateGrid[this.tracker.getData('coordX')][this.tracker.getData('coordY')].y + 16)
               this.movementGrid.push(this.add.sprite(
                 this.coordinateGrid[this.tracker.getData('coordX')][this.tracker.getData('coordY')].x,
                 this.coordinateGrid[this.tracker.getData('coordX')][this.tracker.getData('coordY')].y + 16,
