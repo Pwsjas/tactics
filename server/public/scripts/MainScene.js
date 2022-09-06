@@ -12,6 +12,7 @@ export default class MainScene extends Phaser.Scene {
     let legalMovement = [];
     let invalidTiles = [];
     let pathingArray = [];
+    let attackTiles = [];
   }
 
   // Preload assets into the game engine.
@@ -33,6 +34,7 @@ export default class MainScene extends Phaser.Scene {
     // Preload the cursor and movement tile assets and assign it as a controllable character.
     this.load.image("cursor", "assets/cursor.png");
     this.load.image("movement-tile", "assets/movement-tile.png");
+    this.load.image("attack-tile", "assets/attack-tile.png");
     this.load.image("character", "assets/cursor.png");
 
     // Preload the spritesheets and animations for the dragon_knight character
@@ -289,6 +291,7 @@ export default class MainScene extends Phaser.Scene {
       hit_points: 100,
       hasMoved: false,
       hasMovementTiles: false,
+      hasAttackTiles: false,
       coordX: 3,
       coordY: 3,
     });
@@ -303,6 +306,7 @@ export default class MainScene extends Phaser.Scene {
       hit_points: 100,
       hasMoved: false,
       hasMovementTiles: false,
+      hasAttackTiles: false,
       coordX: 1,
       coordY: 6,
     });
@@ -423,13 +427,12 @@ export default class MainScene extends Phaser.Scene {
       right: Phaser.Input.Keyboard.KeyCodes.D,
       q: Phaser.Input.Keyboard.KeyCodes.Q,
       h: Phaser.Input.Keyboard.KeyCodes.H,
-      p: Phaser.Input.Keyboard.KeyCodes.P
+      p: Phaser.Input.Keyboard.KeyCodes.P,
+      k: Phaser.Input.Keyboard.KeyCodes.K,
     });
 
     this.allies = [this.dragon_knight, this.dragon_knight2];
     this.enemies = [this.skeleton_soldier, this.skeleton_soldier2];
-
-    console.log(this.allies.includes(this.dragon_knight));
 
     this.physics.world.step(0);
   };
@@ -439,8 +442,6 @@ export default class MainScene extends Phaser.Scene {
     const width = 100 * percent / 100;
 	  this.healthBar.displayWidth = width;
   };
-
-
 
   update() {
     const moveTracker = (direction) => {
@@ -848,91 +849,124 @@ export default class MainScene extends Phaser.Scene {
         }
 
         if (Phaser.Input.Keyboard.JustDown(this.inputKeys.q)) {
-              //Confirm movement is valid
-              if (
-                this.legalMovement.filter(
-                  (coords) =>
-                    coords.x === this.player.getData("coordX") &&
-                    coords.y === this.player.getData("coordY")
-                ).length > 0
-              ) {
-                //findMovementPath
-                this.pathingArray = [];
-                let direction = findDirection({x: this.player.getData('coordX'), y: this.player.getData('coordY')}, {x: this.selectedUnit.gameObject.getData('coordX'), y: this.selectedUnit.gameObject.getData('coordY')})
-                //Decide the starting direction of the findMovementPath algorithm
-                console.log('TRACKER', this.tracker.getData('coordX'), this.tracker.getData('coordY'))
-                console.log(direction);
-                const decideOrientation = () => {
-                  if (direction === 'up') {
-                    moveTracker('up');
-                    if (findMovementPath('down', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
-                    moveTracker('left');
-                    if (findMovementPath('right', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
-                    moveTracker('down');
-                    if (findMovementPath('up', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
-                    moveTracker('right');
-                    if (findMovementPath('left', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
-                  }
-                  if (direction === 'down') {
-                    moveTracker('down');
-                    if (findMovementPath('up', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
-                    moveTracker('right');
-                    if (findMovementPath('left', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
-                    moveTracker('up');
-                    if (findMovementPath('down', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
-                    moveTracker('left');
-                    if (findMovementPath('right', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
-                  }
-                  if (direction === 'right') {
-                    moveTracker('right');
-                    if (findMovementPath('left', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
-                    moveTracker('up');
-                    if (findMovementPath('down', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
-                    moveTracker('left');
-                    if (findMovementPath('right', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
-                    moveTracker('down');
-                    if (findMovementPath('up', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
-                  }
-                  if (direction === 'left') {
-                    moveTracker('left');
-                    if (findMovementPath('right', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
-                    moveTracker('down');
-                    if (findMovementPath('up', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
-                    moveTracker('right');
-                    if (findMovementPath('left', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
-                    moveTracker('up');
-                    if (findMovementPath('down', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
-                  }
-                }
-                decideOrientation();
-                console.log(this.pathingArray);
-
-                //Move selectedUnit
-                this.selectedUnit.gameObject.x =
-                  this.coordinateGrid[this.player.getData("coordX")][
-                    this.player.getData("coordY")
-                  ].x;
-                this.selectedUnit.gameObject.y =
-                  this.coordinateGrid[this.player.getData("coordX")][
-                    this.player.getData("coordY")
-                  ].y;
-                this.selectedUnit.gameObject.setData({ hasMoved: true });
-    
-                //Set new Coordinates
-                this.selectedUnit.gameObject.setData({
-                  coordX: this.player.getData("coordX"),
-                });
-                this.selectedUnit.gameObject.setData({
-                  coordY: this.player.getData("coordY"),
-                });
-    
-                //Cleanup movement grid
-                for (const sprite of this.movementGrid) {
-                  sprite.destroy();
-                }
+          //Confirm movement is valid
+          if (
+            this.legalMovement.filter(
+              (coords) =>
+                coords.x === this.player.getData("coordX") &&
+                coords.y === this.player.getData("coordY")
+            ).length > 0
+          ) {
+            //findMovementPath
+            this.pathingArray = [];
+            let direction = findDirection({x: this.player.getData('coordX'), y: this.player.getData('coordY')}, {x: this.selectedUnit.gameObject.getData('coordX'), y: this.selectedUnit.gameObject.getData('coordY')})
+            //Decide the starting direction of the findMovementPath algorithm
+            console.log('TRACKER', this.tracker.getData('coordX'), this.tracker.getData('coordY'))
+            console.log(direction);
+            const decideOrientation = () => {
+              if (direction === 'up') {
+                moveTracker('up');
+                if (findMovementPath('down', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                moveTracker('left');
+                if (findMovementPath('right', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                moveTracker('down');
+                if (findMovementPath('up', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                moveTracker('right');
+                if (findMovementPath('left', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+              }
+              if (direction === 'down') {
+                moveTracker('down');
+                if (findMovementPath('up', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                moveTracker('right');
+                if (findMovementPath('left', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                moveTracker('up');
+                if (findMovementPath('down', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                moveTracker('left');
+                if (findMovementPath('right', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+              }
+              if (direction === 'right') {
+                moveTracker('right');
+                if (findMovementPath('left', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                moveTracker('up');
+                if (findMovementPath('down', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                moveTracker('left');
+                if (findMovementPath('right', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                moveTracker('down');
+                if (findMovementPath('up', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+              }
+              if (direction === 'left') {
+                moveTracker('left');
+                if (findMovementPath('right', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                moveTracker('down');
+                if (findMovementPath('up', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                moveTracker('right');
+                if (findMovementPath('left', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                moveTracker('up');
+                if (findMovementPath('down', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
               }
             }
-    }
+            decideOrientation();
+            console.log(this.pathingArray);
+            //Move selectedUnit
+            this.selectedUnit.gameObject.x =
+              this.coordinateGrid[this.player.getData("coordX")][
+                this.player.getData("coordY")
+              ].x;
+            this.selectedUnit.gameObject.y =
+              this.coordinateGrid[this.player.getData("coordX")][
+                this.player.getData("coordY")
+              ].y;
+            this.selectedUnit.gameObject.setData({ hasMoved: true });
+
+            //Set new Coordinates
+            this.selectedUnit.gameObject.setData({
+              coordX: this.player.getData("coordX"),
+            });
+            this.selectedUnit.gameObject.setData({
+              coordY: this.player.getData("coordY"),
+            });
+
+            //Cleanup movement grid
+            for (const sprite of this.movementGrid) {
+              sprite.destroy();
+            }
+          }
+        }
+      // Attacking
+
+      // Check if unit has moved
+      } else if (this.selectedUnit.gameObject.getData('hasMoved')) {
+        console.log("I moved!");
+        // If yes, check if the surrounding tiles are valid to put the red tiles on. Generate red tiles based on previous check.
+        const x1 = [1, 0, -1, 0];
+        const y1 = [0, 1, 0, -1];
+        // For Ranged Characters
+        const x2 = [];
+        const y2 = [];
+        
+        for (let i in x1) {
+          // Do this by calling invalidTiles array. Check whether the tiles are OOB also.
+          if (this.invalidTiles.filter(
+            (coords) =>
+            coords.x === this.selectedUnit.gameObject.getData("coordX") + x1[i] &&
+            coords.y === this.selectedUnit.gameObject.getData("coordY") + y1[i]
+            ).length === 0 && 
+            this.selectedUnit.gameObject.getData("coordX") + x1[i] >= 0 &&
+            this.selectedUnit.gameObject.getData("coordX") + x1[i] <= 15 &&
+            this.selectedUnit.gameObject.getData("coordY") + y1[i] >= 0 &&
+            this.selectedUnit.gameObject.getData("coordY") + y1[i] <= 15) {
+              // If yes, generate red tiles and make the enemy targetable.
+              this.add.sprite(
+                this.coordinateGrid[this.selectedUnit.gameObject.getData('coordX') + x1[i]][this.selectedUnit.gameObject.getData('coordY') + y1[i]].x, 
+                this.coordinateGrid[this.selectedUnit.gameObject.getData('coordX') + x1[i]][this.selectedUnit.gameObject.getData('coordY') + y1[i]].y,
+              );
+            }
+          }
+            // Click a button to confirm your attack and launch an attack on the enemy. It should only work if you select a valid tile.
+            // After attack, end turn for the selected unit.
+          // If no, end the unit's turn.
+      }
+          // After this, animation time.
 
       // //check if unit has moved this turn
       // if (!this.selectedUnit.gameObject.getData("hasMoved")) {
@@ -1029,8 +1063,8 @@ export default class MainScene extends Phaser.Scene {
       //     }
       //   }
       // }
-      //load ui
 
+      //load ui
       this.uiBackground.visible = true;
       this.dragon_knight_portrait.visible = true;
       this.healthBarEmpty.visible = true;
