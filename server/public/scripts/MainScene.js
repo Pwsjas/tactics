@@ -13,6 +13,7 @@ export default class MainScene extends Phaser.Scene {
     let invalidTiles = [];
     let pathingArray = [];
     let attackTiles = [];
+    let attackGrid = [];
   }
 
   // Preload assets into the game engine.
@@ -22,6 +23,7 @@ export default class MainScene extends Phaser.Scene {
 
     //Preload UI
     this.load.image('ui1', 'assets/ui/ui1.png');
+    this.load.image('ui2', 'assets/ui/ui2.png');
 
     // Images for the empty
     this.load.image('health-bar', 'assets/ui/ui-health-bar.png')
@@ -215,7 +217,7 @@ export default class MainScene extends Phaser.Scene {
     this.tracker = this.add.sprite(this.coordinateGrid[7][7].x, this.coordinateGrid[7][7].y);
     this.tracker.setData({
       coordX: 7,
-      coordY: 7
+      coordY: 7,
     })
 
     this.player = this.physics.add.sprite(
@@ -254,43 +256,54 @@ export default class MainScene extends Phaser.Scene {
     );
 
     // Add HUD for holding the UI
-    this.uiBackground = this.add.sprite(395, 304, "ui1").setScale(0.5);
+    this.uiBackground1 = this.add.sprite(395, 304, "ui1").setScale(0.5);
+    this.uiBackground2 = this.add.sprite(887, 304, "ui2").setScale(0.5);
     
     // Assign a floating sprite as a character portrait and a health bar within the UI
     this.dragon_knight_portrait = this.add.sprite(394, 236, "dragon_knight_downright_idle").setScale(1.5);
+    this.skeleton_soldier_portrait = this.add.sprite(886, 236, "skeleton_downleft_idle").setScale(1.5);
     
     const x = 344;
     const y = 260;
     
     // Background shadow for the health bar
-	  this.healthBarEmpty = this.add.image(x, y, 'health-bar-empty').setOrigin(0, 0.5).setScale(0.4);
-	  this.healthBarEmpty.displayWidth = 100;
+	  this.healthBarEmpty1 = this.add.image(344, 260, 'health-bar-empty').setOrigin(0, 0.5).setScale(0.4);
+	  this.healthBarEmpty1.displayWidth = 100;
+
+    this.healthBarEmpty2 = this.add.image(836, 260, 'health-bar-empty').setOrigin(0, 0.5).setScale(0.4);
+    this.healthBarEmpty2.displayWidth = 100;
 
     // Actual health bar that changes
-    this.healthBar = this.add.image(x, y, 'health-bar').setOrigin(0, 0.5).setScale(0.4);
+    this.healthBar1 = this.add.image(344, 260, 'health-bar').setOrigin(0, 0.5).setScale(0.4);
+
+    this.healthBar2 = this.add.image(836, 260, 'health-bar').setOrigin(0, 0.5).setScale(0.4);
     
-	  this.setMeterPercentage(100);
+	  this.setMeterPercentage1(100);
+    this.setMeterPercentage2(100);
 
     // Create text for the character UI
-    this.uiText = this.add.text(342, 274, "", { color: 'white' });
+    this.uiText1 = this.add.text(342, 274, "", { color: 'white' });
+    this.uiText2 = this.add.text(837, 274, "", { color: 'white' });
 
     // Set UI to invisible until a unit is selected.
-    this.uiBackground.visible = false;
+    this.uiBackground1.visible = false;
+    this.uiBackground2.visible = true;
     this.dragon_knight_portrait.visible = false;
-    this.healthBarEmpty.visible = false;
-    this.healthBar.visible = false;
+    this.healthBarEmpty1.visible = false;
+    this.healthBar1.visible = false;
+    this.healthBarEmpty2.visible = true;
+    this.healthBar2.visible = true;
 
     // Assign data to the dragon_knight game object.
     this.dragon_knight.setData({
       direction: "left",
       turn: true,
-      selected: false,
-      state: null,
       movement: 3,
       total_hit_points: 100,
       hit_points: 100,
       hasMoved: false,
       hasMovementTiles: false,
+      hasAttacked: false,
       hasAttackTiles: false,
       coordX: 3,
       coordY: 3,
@@ -299,16 +312,35 @@ export default class MainScene extends Phaser.Scene {
     this.dragon_knight2.setData({
       direction: "right",
       turn: true,
-      selected: false,
-      state: null,
       movement: 3,
       total_hit_points: 100,
       hit_points: 100,
       hasMoved: false,
       hasMovementTiles: false,
+      hasAttacked: false,
       hasAttackTiles: false,
       coordX: 1,
       coordY: 6,
+    });
+
+    this.skeleton_soldier.setData({
+      direction: "right",
+      turn: false,
+      movement: 3,
+      total_hit_points: 75,
+      hit_points: 75,
+      coordX: 8,
+      coordY: 2,
+    });
+
+    this.skeleton_soldier2.setData({
+      direction: "right",
+      turn: false,
+      movement: 3,
+      total_hit_points: 75,
+      hit_points: 75,
+      coordX: 3,
+      coordY: 4,
     });
 
     // Create animations for the sprites based on the spritesheet for the dragon knight.
@@ -398,14 +430,14 @@ export default class MainScene extends Phaser.Scene {
 
     // Create animations for the sprites based on the spritesheet for the skeleton.
     this.anims.create({
-      key: "skeleton_anim1",
+      key: "skeleton_idle_anim1",
       frames: this.anims.generateFrameNumbers("skeleton_downright_idle"),
       frameRate: 5,
       repeat: -1,
     });
 
     this.anims.create({
-      key: "skeleton_anim2",
+      key: "skeleton_idle_anim2",
       frames: this.anims.generateFrameNumbers("skeleton_downleft_idle"),
       frameRate: 5,
       repeat: -1,
@@ -415,9 +447,15 @@ export default class MainScene extends Phaser.Scene {
     // Play those animations.
     this.dragon_knight.play("dragon_knight_idle_anim1");
     this.dragon_knight2.play("dragon_knight_idle_anim2");
-    this.skeleton_soldier.play("skeleton_anim1");
-    this.skeleton_soldier2.play("skeleton_anim2");
+    this.skeleton_soldier.play("skeleton_idle_anim1");
+    this.skeleton_soldier2.play("skeleton_idle_anim2");
     this.dragon_knight_portrait.play("dragon_knight_idle_anim1");
+    this.skeleton_soldier_portrait.play("skeleton_idle_anim2");
+
+    this.uiText2.setText([
+      "HP: " + this.skeleton_soldier.getData("hit_points") + "/" + this.skeleton_soldier.getData("total_hit_points"),
+      "Movement: " + this.skeleton_soldier.getData("movement"),
+    ]);
 
     // Add keyboard input.
     this.inputKeys = this.input.keyboard.addKeys({
@@ -437,11 +475,15 @@ export default class MainScene extends Phaser.Scene {
     this.physics.world.step(0);
   };
 
-  // Function that determines the length of the health bar.
-  setMeterPercentage(percent = 100) {
+  // Functions that determines the length of the health bar.
+  setMeterPercentage1(percent = 100) {
     const width = 100 * percent / 100;
-	  this.healthBar.displayWidth = width;
+	  this.healthBar1.displayWidth = width;
   };
+  setMeterPercentage2(percent = 100) {
+    const width = 100 * percent / 75;
+    this.healthBar2.displayWidth = width;
+  }
 
   update() {
     const moveTracker = (direction) => {
@@ -936,6 +978,7 @@ export default class MainScene extends Phaser.Scene {
 
       // Check if unit has moved
       } else if (this.selectedUnit.gameObject.getData('hasMoved')) {
+        if (!this.selectedUnit.gameObject.getData("hasAttackTiles")) {
         console.log("I moved!");
         // If yes, check if the surrounding tiles are valid to put the red tiles on. Generate red tiles based on previous check.
         const x1 = [1, 0, -1, 0];
@@ -943,8 +986,12 @@ export default class MainScene extends Phaser.Scene {
         // For Ranged Characters
         const x2 = [];
         const y2 = [];
+
+        this.attackTiles = [];
+        this.attackGrid = [];
         
         for (let i in x1) {
+          console.log("In the loop.")
           // Do this by calling invalidTiles array. Check whether the tiles are OOB also.
           if (this.invalidTiles.filter(
             (coords) =>
@@ -956,16 +1003,40 @@ export default class MainScene extends Phaser.Scene {
             this.selectedUnit.gameObject.getData("coordY") + y1[i] >= 0 &&
             this.selectedUnit.gameObject.getData("coordY") + y1[i] <= 15) {
               // If yes, generate red tiles and make the enemy targetable.
-              this.add.sprite(
+              console.log("Adding Sprites");
+              this.attackGrid.push(this.add.sprite(
                 this.coordinateGrid[this.selectedUnit.gameObject.getData('coordX') + x1[i]][this.selectedUnit.gameObject.getData('coordY') + y1[i]].x, 
-                this.coordinateGrid[this.selectedUnit.gameObject.getData('coordX') + x1[i]][this.selectedUnit.gameObject.getData('coordY') + y1[i]].y,
-              );
+                this.coordinateGrid[this.selectedUnit.gameObject.getData('coordX') + x1[i]][this.selectedUnit.gameObject.getData('coordY') + y1[i]].y + 16,
+                "attack-tile",
+              ));
+             this.attackTiles.push({ x: this.selectedUnit.gameObject.getData('coordX') + x1[i], y: this.selectedUnit.gameObject.getData('coordY') + y1[i] });
             }
           }
+          this.selectedUnit.gameObject.setData({ hasAttackTiles: true });
+        }
+        if (Phaser.Input.Keyboard.JustDown(this.inputKeys.k)) {
+          if (this.enemies.includes(closest.gameObject) && this.attackTiles.filter(
+            (coords) =>
+              coords.x === this.player.getData("coordX") &&
+              coords.y === this.player.getData("coordY")
+          ).length > 0) {
+            // Open the enemy UI, and then attack. Check the UI is open, and then confirm attack.
+            // Play the attack animation,
+            // Play the damage animation,
+            // Deal damage.
+            closest.gameObject.setData({ hit_points: closest.gameObject.getData('hit_points') - 25 });
+            for (const sprite of this.attackGrid) {
+              sprite.destroy();
+            }
+          }
+        
             // Click a button to confirm your attack and launch an attack on the enemy. It should only work if you select a valid tile.
+              // Play the attack animation, reduce hit points of skeleton.
+        }
             // After attack, end turn for the selected unit.
           // If no, end the unit's turn.
       }
+          // Before animation, UI.
           // After this, animation time.
 
       // //check if unit has moved this turn
@@ -1065,35 +1136,35 @@ export default class MainScene extends Phaser.Scene {
       // }
 
       //load ui
-      this.uiBackground.visible = true;
+      this.uiBackground1.visible = true;
       this.dragon_knight_portrait.visible = true;
-      this.healthBarEmpty.visible = true;
-      this.healthBar.visible = true;
+      this.healthBarEmpty1.visible = true;
+      this.healthBar1.visible = true;
 
       if (this.selectedUnit.gameObject.getData("hit_points") <= 0) {
-        this.uiText.setText([
+        this.uiText1.setText([
           "HP: 0/" + this.selectedUnit.gameObject.getData("total_hit_points"),
           "Movement: " + this.selectedUnit.gameObject.getData("movement"),
         ]);
       } else {
-        this.uiText.setText([
+        this.uiText1.setText([
           "HP: " + this.selectedUnit.gameObject.getData("hit_points") + "/" + this.selectedUnit.gameObject.getData("total_hit_points"),
           "Movement: " + this.selectedUnit.gameObject.getData("movement"),
         ]);
-        this.setMeterPercentage(this.selectedUnit.gameObject.getData("hit_points"));
+        this.setMeterPercentage1(this.selectedUnit.gameObject.getData("hit_points"));
       }
       if (Phaser.Input.Keyboard.JustDown(this.inputKeys.h)) {
         this.selectedUnit.gameObject.play("dragon_knight_damage_anim1");
         this.selectedUnit.gameObject.playAfterRepeat("dragon_knight_idle_anim1");
         this.selectedUnit.gameObject.setData({ hit_points: this.selectedUnit.gameObject.getData("hit_points") - 25 });
-        this.setMeterPercentage(this.selectedUnit.gameObject.getData("hit_points"));
-        this.uiText.setText([
+        this.setMeterPercentage1(this.selectedUnit.gameObject.getData("hit_points"));
+        this.uiText1.setText([
           `HP: ${this.selectedUnit.gameObject.getData("hit_points")}/${this.selectedUnit.gameObject.getData("total_hit_points")}`
         ]);
         if (this.selectedUnit.gameObject.getData("hit_points") === 0) {
           this.selectedUnit.gameObject.play("dragon_knight_damage_anim1");
           this.selectedUnit.gameObject.playAfterRepeat("dragon_knight_laying_down_anim1");
-          this.uiText.setText([
+          this.uiText1.setText([
             "HP: 0/" + this.selectedUnit.gameObject.getData("total_hit_points"),
             "Movement: " + this.selectedUnit.gameObject.getData("movement"),
           ]);
