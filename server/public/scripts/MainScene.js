@@ -244,8 +244,8 @@ export default class MainScene extends Phaser.Scene {
 
     // Assign placement for skeleton game object on the map.
     this.skeleton_soldier = this.physics.add.sprite(
-      this.coordinateGrid[8][2].x,
-      this.coordinateGrid[8][2].y,
+      this.coordinateGrid[7][2].x,
+      this.coordinateGrid[7][2].y,
       "skeleton_downright_idle"
     );
 
@@ -333,7 +333,7 @@ export default class MainScene extends Phaser.Scene {
       total_hit_points: 75,
       hit_points: 75,
       hasUiOpen: false,
-      coordX: 8,
+      coordX: 7,
       coordY: 2,
     });
 
@@ -1034,15 +1034,15 @@ export default class MainScene extends Phaser.Scene {
             coords.y === this.player.getData("coordY")
             ).length > 0) {
               // Open the enemy UI, check the UI is open.
+              this.setMeterPercentage2(closest.gameObject.getData("hit_points"));
               closest.gameObject.setData({ hasUiOpen: true });
-              console.log("is UI open? ", closest.gameObject.getData('hasUiOpen'));
               this.uiBackground2.visible = true;
               this.skeleton_soldier_portrait.visible = true;
               this.healthBarEmpty2.visible = true;
               this.healthBar2.visible = true;
               this.uiText2.setText([
-                "HP: " + this.skeleton_soldier.getData("hit_points") + "/" + this.skeleton_soldier.getData("total_hit_points"),
-                "Movement: " + this.skeleton_soldier.getData("movement"),
+                "HP: " + closest.gameObject.getData("hit_points") + "/" + this.skeleton_soldier.getData("total_hit_points"),
+                "Movement: " + closest.gameObject.getData("movement"),
               ]);
           }
             // Click a button to confirm your attack and launch an attack on the enemy. It should only work if you select a valid tile.
@@ -1062,6 +1062,10 @@ export default class MainScene extends Phaser.Scene {
             "Movement: " + this.skeleton_soldier.getData("movement"),
           ]);
           this.setMeterPercentage2(closest.gameObject.getData("hit_points"));
+          this.selectedUnit.gameObject.setData({ hasAttacked: true });
+          this.selectedUnit.gameObject.setData({ hasAttackTiles: false });
+          this.selectedUnit.gameObject.setData({ turn: false });
+          closest.gameObject.setData({ hasUiOpen: false });
           if (closest.gameObject.getData("hit_points") === 0) {
             closest.gameObject.play("skeleton_damage_anim1");
             closest.gameObject.playAfterRepeat("skeleton_laying_down_anim1");
