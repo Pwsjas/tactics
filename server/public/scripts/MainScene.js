@@ -143,8 +143,8 @@ export default class MainScene extends Phaser.Scene {
     //   { frameWidth: 32, frameHeight: 32 }
     // );
     // this.load.spritesheet(
-    //   "skeleton_upright_idle",
-    //   "assets/skeleton/skeleton-upright-idle.png",
+    //   "skeleton_upleft_idle",
+    //   "assets/skeleton/skeleton-upleft-idle.png",
     //   { frameWidth: 32, frameHeight: 32 }
     // );
     this.load.spritesheet(
@@ -425,8 +425,8 @@ export default class MainScene extends Phaser.Scene {
     });
 
     // Play those animations.
-    this.skeleton_soldier.play("skeleton_anim1");
-    this.skeleton_soldier2.play("skeleton_anim2");
+    this.skeleton_soldier.play("skeleton_idle_anim1");
+    this.skeleton_soldier2.play("skeleton_idle_anim2");
     this.dragon_knight_portrait.play("dragon_knight_idle_anim1");
     this.skeleton_soldier_portrait.play("skeleton_idle_anim2");
 
@@ -485,11 +485,12 @@ export default class MainScene extends Phaser.Scene {
     this.allies = [this.dragon_knight1, this.dragon_knight2, this.dragon_knight3, this.dragon_knight4]
   };
 
-  // Functions that determines the length of the health bar.
+  // Functions that determines the length of the health bar for allies.
   setMeterPercentage1(percent = 100) {
     const width = 100 * percent / 100;
 	  this.healthBar1.displayWidth = width;
   };
+  // And for enemies.
   setMeterPercentage2(percent = 100) {
     const width = 100 * percent / 75;
     this.healthBar2.displayWidth = width;
@@ -599,7 +600,7 @@ export default class MainScene extends Phaser.Scene {
       }
 
       //calculate direction
-      let direction = findDirection(destination, {x: this.tracker.getData('coordX'), y: this.tracker.getData('coordY')}); 
+      let direction = findDirection(destination, {x: this.tracker.getData('coordX'), y: this.tracker.getData('coordY')});
 
       //Check valid tile
       if (this.legalMovement.filter((coords) => coords.x === this.tracker.getData("coordX") && coords.y === this.tracker.getData("coordY")).length <= 0) {
@@ -966,8 +967,9 @@ export default class MainScene extends Phaser.Scene {
           }
         }
       
-
-      // Attacking
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      // Attacking //
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
       // Check if unit has moved
       } else if (this.selectedUnit.gameObject.getData('hasMoved') && !this.selectedUnit.gameObject.getData('hasAttacked')) {
@@ -1012,6 +1014,7 @@ export default class MainScene extends Phaser.Scene {
             coords.y === this.player.getData("coordY")
             ).length > 0) {
               // Open the enemy UI, check the UI is open.
+              // Turn the character in the direction of the enemy.
               this.setMeterPercentage2(closest.gameObject.getData("hit_points"));
               closest.gameObject.setData({ hasUiOpen: true });
               this.uiBackground2.visible = true;
@@ -1042,7 +1045,6 @@ export default class MainScene extends Phaser.Scene {
           this.setMeterPercentage2(closest.gameObject.getData("hit_points"));
           this.selectedUnit.gameObject.setData({ hasAttacked: true });
           this.selectedUnit.gameObject.setData({ hasAttackTiles: false });
-          this.selectedUnit.gameObject.setData({ turn: false });
           closest.gameObject.setData({ hasUiOpen: false });
           if (closest.gameObject.getData("hit_points") === 0) {
             closest.gameObject.play("skeleton_damage_anim1");
@@ -1056,7 +1058,6 @@ export default class MainScene extends Phaser.Scene {
               callback: () => {
                 this.selectedUnit.gameObject.setData({ hasAttacked: true });
                 this.selectedUnit.gameObject.setData({ hasAttackTiles: false });
-                this.selectedUnit.gameObject.setData({ turn: false });
                 closest.gameObject.setData({ hasUiOpen: false });
                 this.uiBackground2.visible = false;
                 this.skeleton_soldier_portrait.visible = false;
