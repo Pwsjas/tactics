@@ -23,7 +23,7 @@ export default class MainScene extends Phaser.Scene {
 
   // Preload assets into the game engine.
   preload() {
-    // Preload the background
+    // Preload background
     this.load.image('background', 'assets/background.png');
 
     //Preload UI
@@ -604,18 +604,7 @@ export default class MainScene extends Phaser.Scene {
       //Check valid tile
       if (this.legalMovement.filter((coords) => coords.x === this.tracker.getData("coordX") && coords.y === this.tracker.getData("coordY")).length <= 0) {
         //set tracker to prevDirection
-        if (prevDirection === 'left') {
-          moveTracker('left');
-        }
-        if (prevDirection === 'right') {
-          moveTracker('right');
-        }
-        if (prevDirection === 'up') {
-          moveTracker('up');
-        }
-        if (prevDirection === 'down') {
-          moveTracker('down');
-        }
+        moveTracker(prevDirection);
         return;
       }
 
@@ -882,16 +871,16 @@ export default class MainScene extends Phaser.Scene {
             }
             
             moveTracker('up');
-            findPath('down', 0, 5);
+            findPath('down', 0, this.selectedUnit.gameObject.getData('movement')+ 1);
     
             moveTracker('down');
-            findPath('up', 0, 5);
+            findPath('up', 0, this.selectedUnit.gameObject.getData('movement')+ 1);
     
             moveTracker('right');
-            findPath('left', 0, 5); 
+            findPath('left', 0, this.selectedUnit.gameObject.getData('movement')+ 1); 
     
             moveTracker('left');
-            findPath('right', 0, 5);
+            findPath('right', 0, this.selectedUnit.gameObject.getData('movement')+ 1);
 
             this.selectedUnit.gameObject.setData({hasMovementTiles: true});
           }
@@ -913,43 +902,43 @@ export default class MainScene extends Phaser.Scene {
             const decideOrientation = () => {
               if (direction === 'up') {
                 moveTracker('up');
-                if (findMovementPath('down', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                if (findMovementPath('down', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
                 moveTracker('left');
-                if (findMovementPath('right', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                if (findMovementPath('right', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
                 moveTracker('down');
-                if (findMovementPath('up', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                if (findMovementPath('up', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
                 moveTracker('right');
-                if (findMovementPath('left', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                if (findMovementPath('left', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
               }
               if (direction === 'down') {
                 moveTracker('down');
-                if (findMovementPath('up', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                if (findMovementPath('up', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
                 moveTracker('right');
-                if (findMovementPath('left', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                if (findMovementPath('left', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
                 moveTracker('up');
-                if (findMovementPath('down', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                if (findMovementPath('down', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
                 moveTracker('left');
-                if (findMovementPath('right', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                if (findMovementPath('right', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
               }
               if (direction === 'right') {
                 moveTracker('right');
-                if (findMovementPath('left', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                if (findMovementPath('left', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
                 moveTracker('up');
-                if (findMovementPath('down', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                if (findMovementPath('down', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
                 moveTracker('left');
-                if (findMovementPath('right', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                if (findMovementPath('right', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
                 moveTracker('down');
-                if (findMovementPath('up', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                if (findMovementPath('up', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
               }
               if (direction === 'left') {
                 moveTracker('left');
-                if (findMovementPath('right', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                if (findMovementPath('right', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
                 moveTracker('down');
-                if (findMovementPath('up', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                if (findMovementPath('up', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
                 moveTracker('right');
-                if (findMovementPath('left', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                if (findMovementPath('left', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
                 moveTracker('up');
-                if (findMovementPath('down', 0, 5, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                if (findMovementPath('down', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
               }
             }
             decideOrientation();
