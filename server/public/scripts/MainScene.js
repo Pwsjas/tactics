@@ -5,6 +5,7 @@ export default class MainScene extends Phaser.Scene {
     super("MainScene");
 
     let allies;
+    let alliesGroup;
     let enemies;
     let coordinateGrid;
     let selectedUnit;
@@ -19,6 +20,18 @@ export default class MainScene extends Phaser.Scene {
     let attackTiles = [];
     let attackGrid = [];
     let isMoving = false;
+
+    let phase;
+    let enemyCount;
+    let enemyTotal;
+    let sortedLegalMovement;
+    let closestMove;
+    let hasMoved;
+    let hasAttacked;
+    let enemyPrep;
+
+    let closestAlly;
+    let closestLowHealthAlly
   }
 
   // Preload assets into the game engine.
@@ -137,16 +150,16 @@ export default class MainScene extends Phaser.Scene {
       "assets/skeleton/skeleton-downleft-idle.png",
       { frameWidth: 32, frameHeight: 32 }
     );
-    // this.load.spritesheet(
-    //   "skeleton_upright_idle",
-    //   "assets/skeleton/skeleton-upright-idle.png",
-    //   { frameWidth: 32, frameHeight: 32 }
-    // );
-    // this.load.spritesheet(
-    //   "skeleton_upright_idle",
-    //   "assets/skeleton/skeleton-upright-idle.png",
-    //   { frameWidth: 32, frameHeight: 32 }
-    // );
+    this.load.spritesheet(
+      "skeleton_upright_idle",
+      "assets/skeleton/skeleton-upright-idle.png",
+      { frameWidth: 32, frameHeight: 32 }
+    );
+    this.load.spritesheet(
+      "skeleton_upleft_idle",
+      "assets/skeleton/skeleton-upleft-idle.png",
+      { frameWidth: 32, frameHeight: 32 }
+    );
     this.load.spritesheet(
       "skeleton_downright_damage",
       "assets/skeleton/skeleton-downright-damage.png",
@@ -237,14 +250,14 @@ export default class MainScene extends Phaser.Scene {
 
     // Assign placement for skeleton game object on the map.
     this.skeleton_soldier = this.physics.add.sprite(
-      this.coordinateGrid[7][2].x,
-      this.coordinateGrid[7][2].y,
+      this.coordinateGrid[4][4].x,
+      this.coordinateGrid[4][4].y,
       "skeleton_downright_idle"
     );
 
     this.skeleton_soldier2 = this.physics.add.sprite(
-      this.coordinateGrid[3][4].x,
-      this.coordinateGrid[3][4].y,
+      this.coordinateGrid[4][10].x,
+      this.coordinateGrid[4][10].y,
       "skeleton_downleft_idle"
     );
 
@@ -294,9 +307,17 @@ export default class MainScene extends Phaser.Scene {
       movement: 3,
       total_hit_points: 75,
       hit_points: 75,
+      hasMoved: false,
       hasUiOpen: false,
-      coordX: 7,
-      coordY: 2,
+      hasAttacked: false,
+      coordX: 4,
+      coordY: 4,
+      animations: {
+        down: `skeleton_idle_anim1`,
+        left: `skeleton_idle_anim2`,
+        right: `skeleton_idle_anim3`,
+        up: `skeleton_idle_anim4`
+      }
     });
 
     this.skeleton_soldier2.setData({
@@ -305,9 +326,17 @@ export default class MainScene extends Phaser.Scene {
       movement: 3,
       total_hit_points: 75,
       hit_points: 75,
+      hasMoved: false,
       hasUiOpen: false,
-      coordX: 3,
-      coordY: 4,
+      hasAttacked: false,
+      coordX: 4,
+      coordY: 10,
+      animations: {
+        down: `skeleton_idle_anim1`,
+        left: `skeleton_idle_anim2`,
+        right: `skeleton_idle_anim3`,
+        up: `skeleton_idle_anim4`
+      }
     });
 
     // Create animations for the sprites based on the spritesheet for the dragon knight.
@@ -411,6 +440,20 @@ export default class MainScene extends Phaser.Scene {
     });
 
     this.anims.create({
+      key: "skeleton_idle_anim3",
+      frames: this.anims.generateFrameNumbers("skeleton_upright_idle"),
+      frameRate: 5,
+      repeat: -1,
+    });
+
+    this.anims.create({
+      key: "skeleton_idle_anim4",
+      frames: this.anims.generateFrameNumbers("skeleton_upleft_idle"),
+      frameRate: 5,
+      repeat: -1,
+    });
+
+    this.anims.create({
       key: "skeleton_damage_anim1",
       frames: this.anims.generateFrameNumbers("skeleton_downright_damage"),
       frameRate: 5,
@@ -425,8 +468,8 @@ export default class MainScene extends Phaser.Scene {
     });
 
     // Play those animations.
-    this.skeleton_soldier.play("skeleton_anim1");
-    this.skeleton_soldier2.play("skeleton_anim2");
+    this.skeleton_soldier.play("skeleton_idle_anim1");
+    this.skeleton_soldier2.play("skeleton_idle_anim2");
     this.dragon_knight_portrait.play("dragon_knight_idle_anim1");
     this.skeleton_soldier_portrait.play("skeleton_idle_anim2");
 
@@ -441,6 +484,7 @@ export default class MainScene extends Phaser.Scene {
       p: Phaser.Input.Keyboard.KeyCodes.P,
       k: Phaser.Input.Keyboard.KeyCodes.K,
       l: Phaser.Input.Keyboard.KeyCodes.L,
+      z: Phaser.Input.Keyboard.KeyCodes.Z,
     });
 
     this.enemies = [this.skeleton_soldier, this.skeleton_soldier2];
@@ -465,6 +509,7 @@ export default class MainScene extends Phaser.Scene {
         hit_points: 100,
         hasMoved: false,
         hasMovementTiles: false,
+        hasAttacked: false,
         coordX: x,
         coordY: y,
         animations: {
@@ -472,17 +517,45 @@ export default class MainScene extends Phaser.Scene {
           left: `${unitType}_idle_anim2`,
           right: `${unitType}_idle_anim3`,
           up: `${unitType}_idle_anim4`
+        },
+        attack_animations: {
+          down: `${unitType}_attacking_anim1`,
+          left: `${unitType}_attacking_anim2`,
+          right: `${unitType}_attacking_anim3`,
+          up: `${unitType}_attacking_anim4`
+        },
+        damage_animations: {
+          down: `${unitType}_damage_anim1`,
+          left: `${unitType}_damage_anim2`,
+          right: `${unitType}_damage_anim3`,
+          up: `${unitType}_damage_anim4`
+        },
+        laying_down_animations: {
+          down: `${unitType}_laying_down_anim1`,
+          left: `${unitType}_laying_down_anim2`,
+          right: `${unitType}_laying_down_anim3`,
+          up: `${unitType}_laying_down_anim4`
         }
       });
       newUnit.play(newUnit.data.values.animations.down);
 
       return newUnit;
     }
-    this.dragon_knight1 = generateUnit('dragon_knight', 5, 2);
-    this.dragon_knight2 = generateUnit('dragon_knight', 3, 8);
-    this.dragon_knight3 = generateUnit('dragon_knight', 1, 1);
-    this.dragon_knight4 = generateUnit('dragon_knight', 12, 12);
+    this.dragon_knight1 = generateUnit('dragon_knight', 3, 3);
+    this.dragon_knight2 = generateUnit('dragon_knight', 2, 2);
+    this.dragon_knight3 = generateUnit('dragon_knight', 5, 3);
+    this.dragon_knight4 = generateUnit('dragon_knight', 0, 0);
+    this.alliesGroup = this.physics.add.group();
+    this.alliesGroup.add(this.dragon_knight1)
+    this.alliesGroup.add(this.dragon_knight2)
+    this.alliesGroup.add(this.dragon_knight3)
+    this.alliesGroup.add(this.dragon_knight4)
+    
     this.allies = [this.dragon_knight1, this.dragon_knight2, this.dragon_knight3, this.dragon_knight4]
+
+    this.phase = 'player';
+    this.enemyCount = 0;
+    this.enemyTotal = this.enemies.length;
   };
 
   // Functions that determines the length of the health bar.
@@ -494,8 +567,25 @@ export default class MainScene extends Phaser.Scene {
     const width = 100 * percent / 75;
     this.healthBar2.displayWidth = width;
   }
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  // UPDATE //
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
   update() {
+    if (Phaser.Input.Keyboard.JustDown(this.inputKeys.z)) {
+      if (this.phase === 'player') {
+        this.phase = 'enemy';
+      } else {
+        this.phase = 'player';
+      }
+      this.hasMoved = false;
+      this.hasAttacked - false;
+      this.legalMovement = undefined;
+      console.log(this.coordinateGrid[3][2].x, this.coordinateGrid[3][2].y)
+      console.log(this.dragon_knight1.x, this.dragon_knight1.y)
+    }
+    let closestTracker = this.physics.closest(this.tracker, Phaser.GameObject);
+    
     //Move the Tracker object up down left or right given a direction
     const moveTracker = (direction) => {
       if (direction === 'left') {
@@ -529,6 +619,7 @@ export default class MainScene extends Phaser.Scene {
     }
 
     const findDirection = (destination, location) => {
+      console.log(destination, location);
       if (destination.x - location.x > 0 && destination.y - location.y > 0) {
         return 'left';
       } else if (destination.x - location.x > 0 && destination.y - location.y < 0) {
@@ -551,35 +642,90 @@ export default class MainScene extends Phaser.Scene {
     //Animate a unit's movement to a destination, given sequence of tiles and the unit
     const moveUnit = (unit, sequence, totalMoves) => {
       let direction = findDirection(sequence[totalMoves], {x: unit.gameObject.getData('coordX'), y: unit.gameObject.getData('coordY')})
+      if (!direction) {
+        unit.gameObject.setData({direction: null})
+      } else {
+        unit.gameObject.setData({direction});
+      }
       unit.gameObject.play(`${unit.gameObject.data.values.animations[direction]}`);
-      unit.setVelocity(
-        (this.coordinateGrid[sequence[totalMoves].x][sequence[totalMoves].y].x - this.coordinateGrid[unit.gameObject.data.values.coordX][unit.gameObject.data.values.coordY].x),
-        (this.coordinateGrid[sequence[totalMoves].x][sequence[totalMoves].y].y - this.coordinateGrid[unit.gameObject.data.values.coordX][unit.gameObject.data.values.coordY].y)
-      )
       unit.gameObject.setData({coordX: sequence[totalMoves].x, coordY: sequence[totalMoves].y})
+    }
+    const moveEnemyUnit = (unit, sequence, totalMoves) => {
+      let direction = findDirection(sequence[totalMoves], {x: unit.getData('coordX'), y: unit.getData('coordY')});
+      if (!direction) {
+        unit.setData({direction: null})
+      } else {
+        unit.setData({direction});
+      }
+      unit.play(`${unit.data.values.animations[direction]}`);
+      unit.setData({coordX: sequence[totalMoves].x, coordY: sequence[totalMoves].y})
+    }
+
+    const movePixels = (unit) => {
+      if (unit.getData('direction') === 'up') {
+        unit.x -= 0.5;
+        unit.y -= 0.25;
+      }
+      if (unit.getData('direction') === 'down') {
+        unit.x += 0.5;
+        unit.y += 0.25;
+      }
+      if (unit.getData('direction') === 'left') {
+        unit.x -= 0.5;
+        unit.y += 0.25;
+      }
+      if (unit.getData('direction') === 'right') {
+        unit.x += 0.5;
+        unit.y -= 0.25;
+      }
     }
 
     //If a unit is moving, handle velocity
     if (this.isMoving) {
-      if (this.tileMoves === 0) {
-        if (
-          Math.round(this.movingUnit.gameObject.x) === this.coordinateGrid[this.pathingArray[this.tileMoves].x][this.pathingArray[this.tileMoves].y].x &&
-          Math.round(this.movingUnit.gameObject.y) === this.coordinateGrid[this.pathingArray[this.tileMoves].x][this.pathingArray[this.tileMoves].y].y
-          ) {
-            this.movingUnit.setVelocity(0,0);
-            this.isMoving = false;
-            this.hasMoved = true;
-            this.movingUnit.gameObject.setData({ hasMoved: true });
-          }
+      //ENEMIES
+      if (!this.movingUnit.gameObject) {
+        movePixels(this.movingUnit);
+        if (this.tileMoves === 0) {
+          if (
+            Math.round(this.movingUnit.x) === this.coordinateGrid[this.pathingArray[this.tileMoves].x][this.pathingArray[this.tileMoves].y].x &&
+            Math.round(this.movingUnit.y) === this.coordinateGrid[this.pathingArray[this.tileMoves].x][this.pathingArray[this.tileMoves].y].y
+            ) {
+              this.isMoving = false;
+              this.hasMoved = true;
+              this.movingUnit.setData({ hasMoved: true });
+              movePixels(this.movingUnit);
+            }
+        } else {
+          if (
+            Math.round(this.movingUnit.x) === this.coordinateGrid[this.pathingArray[this.tileMoves].x][this.pathingArray[this.tileMoves].y].x &&
+            Math.round(this.movingUnit.y) === this.coordinateGrid[this.pathingArray[this.tileMoves].x][this.pathingArray[this.tileMoves].y].y
+            ) { 
+                this.tileMoves = this.tileMoves - 1;
+                moveEnemyUnit(this.movingUnit, this.pathingArray, this.tileMoves);
+            }
+        }
       } else {
-        if (
-          Math.round(this.movingUnit.gameObject.x) === this.coordinateGrid[this.pathingArray[this.tileMoves].x][this.pathingArray[this.tileMoves].y].x &&
-          Math.round(this.movingUnit.gameObject.y) === this.coordinateGrid[this.pathingArray[this.tileMoves].x][this.pathingArray[this.tileMoves].y].y
-          ) { 
-              this.tileMoves = this.tileMoves - 1;
-              this.movingUnit.setVelocity(0,0);
-              moveUnit(this.movingUnit, this.pathingArray, this.tileMoves)
-          }
+        //PLAYERS
+        movePixels(this.movingUnit.gameObject);
+        if (this.tileMoves === 0) {
+          if (
+            Math.round(this.movingUnit.gameObject.x) === this.coordinateGrid[this.pathingArray[this.tileMoves].x][this.pathingArray[this.tileMoves].y].x &&
+            Math.round(this.movingUnit.gameObject.y) === this.coordinateGrid[this.pathingArray[this.tileMoves].x][this.pathingArray[this.tileMoves].y].y
+            ) {
+              this.isMoving = false;
+              this.hasMoved = true;
+              this.movingUnit.gameObject.setData({ hasMoved: true });
+              movePixels(this.movingUnit.gameObject);
+            }
+        } else {
+          if (
+            Math.round(this.movingUnit.gameObject.x) === this.coordinateGrid[this.pathingArray[this.tileMoves].x][this.pathingArray[this.tileMoves].y].x &&
+            Math.round(this.movingUnit.gameObject.y) === this.coordinateGrid[this.pathingArray[this.tileMoves].x][this.pathingArray[this.tileMoves].y].y
+            ) { 
+                this.tileMoves = this.tileMoves - 1;
+                moveUnit(this.movingUnit, this.pathingArray, this.tileMoves);
+            }
+        }
       }
     }
 
@@ -729,370 +875,693 @@ export default class MainScene extends Phaser.Scene {
       return;
     }
 
-    console.log(this.player.getData("coordX"), this.player.getData("coordY"));
-    let closest = this.physics.closest(this.player, Phaser.GameObject);
-    let closestTracker = this.physics.closest(this.tracker, Phaser.GameObject);
-
-    if (Phaser.Input.Keyboard.JustDown(this.inputKeys.up)) {
-      this.player.x -= 16;
-      this.player.y -= 8;
-      this.player.setData({ coordX: this.player.getData("coordX") - 1 });
-    }
-    if (Phaser.Input.Keyboard.JustDown(this.inputKeys.left)) {
-      this.player.x -= 16;
-      this.player.y += 8;
-      this.player.setData({ coordY: this.player.getData("coordY") + 1 });
-    }
-    if (Phaser.Input.Keyboard.JustDown(this.inputKeys.down)) {
-      this.player.x += 16;
-      this.player.y += 8;
-      this.player.setData({ coordX: this.player.getData("coordX") + 1 });
-    }
-    if (Phaser.Input.Keyboard.JustDown(this.inputKeys.right)) {
-      this.player.x += 16;
-      this.player.y -= 8;
-      this.player.setData({ coordY: this.player.getData("coordY") - 1 });
-    }
-
-    // Coordinates adjustment to target individual character sprites on the map.
-    if (this.player.x === closest.x + 16 && this.player.y === closest.y + 16 && this.allies.includes(closest.gameObject)) {
-      if (Phaser.Input.Keyboard.JustDown(this.inputKeys.q)) {
-        this.selectedUnit = closest;
-        this.selectedUnit.gameObject.setData({ hasUiOpen: true });
+    //Findpath
+    const findPath = (prevDirection, moveCount, totalMoves) => {
+      closestTracker = this.physics.closest(this.tracker, Phaser.GameObject);
+      //return if moveCount reached
+      if (moveCount === totalMoves) {
+        moveTracker(prevDirection);
+        return;
       }
+
+      //Check if new location is invalid
+      if ((
+        this.tracker.x === closestTracker.gameObject.x && this.tracker.y === closestTracker.gameObject.y)
+        ||
+        (this.invalidTiles.filter((coords) => coords.x === this.tracker.getData("coordX") && coords.y === this.tracker.getData("coordY")).length > 0
+        ||
+        this.tracker.getData('coordX') < 0
+        ||
+        this.tracker.getData('coordY') < 0
+        ||
+        this.tracker.getData('coordX') > 15
+        ||
+        this.tracker.getData('coordY') > 15
+        )) {
+        //set tracker to prevDirection
+        moveTracker(prevDirection);
+        return;
+      }
+
+      //Repeat in every  direciton, except origin direction
+      if (prevDirection === 'left') {
+        moveTracker('up');
+        findPath('down', moveCount + 1, totalMoves);
+
+        moveTracker('right');
+        findPath('left', moveCount + 1, totalMoves);
+
+        moveTracker('down');
+        findPath('up', moveCount + 1, totalMoves);
+      }
+      if (prevDirection === 'right') {
+        moveTracker('up');
+        findPath('down', moveCount + 1, totalMoves);
+
+        moveTracker('left');
+        findPath('right', moveCount + 1, totalMoves);
+
+        moveTracker('down');
+        findPath('up', moveCount + 1, totalMoves);
+      }
+      if (prevDirection === 'down') {
+        moveTracker('up');
+        findPath('down', moveCount + 1, totalMoves);
+
+        moveTracker('right');
+        findPath('left', moveCount + 1, totalMoves);
+
+        moveTracker('left');
+        findPath('right', moveCount + 1, totalMoves);
+      }
+      if (prevDirection === 'up') {
+        moveTracker('left');
+        findPath('right', moveCount + 1, totalMoves);
+
+        moveTracker('right');
+        findPath('left', moveCount + 1, totalMoves);
+
+        moveTracker('down');
+        findPath('up', moveCount + 1, totalMoves);
+      }
+      //Set Tracker to prevDirection
+      moveTracker(prevDirection);
+      
+      //Check if sprite already exists
+      if (this.legalMovement.filter((coords) => coords.x === this.tracker.getData("coordX") && coords.y === this.tracker.getData("coordY")).length > 0) {
+        return;
+      }
+
+      //Add location to legalMovement
+      this.legalMovement.push({x: this.tracker.getData('coordX'), y: this.tracker.getData('coordY')});
+
+      //Render sprite and add it to this.movementGrid
+      if (this.phase === 'player') {
+        console.log(this.tracker.getData('coordX'), this.tracker.getData('coordY'))
+        console.log(this.coordinateGrid[this.tracker.getData('coordX')][this.tracker.getData('coordY')].x, this.coordinateGrid[this.tracker.getData('coordX')][this.tracker.getData('coordY')].y + 16)
+        this.movementGrid.push(this.add.sprite(
+          this.coordinateGrid[this.tracker.getData('coordX')][this.tracker.getData('coordY')].x,
+          this.coordinateGrid[this.tracker.getData('coordX')][this.tracker.getData('coordY')].y + 16,
+          "movement-tile"
+        ));
+      }
+
+      return;
     }
 
-    if (this.selectedUnit) {
-
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    // MOVEMENT //
-    ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-      //check if unit has moved this turn
-      if (!this.selectedUnit.gameObject.getData("hasMoved")) {
-        //check if unit has movement tiles rendered around them
-        if (!this.selectedUnit.gameObject.getData("hasMovementTiles")) {
-          if (Phaser.Input.Keyboard.JustDown(this.inputKeys.p)) {
-            this.tracker.setData({coordX: this.selectedUnit.gameObject.getData("coordX"), coordY: this.selectedUnit.gameObject.getData("coordY")});
-            this.tracker.x = this.selectedUnit.x;
-            this.tracker.y = this.selectedUnit.y;
-            this.legalMovement = [];
-            this.movementGrid = [];
-    
-            const findPath = (prevDirection, moveCount, totalMoves) => {
-              closestTracker = this.physics.closest(this.tracker, Phaser.GameObject);
-              //return if moveCount reached
-              if (moveCount === totalMoves) {
-                moveTracker(prevDirection);
-                return;
-              }
-    
-              //Check if new location is invalid
-              if ((
-                this.tracker.x === closestTracker.gameObject.x && this.tracker.y === closestTracker.gameObject.y)
-                ||
-                (this.invalidTiles.filter((coords) => coords.x === this.tracker.getData("coordX") && coords.y === this.tracker.getData("coordY")).length > 0
-                ||
-                this.tracker.getData('coordX') < 0
-                ||
-                this.tracker.getData('coordY') < 0
-                ||
-                this.tracker.getData('coordX') > 15
-                ||
-                this.tracker.getData('coordY') > 15
-                )) {
-                //set tracker to prevDirection
-                moveTracker(prevDirection);
-                return;
-              }
-    
-              //Repeat in every  direciton, except origin direction
-              if (prevDirection === 'left') {
-                moveTracker('up');
-                findPath('down', moveCount + 1, totalMoves);
-    
-                moveTracker('right');
-                findPath('left', moveCount + 1, totalMoves);
-    
-                moveTracker('down');
-                findPath('up', moveCount + 1, totalMoves);
-              }
-              if (prevDirection === 'right') {
-                moveTracker('up');
-                findPath('down', moveCount + 1, totalMoves);
-    
-                moveTracker('left');
-                findPath('right', moveCount + 1, totalMoves);
-    
-                moveTracker('down');
-                findPath('up', moveCount + 1, totalMoves);
-              }
-              if (prevDirection === 'down') {
-                moveTracker('up');
-                findPath('down', moveCount + 1, totalMoves);
-    
-                moveTracker('right');
-                findPath('left', moveCount + 1, totalMoves);
-    
-                moveTracker('left');
-                findPath('right', moveCount + 1, totalMoves);
-              }
-              if (prevDirection === 'up') {
-                moveTracker('left');
-                findPath('right', moveCount + 1, totalMoves);
-    
-                moveTracker('right');
-                findPath('left', moveCount + 1, totalMoves);
-    
-                moveTracker('down');
-                findPath('up', moveCount + 1, totalMoves);
-              }
-              //Set Tracker to prevDirection
-              moveTracker(prevDirection);
+    if (this.phase === 'player') {
+      let closest = this.physics.closest(this.player, Phaser.GameObject);
+  
+      if (Phaser.Input.Keyboard.JustDown(this.inputKeys.up)) {
+        this.player.x -= 16;
+        this.player.y -= 8;
+        this.player.setData({ coordX: this.player.getData("coordX") - 1 });
+      }
+      if (Phaser.Input.Keyboard.JustDown(this.inputKeys.left)) {
+        this.player.x -= 16;
+        this.player.y += 8;
+        this.player.setData({ coordY: this.player.getData("coordY") + 1 });
+      }
+      if (Phaser.Input.Keyboard.JustDown(this.inputKeys.down)) {
+        this.player.x += 16;
+        this.player.y += 8;
+        this.player.setData({ coordX: this.player.getData("coordX") + 1 });
+      }
+      if (Phaser.Input.Keyboard.JustDown(this.inputKeys.right)) {
+        this.player.x += 16;
+        this.player.y -= 8;
+        this.player.setData({ coordY: this.player.getData("coordY") - 1 });
+      }
+  
+      // Coordinates adjustment to target individual character sprites on the map.
+      if (this.player.x === closest.x + 16 && this.player.y === closest.y + 16 && this.allies.includes(closest.gameObject)) {
+        if (Phaser.Input.Keyboard.JustDown(this.inputKeys.q)) {
+          this.selectedUnit = closest;
+          this.selectedUnit.gameObject.setData({ hasUiOpen: true });
+        }
+      }
+      ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      // PLAYER //
+      ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+      if (this.selectedUnit) {
+  
+      ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      // MOVEMENT //
+      ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+  
+        //check if unit has moved this turn
+        if (!this.selectedUnit.gameObject.getData("hasMoved")) {
+          //check if unit has movement tiles rendered around them
+          if (!this.selectedUnit.gameObject.getData("hasMovementTiles")) {
+            if (Phaser.Input.Keyboard.JustDown(this.inputKeys.p)) {
+              this.tracker.setData({coordX: this.selectedUnit.gameObject.getData("coordX"), coordY: this.selectedUnit.gameObject.getData("coordY")});
+              this.tracker.x = this.selectedUnit.x;
+              this.tracker.y = this.selectedUnit.y;
+              this.legalMovement = [];
+              this.movementGrid = [];
               
-              //Check if sprite already exists
-              if (this.legalMovement.filter((coords) => coords.x === this.tracker.getData("coordX") && coords.y === this.tracker.getData("coordY")).length > 0) {
-                return;
-              }
-    
-              //Add location to legalMovement
-              this.legalMovement.push({x: this.tracker.getData('coordX'), y: this.tracker.getData('coordY')});
-    
-              //Render sprite and add it to this.movementGrid
-              console.log(this.tracker.getData('coordX'), this.tracker.getData('coordY'))
-              console.log(this.coordinateGrid[this.tracker.getData('coordX')][this.tracker.getData('coordY')].x, this.coordinateGrid[this.tracker.getData('coordX')][this.tracker.getData('coordY')].y + 16)
-              this.movementGrid.push(this.add.sprite(
-                this.coordinateGrid[this.tracker.getData('coordX')][this.tracker.getData('coordY')].x,
-                this.coordinateGrid[this.tracker.getData('coordX')][this.tracker.getData('coordY')].y + 16,
-                "movement-tile"
-              ));
-    
-              return;
+              moveTracker('up');
+              findPath('down', 0, this.selectedUnit.gameObject.getData('movement')+ 1);
+      
+              moveTracker('down');
+              findPath('up', 0, this.selectedUnit.gameObject.getData('movement')+ 1);
+      
+              moveTracker('right');
+              findPath('left', 0, this.selectedUnit.gameObject.getData('movement')+ 1); 
+      
+              moveTracker('left');
+              findPath('right', 0, this.selectedUnit.gameObject.getData('movement')+ 1);
+  
+              this.selectedUnit.gameObject.setData({hasMovementTiles: true});
             }
-            
-            moveTracker('up');
-            findPath('down', 0, this.selectedUnit.gameObject.getData('movement')+ 1);
-    
-            moveTracker('down');
-            findPath('up', 0, this.selectedUnit.gameObject.getData('movement')+ 1);
-    
-            moveTracker('right');
-            findPath('left', 0, this.selectedUnit.gameObject.getData('movement')+ 1); 
-    
-            moveTracker('left');
-            findPath('right', 0, this.selectedUnit.gameObject.getData('movement')+ 1);
+          }
+  
+          if (Phaser.Input.Keyboard.JustDown(this.inputKeys.q)) {
+            //Confirm movement is valid
+            if (
+              this.legalMovement.filter(
+                (coords) =>
+                  coords.x === this.player.getData("coordX") &&
+                  coords.y === this.player.getData("coordY")
+              ).length > 0
+            ) {
+              //findMovementPath
+              this.pathingArray = [];
+              let direction = findDirection({x: this.player.getData('coordX'), y: this.player.getData('coordY')}, {x: this.selectedUnit.gameObject.getData('coordX'), y: this.selectedUnit.gameObject.getData('coordY')})
+              //Decide the starting direction of the findMovementPath algorithm
+              const decideOrientation = () => {
+                if (this.selectedUnit.gameObject.getData('coordX') === this.player.getData('coordX') && this.selectedUnit.gameObject.getData('coordY') === this.player.getData('coordY')) {
+                  this.pathingArray.push({ x: this.player.getData('coordX'), y: this.player.getData('coordY')});
+                  this.selectedUnit.gameObject.setData({direction: null});
+                  return;
+                }
 
-            this.selectedUnit.gameObject.setData({hasMovementTiles: true});
+                if (direction === 'up') {
+                  moveTracker('up');
+                  if (findMovementPath('down', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                  moveTracker('left');
+                  if (findMovementPath('right', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                  moveTracker('down');
+                  if (findMovementPath('up', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                  moveTracker('right');
+                  if (findMovementPath('left', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                }
+                if (direction === 'down') {
+                  moveTracker('down');
+                  if (findMovementPath('up', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                  moveTracker('right');
+                  if (findMovementPath('left', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                  moveTracker('up');
+                  if (findMovementPath('down', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                  moveTracker('left');
+                  if (findMovementPath('right', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                }
+                if (direction === 'right') {
+                  moveTracker('right');
+                  if (findMovementPath('left', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                  moveTracker('up');
+                  if (findMovementPath('down', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                  moveTracker('left');
+                  if (findMovementPath('right', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                  moveTracker('down');
+                  if (findMovementPath('up', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                }
+                if (direction === 'left') {
+                  moveTracker('left');
+                  if (findMovementPath('right', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                  moveTracker('down');
+                  if (findMovementPath('up', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                  moveTracker('right');
+                  if (findMovementPath('left', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                  moveTracker('up');
+                  if (findMovementPath('down', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                }
+              }
+              decideOrientation();
+              console.log(this.pathingArray);
+  
+              //Cleanup movement grid
+              for (const sprite of this.movementGrid) {
+                sprite.destroy();
+              }
+              this.tileMoves = this.pathingArray.length - 1;
+              this.movingUnit = this.selectedUnit;
+              moveUnit(this.selectedUnit, this.pathingArray, this.tileMoves)
+              this.isMoving = true;
+              this.legalMovement = [];
+            }
+          }
+        
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        // Attacking //
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        // Check if unit has moved
+        } else if (this.selectedUnit.gameObject.getData('hasMoved') && !this.selectedUnit.gameObject.getData('hasAttacked')) {
+          if (!this.selectedUnit.gameObject.getData("hasAttackTiles")) {
+          // If yes, check if the surrounding tiles are valid to put the red tiles on. Generate red tiles based on previous check.
+          const x1 = [1, 0, -1, 0];
+          const y1 = [0, 1, 0, -1];
+          // For Ranged Characters
+          const x2 = [];
+          const y2 = [];
+  
+          this.attackTiles = [];
+          this.attackGrid = [];
+          
+          for (let i in x1) {
+            // Do this by calling invalidTiles array. Check whether the tiles are OOB also.
+            if (this.invalidTiles.filter(
+              (coords) =>
+                coords.x === this.selectedUnit.gameObject.getData("coordX") + x1[i] &&
+                coords.y === this.selectedUnit.gameObject.getData("coordY") + y1[i]
+              ).length === 0 && 
+              this.selectedUnit.gameObject.getData("coordX") + x1[i] >= 0 &&
+              this.selectedUnit.gameObject.getData("coordX") + x1[i] <= 15 &&
+              this.selectedUnit.gameObject.getData("coordY") + y1[i] >= 0 &&
+              this.selectedUnit.gameObject.getData("coordY") + y1[i] <= 15) {
+                // If no, generate red tiles and make the enemy targetable.
+                this.attackGrid.push(this.add.sprite(
+                  this.coordinateGrid[this.selectedUnit.gameObject.getData('coordX') + x1[i]][this.selectedUnit.gameObject.getData('coordY') + y1[i]].x, 
+                  this.coordinateGrid[this.selectedUnit.gameObject.getData('coordX') + x1[i]][this.selectedUnit.gameObject.getData('coordY') + y1[i]].y + 16,
+                  "attack-tile",
+                ));
+               this.attackTiles.push({ x: this.selectedUnit.gameObject.getData('coordX') + x1[i], y: this.selectedUnit.gameObject.getData('coordY') + y1[i]});
+              }
+            }
+            this.selectedUnit.gameObject.setData({ hasAttackTiles: true });
+            console.log("Attack Grid: ", this.attackTiles);
+          }
+          if (Phaser.Input.Keyboard.JustDown(this.inputKeys.k)) {
+            if (this.player.x === closest.x + 16 && this.player.y === closest.y + 16 && this.enemies.includes(closest.gameObject) && this.attackTiles.filter(
+              (coords) =>
+              coords.x === this.player.getData("coordX") &&
+              coords.y === this.player.getData("coordY")
+              ).length > 0) {
+                // Open the enemy UI, check the UI is open.
+                this.setMeterPercentage2(closest.gameObject.getData("hit_points"));
+                closest.gameObject.setData({ hasUiOpen: true });
+                this.uiBackground2.visible = true;
+                this.skeleton_soldier_portrait.visible = true;
+                this.healthBarEmpty2.visible = true;
+                this.healthBar2.visible = true;
+                this.uiText2.setText([
+                  "HP: " + closest.gameObject.getData("hit_points") + "/" + this.skeleton_soldier.getData("total_hit_points"),
+                  "Movement: " + closest.gameObject.getData("movement"),
+                ]);
+            }
+              // Click a button to confirm your attack and launch an attack on the enemy. It should only work if you select a valid tile.
+              // Play the attack animation, reduce hit points of skeleton.
+          }
+  
+          if (this.enemies.includes(closest.gameObject) && closest.gameObject.getData('hasUiOpen') && Phaser.Input.Keyboard.JustDown(this.inputKeys.l)) {
+            for (const sprite of this.attackGrid) {
+              sprite.destroy();
+            }
+            // Dynamic animations:
+            this.selectedUnit.gameObject.play("dragon_knight_attacking_anim1");
+            this.selectedUnit.gameObject.playAfterRepeat("dragon_knight_idle_anim1");
+            closest.gameObject.play("skeleton_damage_anim1");
+            closest.gameObject.setData({ hit_points: closest.gameObject.getData('hit_points') - 25 });
+            this.uiText2.setText([
+              `HP: ${closest.gameObject.getData("hit_points")}/${closest.gameObject.getData("total_hit_points")}`,
+              "Movement: " + this.skeleton_soldier.getData("movement"),
+            ]);
+            this.setMeterPercentage2(closest.gameObject.getData("hit_points"));
+            this.selectedUnit.gameObject.setData({ hasAttacked: true });
+            this.selectedUnit.gameObject.setData({ hasAttackTiles: false });
+            this.selectedUnit.gameObject.setData({ turn: false });
+            closest.gameObject.setData({ hasUiOpen: false });
+            if (closest.gameObject.getData("hit_points") === 0) {
+              closest.gameObject.play("skeleton_damage_anim1");
+              closest.gameObject.playAfterRepeat("skeleton_laying_down_anim1");
+              this.uiText2.setText([
+                "HP: 0/" + closest.gameObject.getData("total_hit_points"),
+                "Movement: " + closest.gameObject.getData("movement"),
+              ]);
+              this.time.addEvent({
+                delay: 2000,
+                callback: () => {
+                  this.selectedUnit.gameObject.setData({ hasAttacked: true });
+                  this.selectedUnit.gameObject.setData({ hasAttackTiles: false });
+                  this.selectedUnit.gameObject.setData({ turn: false });
+                  closest.gameObject.setData({ hasUiOpen: false });
+                  this.uiBackground2.visible = false;
+                  this.skeleton_soldier_portrait.visible = false;
+                  this.healthBarEmpty2.visible = false;
+                  this.healthBar2.visible = false;
+                  this.uiText2.setText([""]);
+                  // Replace the game object with a sprite at the coords of knocked out, remove enemy from enemy array.
+                }
+              });
+            }
           }
         }
+  
+        //load ui
+        this.uiBackground1.visible = true;
+        this.dragon_knight_portrait.visible = true;
+        this.healthBarEmpty1.visible = true;
+        this.healthBar1.visible = true;
+  
+        if (this.selectedUnit.gameObject.getData("hit_points") <= 0) {
+          this.uiText1.setText([
+            "HP: 0/" + this.selectedUnit.gameObject.getData("total_hit_points"),
+            "Movement: " + this.selectedUnit.gameObject.getData("movement"),
+          ]);
+        } else {
+          this.uiText1.setText([
+            "HP: " + this.selectedUnit.gameObject.getData("hit_points") + "/" + this.selectedUnit.gameObject.getData("total_hit_points"),
+            "Movement: " + this.selectedUnit.gameObject.getData("movement"),
+          ]);
+          this.setMeterPercentage1(this.selectedUnit.gameObject.getData("hit_points"));
+        }
+      }
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+      //ENEMY PHASE//
+      ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    } else if (this.phase === 'enemy') {
+      let enemy = this.enemies[this.enemyCount];
 
-        if (Phaser.Input.Keyboard.JustDown(this.inputKeys.q)) {
-          //Confirm movement is valid
-          if (
-            this.legalMovement.filter(
-              (coords) =>
-                coords.x === this.player.getData("coordX") &&
-                coords.y === this.player.getData("coordY")
-            ).length > 0
-          ) {
+      //Generate legalMovement
+      if (!this.legalMovement) {
+        this.tracker.setData({coordX: enemy.getData("coordX"), coordY: enemy.getData("coordY")});
+        this.tracker.x = enemy.x;
+        this.tracker.y = enemy.y;
+        this.legalMovement = [];
+        this.movementGrid = [];
+  
+        moveTracker('up');
+        findPath('down', 0, enemy.getData('movement')+ 1);
+  
+        moveTracker('down');
+        findPath('up', 0, enemy.getData('movement')+ 1);
+        
+        moveTracker('left');
+        findPath('right', 0, enemy.getData('movement')+ 1);
+        
+        moveTracker('right');
+        findPath('left', 0, enemy.getData('movement')+ 1);
+
+        console.log(this.legalMovement);
+      }
+
+      //  Attack lowest hp and closest if in range
+      //  Attack closest if in range
+      //  Go toward lowest hp if out of range
+      //  Go toward closest if out of range
+      
+      const inRange = (allyCoords) => {
+        if (this.legalMovement.filter((coords) => coords.x === allyCoords.x + 1 && coords.y === allyCoords.y).length > 0) {
+          return true;
+        }
+        if (this.legalMovement.filter((coords) => coords.x === allyCoords.x - 1 && coords.y === allyCoords.y).length > 0) {
+          return true;
+        }
+        if (this.legalMovement.filter((coords) => coords.x === allyCoords.x && coords.y === allyCoords.y + 1).length > 0) {
+          return true;
+        }
+        if (this.legalMovement.filter((coords) => coords.x === allyCoords.x && coords.y === allyCoords.y - 1).length > 0) {
+          return true;
+        }
+        return false;
+      }
+        //Return an array of Ally health values
+        const healthArray = () => {
+          const output = [];
+          for (const ally of this.allies) {
+            output.push(ally.getData('hit_points'));
+          }
+          return output;
+        }
+        const alliesHealth = healthArray();
+
+        //Return allies in range of enemy
+        const alliesInRange = this.allies.filter((ally) => {
+          return inRange({x: ally.getData('coordX'), y: ally.getData('coordY')});
+        });
+
+        // Find the closest ally with the lowest health to target.
+        const lowHealthAllies = this.allies.filter((ally) => {
+          return ally.getData('hit_points') === Math.min(...alliesHealth);
+        });
+
+        //Physics group of low health allies
+        const lowHealthAlliesGroup = this.physics.add.group(); 
+        for (const ally of lowHealthAllies) {
+          lowHealthAlliesGroup.add(ally);
+        }
+
+        if (!this.enemyPrep) {
+          // Find the closest ally to target.
+          this.closestAlly = this.physics.closest(enemy, this.alliesGroup.children.entries);
+  
+          //Closest low health ally
+          this.closestLowHealthAlly = this.physics.closest(enemy, lowHealthAlliesGroup.children.entries);
+          this.enemyPrep = true;
+        }
+
+      if (!this.hasMoved) {
+        //Check if allies are in range
+        if (alliesInRange.length > 0) {
+          console.log(alliesInRange)
+          //Check if low health allies are in range
+          if (alliesInRange.includes(this.closestLowHealthAlly)) {
+            // Move towards lowest health ally, and attack
+            console.log(this.closestLowHealthAlly.getData('coordX'), this.closestLowHealthAlly.getData('coordY'));
+            const viableMoves = this.legalMovement.filter((move) => {
+                if (
+                  move.x === this.closestLowHealthAlly.getData('coordX') + 1 && move.y === this.closestLowHealthAlly.getData('coordY') ||
+                  move.x === this.closestLowHealthAlly.getData('coordX') - 1 && move.y === this.closestLowHealthAlly.getData('coordY') ||
+                  move.x === this.closestLowHealthAlly.getData('coordX') && move.y === this.closestLowHealthAlly.getData('coordY') + 1 ||
+                  move.x === this.closestLowHealthAlly.getData('coordX') && move.y === this.closestLowHealthAlly.getData('coordY') - 1
+                ) {
+                  return true;
+                }
+                return false;
+            });
+            
             //findMovementPath
             this.pathingArray = [];
-            let direction = findDirection({x: this.player.getData('coordX'), y: this.player.getData('coordY')}, {x: this.selectedUnit.gameObject.getData('coordX'), y: this.selectedUnit.gameObject.getData('coordY')})
+            console.log(viableMoves)
+            let direction = findDirection(viableMoves[0], {x: enemy.getData('coordX'), y: enemy.getData('coordY')});
             //Decide the starting direction of the findMovementPath algorithm
             const decideOrientation = () => {
+              if (enemy.getData('coordX') === viableMoves[0].x && enemy.getData('coordY') === viableMoves[0].y) {
+                this.pathingArray.push(viableMoves[0]);
+                enemy.setData({direction: null});
+                return;
+              }
+
               if (direction === 'up') {
                 moveTracker('up');
-                if (findMovementPath('down', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                if (findMovementPath('down', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
                 moveTracker('left');
-                if (findMovementPath('right', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                if (findMovementPath('right', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
                 moveTracker('down');
-                if (findMovementPath('up', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                if (findMovementPath('up', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
                 moveTracker('right');
-                if (findMovementPath('left', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                if (findMovementPath('left', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
               }
               if (direction === 'down') {
                 moveTracker('down');
-                if (findMovementPath('up', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                if (findMovementPath('up', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
                 moveTracker('right');
-                if (findMovementPath('left', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                if (findMovementPath('left', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
                 moveTracker('up');
-                if (findMovementPath('down', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                if (findMovementPath('down', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
                 moveTracker('left');
-                if (findMovementPath('right', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                if (findMovementPath('right', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
               }
               if (direction === 'right') {
                 moveTracker('right');
-                if (findMovementPath('left', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                if (findMovementPath('left', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
                 moveTracker('up');
-                if (findMovementPath('down', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                if (findMovementPath('down', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
                 moveTracker('left');
-                if (findMovementPath('right', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                if (findMovementPath('right', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
                 moveTracker('down');
-                if (findMovementPath('up', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                if (findMovementPath('up', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
               }
               if (direction === 'left') {
                 moveTracker('left');
-                if (findMovementPath('right', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                if (findMovementPath('right', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
                 moveTracker('down');
-                if (findMovementPath('up', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                if (findMovementPath('up', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
                 moveTracker('right');
-                if (findMovementPath('left', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                if (findMovementPath('left', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
                 moveTracker('up');
-                if (findMovementPath('down', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                if (findMovementPath('down', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
               }
             }
             decideOrientation();
             console.log(this.pathingArray);
 
-            //Cleanup movement grid
-            for (const sprite of this.movementGrid) {
-              sprite.destroy();
-            }
             this.tileMoves = this.pathingArray.length - 1;
-            this.movingUnit = this.selectedUnit;
-            moveUnit(this.selectedUnit, this.pathingArray, this.tileMoves)
+            console.log(this.tileMoves);
+            this.movingUnit = enemy;
+            moveEnemyUnit(enemy, this.pathingArray, this.tileMoves);
             this.isMoving = true;
+            this.legalMovement = [];
           }
-        }
-      
+        } else if (!this.isMoving) {
+          //Sort legalMovement by distance from coordinate
+          if (!this.closestMove) {
 
-      // Attacking
+              let closest;
+              let closestDistance;
+              for (const coord of this.legalMovement) {
+                if (!closest) {
+                  closest = coord;
+                  closestDistance = Math.abs((this.closestAlly.getData('coordX') - coord.x)) + Math.abs((this.closestAlly.getData('coordY') - coord.y));
+                } else {
+                  let distance = Math.abs((this.closestAlly.getData('coordX') - coord.x)) + Math.abs((this.closestAlly.getData('coordY') - coord.y));
 
-      // Check if unit has moved
-      } else if (this.selectedUnit.gameObject.getData('hasMoved') && !this.selectedUnit.gameObject.getData('hasAttacked')) {
-        if (!this.selectedUnit.gameObject.getData("hasAttackTiles")) {
-        // If yes, check if the surrounding tiles are valid to put the red tiles on. Generate red tiles based on previous check.
-        const x1 = [1, 0, -1, 0];
-        const y1 = [0, 1, 0, -1];
-        // For Ranged Characters
-        const x2 = [];
-        const y2 = [];
+                  if (distance <= closestDistance) {
+                    closest = coord;
+                    closestDistance = Math.abs((this.closestAlly.getData('coordX') - coord.x)) + Math.abs((this.closestAlly.getData('coordY') - coord.y));
+                  }
+                }
+              }
+              console.log(this.legalMovement)
+              this.closestMove = closest;
+              console.log(this.closestMove)
 
-        this.attackTiles = [];
-        this.attackGrid = [];
-        
-        for (let i in x1) {
-          // Do this by calling invalidTiles array. Check whether the tiles are OOB also.
-          if (this.invalidTiles.filter(
-            (coords) =>
-              coords.x === this.selectedUnit.gameObject.getData("coordX") + x1[i] &&
-              coords.y === this.selectedUnit.gameObject.getData("coordY") + y1[i]
-            ).length === 0 && 
-            this.selectedUnit.gameObject.getData("coordX") + x1[i] >= 0 &&
-            this.selectedUnit.gameObject.getData("coordX") + x1[i] <= 15 &&
-            this.selectedUnit.gameObject.getData("coordY") + y1[i] >= 0 &&
-            this.selectedUnit.gameObject.getData("coordY") + y1[i] <= 15) {
-              // If no, generate red tiles and make the enemy targetable.
-              this.attackGrid.push(this.add.sprite(
-                this.coordinateGrid[this.selectedUnit.gameObject.getData('coordX') + x1[i]][this.selectedUnit.gameObject.getData('coordY') + y1[i]].x, 
-                this.coordinateGrid[this.selectedUnit.gameObject.getData('coordX') + x1[i]][this.selectedUnit.gameObject.getData('coordY') + y1[i]].y + 16,
-                "attack-tile",
-              ));
-             this.attackTiles.push({ x: this.selectedUnit.gameObject.getData('coordX') + x1[i], y: this.selectedUnit.gameObject.getData('coordY') + y1[i]});
+              //findMovementPath
+            this.pathingArray = [];
+            let direction = findDirection(this.closestMove, {x: enemy.getData('coordX'), y: enemy.getData('coordY')});
+            //Decide the starting direction of the findMovementPath algorithm
+            const decideOrientation = () => {
+              if (direction === 'up') {
+                moveTracker('up');
+                if (findMovementPath('down', 0, enemy.getData('movement')+ 1, {x: this.closestMove.x, y: this.closestMove.y})) {return}
+                moveTracker('left');
+                if (findMovementPath('right', 0, enemy.getData('movement')+ 1, {x: this.closestMove.x, y: this.closestMove.y})) {return}
+                moveTracker('down');
+                if (findMovementPath('up', 0, enemy.getData('movement')+ 1, {x: this.closestMove.x, y: this.closestMove.y})) {return}
+                moveTracker('right');
+                if (findMovementPath('left', 0, enemy.getData('movement')+ 1, {x: this.closestMove.x, y: this.closestMove.y})) {return}
+              }
+              if (direction === 'down') {
+                moveTracker('down');
+                if (findMovementPath('up', 0, enemy.getData('movement')+ 1, {x: this.closestMove.x, y: this.closestMove.y})) {return}
+                moveTracker('right');
+                if (findMovementPath('left', 0, enemy.getData('movement')+ 1, {x: this.closestMove.x, y: this.closestMove.y})) {return}
+                moveTracker('up');
+                if (findMovementPath('down', 0, enemy.getData('movement')+ 1, {x: this.closestMove.x, y: this.closestMove.y})) {return}
+                moveTracker('left');
+                if (findMovementPath('right', 0, enemy.getData('movement')+ 1, {x: this.closestMove.x, y: this.closestMove.y})) {return}
+              }
+              if (direction === 'right') {
+                moveTracker('right');
+                if (findMovementPath('left', 0, enemy.getData('movement')+ 1, {x: this.closestMove.x, y: this.closestMove.y})) {return}
+                moveTracker('up');
+                if (findMovementPath('down', 0, enemy.getData('movement')+ 1, {x: this.closestMove.x, y: this.closestMove.y})) {return}
+                moveTracker('left');
+                if (findMovementPath('right', 0, enemy.getData('movement')+ 1, {x: this.closestMove.x, y: this.closestMove.y})) {return}
+                moveTracker('down');
+                if (findMovementPath('up', 0, enemy.getData('movement')+ 1, {x: this.closestMove.x, y: this.closestMove.y})) {return}
+              }
+              if (direction === 'left') {
+                moveTracker('left');
+                if (findMovementPath('right', 0, enemy.getData('movement')+ 1, {x: this.closestMove.x, y: this.closestMove.y})) {return}
+                moveTracker('down');
+                if (findMovementPath('up', 0, enemy.getData('movement')+ 1, {x: this.closestMove.x, y: this.closestMove.y})) {return}
+                moveTracker('right');
+                if (findMovementPath('left', 0, enemy.getData('movement')+ 1, {x: this.closestMove.x, y: this.closestMove.y})) {return}
+                moveTracker('up');
+                if (findMovementPath('down', 0, enemy.getData('movement')+ 1, {x: this.closestMove.x, y: this.closestMove.y})) {return}
+              }
             }
-          }
-          this.selectedUnit.gameObject.setData({ hasAttackTiles: true });
-          console.log("Attack Grid: ", this.attackTiles);
-        }
-        if (Phaser.Input.Keyboard.JustDown(this.inputKeys.k)) {
-          if (this.player.x === closest.x + 16 && this.player.y === closest.y + 16 && this.enemies.includes(closest.gameObject) && this.attackTiles.filter(
-            (coords) =>
-            coords.x === this.player.getData("coordX") &&
-            coords.y === this.player.getData("coordY")
-            ).length > 0) {
-              // Open the enemy UI, check the UI is open.
-              this.setMeterPercentage2(closest.gameObject.getData("hit_points"));
-              closest.gameObject.setData({ hasUiOpen: true });
-              this.uiBackground2.visible = true;
-              this.skeleton_soldier_portrait.visible = true;
-              this.healthBarEmpty2.visible = true;
-              this.healthBar2.visible = true;
-              this.uiText2.setText([
-                "HP: " + closest.gameObject.getData("hit_points") + "/" + this.skeleton_soldier.getData("total_hit_points"),
-                "Movement: " + closest.gameObject.getData("movement"),
-              ]);
-          }
-            // Click a button to confirm your attack and launch an attack on the enemy. It should only work if you select a valid tile.
-            // Play the attack animation, reduce hit points of skeleton.
-        }
+            decideOrientation();
+            console.log(this.pathingArray);
 
-        if (this.enemies.includes(closest.gameObject) && closest.gameObject.getData('hasUiOpen') && Phaser.Input.Keyboard.JustDown(this.inputKeys.l)) {
-          for (const sprite of this.attackGrid) {
-            sprite.destroy();
+            this.tileMoves = this.pathingArray.length - 1;
+            this.movingUnit = enemy;
+            moveEnemyUnit(enemy, this.pathingArray, this.tileMoves);
+            this.isMoving = true;
+            this.legalMovement = [];
+            enemy.setData({ hasAttacked: true });
+            
+            //Cleanup
+            this.enemyCount += 1;
+            this.hasMoved = false;
+            this.hasAttacked = false;
+            this.legalMovement = undefined;
+            this.closestMove = undefined;
+            this.enemyPrep = undefined;
           }
-          this.selectedUnit.gameObject.play("dragon_knight_attacking_anim1");
-          this.selectedUnit.gameObject.playAfterRepeat("dragon_knight_idle_anim1");
-          closest.gameObject.play("skeleton_damage_anim1");
-          closest.gameObject.setData({ hit_points: closest.gameObject.getData('hit_points') - 25 });
-          this.uiText2.setText([
-            `HP: ${closest.gameObject.getData("hit_points")}/${closest.gameObject.getData("total_hit_points")}`,
-            "Movement: " + this.skeleton_soldier.getData("movement"),
+        }
+      }
+      
+      // Check if enemy has attacked.
+      if (this.hasMoved && !this.hasAttacked) {
+        // Open the enemy UI, check the UI is open.
+        this.setMeterPercentage1(this.closestLowHealthAlly.getData("hit_points"));
+        this.closestLowHealthAlly.setData({ hasUiOpen: true });
+        this.uiBackground1.visible = true;
+        this.dragon_knight_portrait.visible = true;
+        this.healthBarEmpty1.visible = true;
+        this.healthBar1.visible = true;
+        this.uiText1.setText([
+          "HP: " + this.closestLowHealthAlly.getData("hit_points") + "/" + this.closestLowHealthAlly.getData("total_hit_points"),
+          "Movement: " + this.closestLowHealthAlly.getData("movement"),
+        ]);
+          // Click a button to confirm your attack and launch an attack on the enemy. It should only work if you select a valid tile.
+          // Play the attack animation, reduce hit points of skeleton.
+
+        if (this.closestLowHealthAlly.getData('hasUiOpen')) {
+          // Play attack animation and then idle after
+          // this.selectedUnit.gameObject.playAfterRepeat("dragon_knight_idle_anim1");
+          this.closestLowHealthAlly.play("dragon_knight_damage_anim1");
+          this.closestLowHealthAlly.playAfterRepeat("dragon_knight_idle_anim1");
+          this.closestLowHealthAlly.setData({ hit_points: this.closestLowHealthAlly.getData('hit_points') - 25 });
+          this.uiText1.setText([
+            `HP: ${this.closestLowHealthAlly.getData("hit_points")}/${this.closestLowHealthAlly.getData("total_hit_points")}`,
+            "Movement: " + this.closestLowHealthAlly.getData("movement"),
           ]);
-          this.setMeterPercentage2(closest.gameObject.getData("hit_points"));
-          this.selectedUnit.gameObject.setData({ hasAttacked: true });
-          this.selectedUnit.gameObject.setData({ hasAttackTiles: false });
-          this.selectedUnit.gameObject.setData({ turn: false });
-          closest.gameObject.setData({ hasUiOpen: false });
-          if (closest.gameObject.getData("hit_points") === 0) {
-            closest.gameObject.play("skeleton_damage_anim1");
-            closest.gameObject.playAfterRepeat("skeleton_laying_down_anim1");
-            this.uiText2.setText([
-              "HP: 0/" + closest.gameObject.getData("total_hit_points"),
-              "Movement: " + closest.gameObject.getData("movement"),
+          this.setMeterPercentage1(this.closestLowHealthAlly.getData("hit_points"));
+          this.hasAttacked = true;
+          this.closestLowHealthAlly.setData({ hasUiOpen: false });
+          if (this.closestLowHealthAlly.getData("hit_points") === 0) {
+            this.closestLowHealthAlly.play("dragon_knight_damage_anim1");
+            this.closestLowHealthAlly.playAfterRepeat("dragon_knight_laying_down_anim1");
+            this.uiText1.setText([
+              "HP: 0/" + this.closestLowHealthAlly.getData("total_hit_points"),
+              "Movement: " + this.closestLowHealthAlly.getData("movement"),
             ]);
             this.time.addEvent({
               delay: 2000,
               callback: () => {
-                this.selectedUnit.gameObject.setData({ hasAttacked: true });
-                this.selectedUnit.gameObject.setData({ hasAttackTiles: false });
-                this.selectedUnit.gameObject.setData({ turn: false });
-                closest.gameObject.setData({ hasUiOpen: false });
-                this.uiBackground2.visible = false;
-                this.skeleton_soldier_portrait.visible = false;
-                this.healthBarEmpty2.visible = false;
-                this.healthBar2.visible = false;
-                this.uiText2.setText([""]);
+                //this never executes
+                this.hasAttacked = true;
+                this.closestLowHealthAlly.setData({ hasUiOpen: false });
+                this.uiBackground1.visible = false;
+                this.dragon_knight_portrait.visible = false;
+                this.healthBarEmpty1.visible = false;
+                this.healthBar1.visible = false;
+                this.uiText1.setText([""]);
+                // Remove ally from ally array, replace with sprite at coords of knocked out.
               }
             });
           }
+          //Cleanup
+          this.enemyCount += 1;
+          this.hasMoved = false;
+          this.hasAttacked = false;
+          this.legalMovement = undefined;
+          this.closestMove = undefined;
+          this.enemyPrep = undefined;
         }
       }
 
-      //load ui
-      this.uiBackground1.visible = true;
-      this.dragon_knight_portrait.visible = true;
-      this.healthBarEmpty1.visible = true;
-      this.healthBar1.visible = true;
+      // For every enemy that has completed its turn, increment by 1.
 
-      if (this.selectedUnit.gameObject.getData("hit_points") <= 0) {
-        this.uiText1.setText([
-          "HP: 0/" + this.selectedUnit.gameObject.getData("total_hit_points"),
-          "Movement: " + this.selectedUnit.gameObject.getData("movement"),
-        ]);
-      } else {
-        this.uiText1.setText([
-          "HP: " + this.selectedUnit.gameObject.getData("hit_points") + "/" + this.selectedUnit.gameObject.getData("total_hit_points"),
-          "Movement: " + this.selectedUnit.gameObject.getData("movement"),
-        ]);
-        this.setMeterPercentage1(this.selectedUnit.gameObject.getData("hit_points"));
-      }
-      if (Phaser.Input.Keyboard.JustDown(this.inputKeys.h)) {
-        this.selectedUnit.gameObject.play("dragon_knight_damage_anim1");
-        this.selectedUnit.gameObject.playAfterRepeat("dragon_knight_idle_anim1");
-        this.selectedUnit.gameObject.setData({ hit_points: this.selectedUnit.gameObject.getData("hit_points") - 25 });
-        this.setMeterPercentage1(this.selectedUnit.gameObject.getData("hit_points"));
-        this.uiText1.setText([
-          `HP: ${this.selectedUnit.gameObject.getData("hit_points")}/${this.selectedUnit.gameObject.getData("total_hit_points")}`
-        ]);
-        if (this.selectedUnit.gameObject.getData("hit_points") === 0) {
-          this.selectedUnit.gameObject.play("dragon_knight_damage_anim1");
-          this.selectedUnit.gameObject.playAfterRepeat("dragon_knight_laying_down_anim1");
-          this.uiText1.setText([
-            "HP: 0/" + this.selectedUnit.gameObject.getData("total_hit_points"),
-            "Movement: " + this.selectedUnit.gameObject.getData("movement"),
-          ]);
-          this.selectedUnit = undefined;
-        }
+      // Check that each enemy has moved.
+      if (this.enemyCount === this.enemyTotal) {
+        this.phase = 'player';
+        this.enemyCount = 0;
       }
     }
   }
