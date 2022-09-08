@@ -161,6 +161,26 @@ export default class MainScene extends Phaser.Scene {
       { frameWidth: 32, frameHeight: 32 }
     );
     this.load.spritesheet(
+      "skeleton_downright_attacking",
+      "assets/skeleton/skeleton-downright-attacking.png",
+      { frameWidth: 32, frameHeight: 32 }
+    );
+    this.load.spritesheet(
+      "skeleton_downleft_attacking",
+      "assets/skeleton/skeleton-downleft-attacking.png",
+      { frameWidth: 32, frameHeight: 32 }
+    );
+    this.load.spritesheet(
+      "skeleton_upright_attacking",
+      "assets/skeleton/skeleton-upright-attacking.png",
+      { frameWidth: 32, frameHeight: 32 }
+    );
+    this.load.spritesheet(
+      "skeleton_upleft_attacking",
+      "assets/skeleton/skeleton-upleft-attacking.png",
+      { frameWidth: 32, frameHeight: 32 }
+    );
+    this.load.spritesheet(
       "skeleton_downright_damage",
       "assets/skeleton/skeleton-downright-damage.png",
       { frameWidth: 32, frameHeight: 32 }
@@ -171,6 +191,16 @@ export default class MainScene extends Phaser.Scene {
       { frameWidth: 32, frameHeight: 32 }
     );
     this.load.spritesheet(
+      "skeleton_upright_damage",
+      "assets/skeleton/skeleton-upright-damage.png",
+      { frameWidth: 32, frameHeight: 32 }
+    );
+    this.load.spritesheet(
+      "skeleton_upleft_damage",
+      "assets/skeleton/skeleton-upleft-damage.png",
+      { frameWidth: 32, frameHeight: 32 }
+    );
+    this.load.spritesheet(
       "skeleton_downright_laying_down",
       "assets/skeleton/skeleton-downright-laying-down.png",
       { frameWidth: 32, frameHeight: 32 }
@@ -178,6 +208,16 @@ export default class MainScene extends Phaser.Scene {
     this.load.spritesheet(
       "skeleton_downleft_laying_down",
       "assets/skeleton/skeleton-downleft-laying-down.png",
+      { frameWidth: 32, frameHeight: 32 }
+    );
+    this.load.spritesheet(
+      "skeleton_upright_laying_down",
+      "assets/skeleton/skeleton-upright-laying-down.png",
+      { frameWidth: 32, frameHeight: 32 }
+    );
+    this.load.spritesheet(
+      "skeleton_upleft_laying_down",
+      "assets/skeleton/skeleton-upleft-laying-down.png",
       { frameWidth: 32, frameHeight: 32 }
     );
   }
@@ -248,19 +288,6 @@ export default class MainScene extends Phaser.Scene {
       coordY: 0,
     });
 
-    // Assign placement for skeleton game object on the map.
-    this.skeleton_soldier = this.physics.add.sprite(
-      this.coordinateGrid[4][4].x,
-      this.coordinateGrid[4][4].y,
-      "skeleton_downright_idle"
-    );
-
-    this.skeleton_soldier2 = this.physics.add.sprite(
-      this.coordinateGrid[4][10].x,
-      this.coordinateGrid[4][10].y,
-      "skeleton_downleft_idle"
-    );
-
     // Add HUD for holding the UI
     this.uiBackground1 = this.add.sprite(395, 304, "ui1").setScale(0.5);
     this.uiBackground2 = this.add.sprite(887, 304, "ui2").setScale(0.5);
@@ -300,44 +327,6 @@ export default class MainScene extends Phaser.Scene {
     this.healthBar1.visible = false;
     this.healthBarEmpty2.visible = false;
     this.healthBar2.visible = false;
-
-    this.skeleton_soldier.setData({
-      direction: "right",
-      turn: false,
-      movement: 3,
-      total_hit_points: 75,
-      hit_points: 75,
-      hasMoved: false,
-      hasUiOpen: false,
-      hasAttacked: false,
-      coordX: 4,
-      coordY: 4,
-      animations: {
-        down: `skeleton_idle_anim1`,
-        left: `skeleton_idle_anim2`,
-        right: `skeleton_idle_anim3`,
-        up: `skeleton_idle_anim4`
-      }
-    });
-
-    this.skeleton_soldier2.setData({
-      direction: "right",
-      turn: false,
-      movement: 3,
-      total_hit_points: 75,
-      hit_points: 75,
-      hasMoved: false,
-      hasUiOpen: false,
-      hasAttacked: false,
-      coordX: 4,
-      coordY: 10,
-      animations: {
-        down: `skeleton_idle_anim1`,
-        left: `skeleton_idle_anim2`,
-        right: `skeleton_idle_anim3`,
-        up: `skeleton_idle_anim4`
-      }
-    });
 
     // Create animations for the sprites based on the spritesheet for the dragon knight.
     this.anims.create({
@@ -411,6 +400,20 @@ export default class MainScene extends Phaser.Scene {
     });
 
     this.anims.create({
+      key: "dragon_knight_damage_anim3",
+      frames: this.anims.generateFrameNumbers("dragon_knight_upright_damage"),
+      frameRate: 5,
+      repeat: 0,
+    });
+
+    this.anims.create({
+      key: "dragon_knight_damage_anim4",
+      frames: this.anims.generateFrameNumbers("dragon_knight_upleft_damage"),
+      frameRate: 5,
+      repeat: 0,
+    });
+
+    this.anims.create({
       key: "dragon_knight_laying_down_anim1",
       frames: this.anims.generateFrameNumbers("dragon_knight_downright_laying_down"),
       frameRate: 5,
@@ -454,8 +457,57 @@ export default class MainScene extends Phaser.Scene {
     });
 
     this.anims.create({
+      key: "skeleton_attacking_anim1",
+      frames: this.anims.generateFrameNumbers("skeleton_downright_attacking"),
+      frameRate: 5,
+      repeat: 0,
+    });
+
+    this.anims.create({
+      key: "skeleton_attacking_anim2",
+      frames: this.anims.generateFrameNumbers("skeleton_downleft_attacking"),
+      frameRate: 5,
+      repeat: 0,
+    });
+
+    this.anims.create({
+      key: "skeleton_attacking_anim3",
+      frames: this.anims.generateFrameNumbers("skeleton_upright_attacking"),
+      frameRate: 5,
+      repeat: 0,
+    });
+
+    this.anims.create({
+      key: "skeleton_attacking_anim4",
+      frames: this.anims.generateFrameNumbers("skeleton_upleft_attacking"),
+      frameRate: 5,
+      repeat: 0,
+    });
+
+    this.anims.create({
       key: "skeleton_damage_anim1",
       frames: this.anims.generateFrameNumbers("skeleton_downright_damage"),
+      frameRate: 5,
+      repeat: 0,
+    });
+
+    this.anims.create({
+      key: "skeleton_damage_anim2",
+      frames: this.anims.generateFrameNumbers("skeleton_downleft_damage"),
+      frameRate: 5,
+      repeat: 0,
+    });
+
+    this.anims.create({
+      key: "skeleton_damage_anim3",
+      frames: this.anims.generateFrameNumbers("skeleton_upright_damage"),
+      frameRate: 5,
+      repeat: 0,
+    });
+
+    this.anims.create({
+      key: "skeleton_damage_anim4",
+      frames: this.anims.generateFrameNumbers("skeleton_upleft_damage"),
       frameRate: 5,
       repeat: 0,
     });
@@ -467,9 +519,28 @@ export default class MainScene extends Phaser.Scene {
       repeat: 0,
     });
 
+    this.anims.create({
+      key: "skeleton_laying_down_anim2",
+      frames: this.anims.generateFrameNumbers("skeleton_downleft_laying_down"),
+      frameRate: 5,
+      repeat: 0,
+    });
+
+    this.anims.create({
+      key: "skeleton_laying_down_anim3",
+      frames: this.anims.generateFrameNumbers("skeleton_upright_laying_down"),
+      frameRate: 5,
+      repeat: 0,
+    });
+
+    this.anims.create({
+      key: "skeleton_laying_down_anim4",
+      frames: this.anims.generateFrameNumbers("skeleton_upleft_laying_down"),
+      frameRate: 5,
+      repeat: 0,
+    });
+
     // Play those animations.
-    this.skeleton_soldier.play("skeleton_idle_anim1");
-    this.skeleton_soldier2.play("skeleton_idle_anim2");
     this.dragon_knight_portrait.play("dragon_knight_idle_anim1");
     this.skeleton_soldier_portrait.play("skeleton_idle_anim2");
 
@@ -487,12 +558,10 @@ export default class MainScene extends Phaser.Scene {
       z: Phaser.Input.Keyboard.KeyCodes.Z,
     });
 
-    this.enemies = [this.skeleton_soldier, this.skeleton_soldier2];
-
     this.physics.world.step(0);
 
     //Generate allied and enemy units
-    const generateUnit = (unitType, x, y) => {
+    const generateUnit = (unitType, x, y, health) => {
       const newUnit = this.physics.add.sprite(
         this.coordinateGrid[x][y].x,
         this.coordinateGrid[x][y].y,
@@ -505,8 +574,8 @@ export default class MainScene extends Phaser.Scene {
         selected: false,
         state: null,
         movement: 3,
-        total_hit_points: 100,
-        hit_points: 100,
+        total_hit_points: health,
+        hit_points: health,
         hasMoved: false,
         hasMovementTiles: false,
         hasAttacked: false,
@@ -541,17 +610,20 @@ export default class MainScene extends Phaser.Scene {
 
       return newUnit;
     }
-    this.dragon_knight1 = generateUnit('dragon_knight', 3, 3);
-    this.dragon_knight2 = generateUnit('dragon_knight', 2, 2);
-    this.dragon_knight3 = generateUnit('dragon_knight', 5, 3);
-    this.dragon_knight4 = generateUnit('dragon_knight', 0, 0);
+    this.dragon_knight1 = generateUnit('dragon_knight', 3, 3, 100);
+    this.dragon_knight2 = generateUnit('dragon_knight', 2, 2, 100);
+    this.dragon_knight3 = generateUnit('dragon_knight', 5, 3, 100);
+    this.dragon_knight4 = generateUnit('dragon_knight', 0, 0, 100);
+    this.skeleton_soldier1 = generateUnit('skeleton', 4, 4, 75);
+    this.skeleton_soldier2 = generateUnit('skeleton', 4, 10, 75);
     this.alliesGroup = this.physics.add.group();
     this.alliesGroup.add(this.dragon_knight1)
     this.alliesGroup.add(this.dragon_knight2)
     this.alliesGroup.add(this.dragon_knight3)
     this.alliesGroup.add(this.dragon_knight4)
     
-    this.allies = [this.dragon_knight1, this.dragon_knight2, this.dragon_knight3, this.dragon_knight4]
+    this.allies = [this.dragon_knight1, this.dragon_knight2, this.dragon_knight3, this.dragon_knight4];
+    this.enemies = [this.skeleton_soldier1, this.skeleton_soldier2];
 
     this.phase = 'player';
     this.enemyCount = 0;
@@ -1119,42 +1191,49 @@ export default class MainScene extends Phaser.Scene {
 
         // Check if unit has moved
         } else if (this.selectedUnit.gameObject.getData('hasMoved') && !this.selectedUnit.gameObject.getData('hasAttacked')) {
-          if (!this.selectedUnit.gameObject.getData("hasAttackTiles")) {
-          // If yes, check if the surrounding tiles are valid to put the red tiles on. Generate red tiles based on previous check.
-          const x1 = [1, 0, -1, 0];
-          const y1 = [0, 1, 0, -1];
-          // For Ranged Characters
-          const x2 = [];
-          const y2 = [];
-  
-          this.attackTiles = [];
-          this.attackGrid = [];
+          // Assign the target enemy and attacker.
+          const attacker = this.selectedUnit.gameObject;
+          // Find the orientation of the selected unit to the enemy it wants to attack.
+          const directionToAttack = findDirection({ x: closest.gameObject.getData('coordX'), y: closest.gameObject.getData('coordY') }, { x: attacker.getData('coordX'), y: attacker.getData('coordY') });
           
-          for (let i in x1) {
-            // Do this by calling invalidTiles array. Check whether the tiles are OOB also.
-            if (this.invalidTiles.filter(
-              (coords) =>
-                coords.x === this.selectedUnit.gameObject.getData("coordX") + x1[i] &&
-                coords.y === this.selectedUnit.gameObject.getData("coordY") + y1[i]
-              ).length === 0 && 
-              this.selectedUnit.gameObject.getData("coordX") + x1[i] >= 0 &&
-              this.selectedUnit.gameObject.getData("coordX") + x1[i] <= 15 &&
-              this.selectedUnit.gameObject.getData("coordY") + y1[i] >= 0 &&
-              this.selectedUnit.gameObject.getData("coordY") + y1[i] <= 15) {
-                // If no, generate red tiles and make the enemy targetable.
-                this.attackGrid.push(this.add.sprite(
-                  this.coordinateGrid[this.selectedUnit.gameObject.getData('coordX') + x1[i]][this.selectedUnit.gameObject.getData('coordY') + y1[i]].x, 
-                  this.coordinateGrid[this.selectedUnit.gameObject.getData('coordX') + x1[i]][this.selectedUnit.gameObject.getData('coordY') + y1[i]].y + 16,
-                  "attack-tile",
-                ));
-               this.attackTiles.push({ x: this.selectedUnit.gameObject.getData('coordX') + x1[i], y: this.selectedUnit.gameObject.getData('coordY') + y1[i]});
+          // If yes, check if the surrounding tiles are valid to put the red tiles on. Generate red tiles based on previous check.
+          if (!attacker.getData("hasAttackTiles")) {
+            const x1 = [1, 0, -1, 0];
+            const y1 = [0, 1, 0, -1];
+            // For Ranged Characters
+            const x2 = [];
+            const y2 = [];
+
+            this.attackTiles = [];
+            this.attackGrid = [];
+
+            for (let i in x1) {
+              // Do this by calling invalidTiles array. Check whether the tiles are OOB also.
+              if (this.invalidTiles.filter(
+                (coords) =>
+                  coords.x === attacker.getData("coordX") + x1[i] &&
+                  coords.y === attacker.getData("coordY") + y1[i]
+                ).length === 0 && 
+                attacker.getData("coordX") + x1[i] >= 0 &&
+                attacker.getData("coordX") + x1[i] <= 15 &&
+                attacker.getData("coordY") + y1[i] >= 0 &&
+                attacker.getData("coordY") + y1[i] <= 15) {
+                  // If no, generate red tiles and make the enemy targetable.
+                  this.attackGrid.push(this.add.sprite(
+                    this.coordinateGrid[attacker.getData('coordX') + x1[i]][attacker.getData('coordY') + y1[i]].x, 
+                    this.coordinateGrid[attacker.getData('coordX') + x1[i]][attacker.getData('coordY') + y1[i]].y + 16,
+                    "attack-tile",
+                  ));
+                 this.attackTiles.push({ x: attacker.getData('coordX') + x1[i], y: attacker.getData('coordY') + y1[i]});
+                }
               }
-            }
-            this.selectedUnit.gameObject.setData({ hasAttackTiles: true });
-            console.log("Attack Grid: ", this.attackTiles);
-          }
+              attacker.setData({ hasAttackTiles: true });
+              console.log("Attack Grid: ", this.attackTiles);
+        }
           if (Phaser.Input.Keyboard.JustDown(this.inputKeys.k)) {
-            if (this.player.x === closest.x + 16 && this.player.y === closest.y + 16 && this.enemies.includes(closest.gameObject) && this.attackTiles.filter(
+            attacker.play(`${attacker.data.values.animations[directionToAttack]}`);
+            // Make sure the target is an enemy, that the cursor is over it, and that it is within the generated attack tiles.
+            if (this.enemies.includes(closest.gameObject) && this.player.x === closest.x + 16 && this.player.y === closest.y + 16 && this.attackTiles.filter(
               (coords) =>
               coords.x === this.player.getData("coordX") &&
               coords.y === this.player.getData("coordY")
@@ -1167,35 +1246,37 @@ export default class MainScene extends Phaser.Scene {
                 this.healthBarEmpty2.visible = true;
                 this.healthBar2.visible = true;
                 this.uiText2.setText([
-                  "HP: " + closest.gameObject.getData("hit_points") + "/" + this.skeleton_soldier.getData("total_hit_points"),
+                  "HP: " + closest.gameObject.getData("hit_points") + "/" + closest.gameObject.getData("total_hit_points"),
                   "Movement: " + closest.gameObject.getData("movement"),
                 ]);
             }
-              // Click a button to confirm your attack and launch an attack on the enemy. It should only work if you select a valid tile.
-              // Play the attack animation, reduce hit points of skeleton.
           }
-  
           if (this.enemies.includes(closest.gameObject) && closest.gameObject.getData('hasUiOpen') && Phaser.Input.Keyboard.JustDown(this.inputKeys.l)) {
+            // Destroy the targeting sprites
             for (const sprite of this.attackGrid) {
               sprite.destroy();
             }
             // Dynamic animations:
-            this.selectedUnit.gameObject.play("dragon_knight_attacking_anim1");
-            this.selectedUnit.gameObject.playAfterRepeat("dragon_knight_idle_anim1");
-            closest.gameObject.play("skeleton_damage_anim1");
+            // Define direction for animations of the attack target.
+            const directionFromAttack = findDirection({ x: attacker.getData('coordX'), y: attacker.getData('coordY') }, { x: closest.gameObject.getData('coordX'), y: closest.gameObject.getData('coordY') });
+
+            attacker.play(`${attacker.data.values.attack_animations[directionToAttack]}`);
+            attacker.playAfterRepeat(`${attacker.data.values.animations[directionToAttack]}`);
+            closest.gameObject.play(`${closest.gameObject.data.values.damage_animations[directionFromAttack]}`);
+            closest.gameObject.playAfterRepeat(`${closest.gameObject.data.values.animations[directionFromAttack]}`);
             closest.gameObject.setData({ hit_points: closest.gameObject.getData('hit_points') - 25 });
             this.uiText2.setText([
               `HP: ${closest.gameObject.getData("hit_points")}/${closest.gameObject.getData("total_hit_points")}`,
-              "Movement: " + this.skeleton_soldier.getData("movement"),
+              "Movement: " + closest.gameObject.getData("movement"),
             ]);
             this.setMeterPercentage2(closest.gameObject.getData("hit_points"));
-            this.selectedUnit.gameObject.setData({ hasAttacked: true });
-            this.selectedUnit.gameObject.setData({ hasAttackTiles: false });
-            this.selectedUnit.gameObject.setData({ turn: false });
+            attacker.setData({ hasAttacked: true });
+            attacker.setData({ hasAttackTiles: false });
+            attacker.setData({ turn: false });
             closest.gameObject.setData({ hasUiOpen: false });
             if (closest.gameObject.getData("hit_points") === 0) {
-              closest.gameObject.play("skeleton_damage_anim1");
-              closest.gameObject.playAfterRepeat("skeleton_laying_down_anim1");
+              closest.gameObject.play(`${closest.gameObject.data.values.damage_animations[directionFromAttack]}`);
+              closest.gameObject.playAfterRepeat(`${closest.gameObject.data.values.laying_down_animations[directionFromAttack]}`);
               this.uiText2.setText([
                 "HP: 0/" + closest.gameObject.getData("total_hit_points"),
                 "Movement: " + closest.gameObject.getData("movement"),
@@ -1203,9 +1284,8 @@ export default class MainScene extends Phaser.Scene {
               this.time.addEvent({
                 delay: 2000,
                 callback: () => {
-                  this.selectedUnit.gameObject.setData({ hasAttacked: true });
-                  this.selectedUnit.gameObject.setData({ hasAttackTiles: false });
-                  this.selectedUnit.gameObject.setData({ turn: false });
+                  attacker.setData({ hasAttacked: true });
+                  attacker.setData({ hasAttackTiles: false });
                   closest.gameObject.setData({ hasUiOpen: false });
                   this.uiBackground2.visible = false;
                   this.skeleton_soldier_portrait.visible = false;
@@ -1497,6 +1577,11 @@ export default class MainScene extends Phaser.Scene {
       
       // Check if enemy has attacked.
       if (this.hasMoved && !this.hasAttacked) {
+        // Assign the target enemy and attacker.
+        const attacker = enemy;
+        // Find the orientation of the selected unit to the enemy it wants to attack.
+        const directionToAttack = findDirection({ x: this.closestLowHealthAlly.getData('coordX'), y: this.closestLowHealthAlly.getData('coordY') }, { x: attacker.getData('coordX'), y: attacker.getData('coordY') });
+        const directionFromAttack = findDirection({ x: attacker.getData('coordX'), y: attacker.getData('coordY') }, { x: this.closestLowHealthAlly.getData('coordX'), y: this.closestLowHealthAlly.getData('coordY') });
         // Open the enemy UI, check the UI is open.
         this.setMeterPercentage1(this.closestLowHealthAlly.getData("hit_points"));
         this.closestLowHealthAlly.setData({ hasUiOpen: true });
@@ -1512,10 +1597,10 @@ export default class MainScene extends Phaser.Scene {
           // Play the attack animation, reduce hit points of skeleton.
 
         if (this.closestLowHealthAlly.getData('hasUiOpen')) {
-          // Play attack animation and then idle after
-          // this.selectedUnit.gameObject.playAfterRepeat("dragon_knight_idle_anim1");
-          this.closestLowHealthAlly.play("dragon_knight_damage_anim1");
-          this.closestLowHealthAlly.playAfterRepeat("dragon_knight_idle_anim1");
+          attacker.play(`${attacker.data.values.attack_animations[directionToAttack]}`);
+          attacker.playAfterRepeat(`${attacker.data.values.animations[directionToAttack]}`);
+          this.closestLowHealthAlly.play(`${this.closestLowHealthAlly.data.values.damage_animations[directionFromAttack]}`);
+          this.closestLowHealthAlly.playAfterRepeat(`${this.closestLowHealthAlly.data.values.animations[directionFromAttack]}`);
           this.closestLowHealthAlly.setData({ hit_points: this.closestLowHealthAlly.getData('hit_points') - 25 });
           this.uiText1.setText([
             `HP: ${this.closestLowHealthAlly.getData("hit_points")}/${this.closestLowHealthAlly.getData("total_hit_points")}`,
@@ -1525,8 +1610,8 @@ export default class MainScene extends Phaser.Scene {
           this.hasAttacked = true;
           this.closestLowHealthAlly.setData({ hasUiOpen: false });
           if (this.closestLowHealthAlly.getData("hit_points") === 0) {
-            this.closestLowHealthAlly.play("dragon_knight_damage_anim1");
-            this.closestLowHealthAlly.playAfterRepeat("dragon_knight_laying_down_anim1");
+            this.closestLowHealthAlly.play(`${this.closestLowHealthAlly.data.values.damage_animations[directionFromAttack]}`);
+            this.closestLowHealthAlly.playAfterRepeat(`${this.closestLowHealthAlly.data.values.laying_down_animations[directionFromAttack]}`);
             this.uiText1.setText([
               "HP: 0/" + this.closestLowHealthAlly.getData("total_hit_points"),
               "Movement: " + this.closestLowHealthAlly.getData("movement"),
