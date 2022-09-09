@@ -32,6 +32,7 @@ export default class MainScene extends Phaser.Scene {
 
     let closestAlly;
     let closestLowHealthAlly
+    let alliesInRange;
   }
 
   // Preload assets into the game engine.
@@ -693,7 +694,8 @@ export default class MainScene extends Phaser.Scene {
               this.isMoving = false;
               this.hasMoved = true;
               this.movingUnit.setData({ hasMoved: true });
-              movePixels(this.movingUnit);
+              this.movingUnit.x = this.coordinateGrid[this.pathingArray[this.tileMoves].x][this.pathingArray[this.tileMoves].y].x
+              this.movingUnit.y = this.coordinateGrid[this.pathingArray[this.tileMoves].x][this.pathingArray[this.tileMoves].y].y
             }
         } else {
           if (
@@ -880,7 +882,6 @@ export default class MainScene extends Phaser.Scene {
 
     //Findpath
     const findPath = (prevDirection, moveCount, totalMoves) => {
-      console.log("New Tilel", this.tracker.getData('coordX'), this.tracker.getData('coordY'))
       closestTracker = this.physics.closest(this.tracker, Phaser.GameObject);
       let allInvalid = 0;
       //return if moveCount reached
@@ -899,7 +900,7 @@ export default class MainScene extends Phaser.Scene {
         this.tracker.getData('coordY') > 15)) {
         //set tracker to prevDirection
         moveTracker(prevDirection);
-        return;
+        return true;
       }
 
       //Repeat in every  direciton, except origin direction
@@ -1203,7 +1204,6 @@ export default class MainScene extends Phaser.Scene {
             this.setMeterPercentage2(closest.gameObject.getData("hit_points"));
             this.selectedUnit.gameObject.setData({ hasAttacked: true });
             this.selectedUnit.gameObject.setData({ hasAttackTiles: false });
-            this.selectedUnit.gameObject.setData({ turn: false });
             closest.gameObject.setData({ hasUiOpen: false });
             if (closest.gameObject.getData("hit_points") === 0) {
               closest.gameObject.play("skeleton_damage_anim1");
@@ -1217,14 +1217,14 @@ export default class MainScene extends Phaser.Scene {
                 callback: () => {
                   this.selectedUnit.gameObject.setData({ hasAttacked: true });
                   this.selectedUnit.gameObject.setData({ hasAttackTiles: false });
-                  this.selectedUnit.gameObject.setData({ turn: false });
                   closest.gameObject.setData({ hasUiOpen: false });
                   this.uiBackground2.visible = false;
                   this.skeleton_soldier_portrait.visible = false;
                   this.healthBarEmpty2.visible = false;
                   this.healthBar2.visible = false;
                   this.uiText2.setText([""]);
-                  // Replace the game object with a sprite at the coords of knocked out, remove enemy from enemy array.
+                  this.add.sprite(closest.gameObject.getData('coordX'), closest.gameObject.getData('coordY'), "skeleton_downright_laying_down", 2);
+                  closest.gameObject.destroy();
                 }
               });
             }
@@ -1299,55 +1299,129 @@ export default class MainScene extends Phaser.Scene {
         }
         return false;
       }
-        //Return an array of Ally health values
-        const healthArray = () => {
-          const output = [];
-          for (const ally of this.allies) {
-            output.push(ally.getData('hit_points'));
-          }
-          return output;
+      //Return an array of Ally health values
+      const healthArray = () => {
+        const output = [];
+        for (const ally of this.allies) {
+          output.push(ally.getData('hit_points'));
         }
-        const alliesHealth = healthArray();
+        return output;
+      }
+      const alliesHealth = healthArray();
+
+      // Find the closest ally with the lowest health to target.
+      const lowHealthAllies = this.allies.filter((ally) => {
+        return ally.getData('hit_points') === Math.min(...alliesHealth);
+      });
+      //Physics group of low health allies
+      const lowHealthAlliesGroup = this.physics.add.group(); 
+      for (const ally of lowHealthAllies) {
+        lowHealthAlliesGroup.add(ally);
+      }
+      if (!this.enemyPrep) {
+        // Find the closest ally to target.
+        this.closestAlly = this.physics.closest(enemy, this.alliesGroup.children.entries);
+
+        //Closest low health ally
+        this.closestLowHealthAlly = this.physics.closest(enemy, lowHealthAlliesGroup.children.entries);
 
         //Return allies in range of enemy
-        const alliesInRange = this.allies.filter((ally) => {
+        this.alliesInRange = this.allies.filter((ally) => {
           return inRange({x: ally.getData('coordX'), y: ally.getData('coordY')});
         });
-
-        // Find the closest ally with the lowest health to target.
-        const lowHealthAllies = this.allies.filter((ally) => {
-          return ally.getData('hit_points') === Math.min(...alliesHealth);
-        });
-
-        //Physics group of low health allies
-        const lowHealthAlliesGroup = this.physics.add.group(); 
-        for (const ally of lowHealthAllies) {
-          lowHealthAlliesGroup.add(ally);
-        }
-
-        if (!this.enemyPrep) {
-          // Find the closest ally to target.
-          this.closestAlly = this.physics.closest(enemy, this.alliesGroup.children.entries);
-  
-          //Closest low health ally
-          this.closestLowHealthAlly = this.physics.closest(enemy, lowHealthAlliesGroup.children.entries);
-          this.enemyPrep = true;
-        }
+        this.enemyPrep = true;
+      }
 
       if (!this.hasMoved) {
         //Check if allies are in range
-        if (alliesInRange.length > 0) {
-          console.log(alliesInRange)
+        if (this.alliesInRange.length > 0 && !this.isMoving) {
+          console.log(this.alliesInRange);
           //Check if low health allies are in range
-          if (alliesInRange.includes(this.closestLowHealthAlly)) {
+          if (this.alliesInRange.includes(this.closestLowHealthAlly)) {
             // Move towards lowest health ally, and attack
-            console.log(this.closestLowHealthAlly.getData('coordX'), this.closestLowHealthAlly.getData('coordY'));
+            console.log("Closest Low Health Ally Move: ", this.closestLowHealthAlly.getData('coordX'), this.closestLowHealthAlly.getData('coordY'));
             const viableMoves = this.legalMovement.filter((move) => {
                 if (
                   move.x === this.closestLowHealthAlly.getData('coordX') + 1 && move.y === this.closestLowHealthAlly.getData('coordY') ||
                   move.x === this.closestLowHealthAlly.getData('coordX') - 1 && move.y === this.closestLowHealthAlly.getData('coordY') ||
                   move.x === this.closestLowHealthAlly.getData('coordX') && move.y === this.closestLowHealthAlly.getData('coordY') + 1 ||
                   move.x === this.closestLowHealthAlly.getData('coordX') && move.y === this.closestLowHealthAlly.getData('coordY') - 1
+                ) {
+                  return true;
+                }
+                return false;
+            });
+            
+            //findMovementPath
+            this.pathingArray = [];
+            console.log(viableMoves)
+            let direction = findDirection(viableMoves[0], {x: enemy.getData('coordX'), y: enemy.getData('coordY')});
+            //Decide the starting direction of the findMovementPath algorithm
+            const decideOrientation = () => {
+              if (enemy.getData('coordX') === viableMoves[0].x && enemy.getData('coordY') === viableMoves[0].y) {
+                this.pathingArray.push(viableMoves[0]);
+                enemy.setData({direction: null});
+                return;
+              }
+
+              if (direction === 'up') {
+                moveTracker('up');
+                if (findMovementPath('down', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                moveTracker('left');
+                if (findMovementPath('right', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                moveTracker('down');
+                if (findMovementPath('up', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                moveTracker('right');
+                if (findMovementPath('left', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+              }
+              if (direction === 'down') {
+                moveTracker('down');
+                if (findMovementPath('up', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                moveTracker('right');
+                if (findMovementPath('left', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                moveTracker('up');
+                if (findMovementPath('down', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                moveTracker('left');
+                if (findMovementPath('right', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+              }
+              if (direction === 'right') {
+                moveTracker('right');
+                if (findMovementPath('left', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                moveTracker('up');
+                if (findMovementPath('down', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                moveTracker('left');
+                if (findMovementPath('right', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                moveTracker('down');
+                if (findMovementPath('up', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+              }
+              if (direction === 'left') {
+                moveTracker('left');
+                if (findMovementPath('right', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                moveTracker('down');
+                if (findMovementPath('up', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                moveTracker('right');
+                if (findMovementPath('left', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                moveTracker('up');
+                if (findMovementPath('down', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+              }
+            }
+            decideOrientation();
+            console.log(this.pathingArray);
+
+            this.tileMoves = this.pathingArray.length - 1;
+            this.movingUnit = enemy;
+            moveEnemyUnit(enemy, this.pathingArray, this.tileMoves);
+            this.isMoving = true;
+            this.legalMovement = [];
+          } else {
+            // Move towards closest ally, and attack
+            console.log("Closest Ally Move: ", this.closestAlly.getData('coordX'), this.closestAlly.getData('coordY'));
+            const viableMoves = this.legalMovement.filter((move) => {
+                if (
+                  move.x === this.closestAlly.getData('coordX') + 1 && move.y === this.closestAlly.getData('coordY') ||
+                  move.x === this.closestAlly.getData('coordX') - 1 && move.y === this.closestAlly.getData('coordY') ||
+                  move.x === this.closestAlly.getData('coordX') && move.y === this.closestAlly.getData('coordY') + 1 ||
+                  move.x === this.closestAlly.getData('coordX') && move.y === this.closestAlly.getData('coordY') - 1
                 ) {
                   return true;
                 }
@@ -1493,86 +1567,175 @@ export default class MainScene extends Phaser.Scene {
             moveEnemyUnit(enemy, this.pathingArray, this.tileMoves);
             this.isMoving = true;
             this.legalMovement = [];
-            enemy.setData({ hasAttacked: true });
+            this.hasAttacked = true;
             
-            //Cleanup
-            this.enemyCount += 1;
-            this.hasMoved = false;
-            this.hasAttacked = false;
-            this.legalMovement = undefined;
-            this.closestMove = undefined;
-            this.enemyPrep = undefined;
+              //Cleanup
+              this.time.addEvent({
+                delay: 1000,
+                callback: () => {
+                  this.enemyCount += 1;
+                  this.hasMoved = false;
+                  this.hasAttacked = false;
+                  this.legalMovement = undefined;
+                  this.closestMove = undefined;
+                  this.enemyPrep = undefined;
+
+                  if (this.enemyCount === this.enemyTotal) {
+                    this.phase = 'player';
+                    this.enemyCount = 0;
+                  }
+                }
+              })
           }
         }
       }
       
       // Check if enemy has attacked.
       if (this.hasMoved && !this.hasAttacked) {
-        // Open the enemy UI, check the UI is open.
-        this.setMeterPercentage1(this.closestLowHealthAlly.getData("hit_points"));
-        this.closestLowHealthAlly.setData({ hasUiOpen: true });
-        this.uiBackground1.visible = true;
-        this.dragon_knight_portrait.visible = true;
-        this.healthBarEmpty1.visible = true;
-        this.healthBar1.visible = true;
-        this.uiText1.setText([
-          "HP: " + this.closestLowHealthAlly.getData("hit_points") + "/" + this.closestLowHealthAlly.getData("total_hit_points"),
-          "Movement: " + this.closestLowHealthAlly.getData("movement"),
-        ]);
-          // Click a button to confirm your attack and launch an attack on the enemy. It should only work if you select a valid tile.
-          // Play the attack animation, reduce hit points of skeleton.
-
-        if (this.closestLowHealthAlly.getData('hasUiOpen')) {
-          // Play attack animation and then idle after
-          // this.selectedUnit.gameObject.playAfterRepeat("dragon_knight_idle_anim1");
-          this.closestLowHealthAlly.play("dragon_knight_damage_anim1");
-          this.closestLowHealthAlly.playAfterRepeat("dragon_knight_idle_anim1");
-          this.closestLowHealthAlly.setData({ hit_points: this.closestLowHealthAlly.getData('hit_points') - 25 });
+        console.log(this.alliesInRange)
+        console.log("Closest Low Health Ally Attack: ", this.closestLowHealthAlly.getData('coordX'), this.closestLowHealthAlly.getData('coordY'));
+        console.log("Closest Ally Attack: ", this.closestAlly.getData('coordX'), this.closestAlly.getData('coordY'));
+        
+        if (this.alliesInRange.includes(this.closestLowHealthAlly)) {
+          // console.log("Closest Low Health Ally Attack: ", this.closestLowHealthAlly.getData('coordX'), this.closestLowHealthAlly.getData('coordY'));
+          // Open the enemy UI, check the UI is open.
+          this.setMeterPercentage1(this.closestLowHealthAlly.getData("hit_points"));
+          this.closestLowHealthAlly.setData({ hasUiOpen: true });
+          this.uiBackground1.visible = true;
+          this.dragon_knight_portrait.visible = true;
+          this.healthBarEmpty1.visible = true;
+          this.healthBar1.visible = true;
           this.uiText1.setText([
-            `HP: ${this.closestLowHealthAlly.getData("hit_points")}/${this.closestLowHealthAlly.getData("total_hit_points")}`,
+            "HP: " + this.closestLowHealthAlly.getData("hit_points") + "/" + this.closestLowHealthAlly.getData("total_hit_points"),
             "Movement: " + this.closestLowHealthAlly.getData("movement"),
           ]);
-          this.setMeterPercentage1(this.closestLowHealthAlly.getData("hit_points"));
-          this.hasAttacked = true;
-          this.closestLowHealthAlly.setData({ hasUiOpen: false });
-          if (this.closestLowHealthAlly.getData("hit_points") === 0) {
+            // Click a button to confirm your attack and launch an attack on the enemy. It should only work if you select a valid tile.
+            // Play the attack animation, reduce hit points of skeleton.
+
+          if (this.closestLowHealthAlly.getData('hasUiOpen')) {
+            // Play attack animation and then idle after
+            // this.selectedUnit.gameObject.playAfterRepeat("dragon_knight_idle_anim1");
             this.closestLowHealthAlly.play("dragon_knight_damage_anim1");
-            this.closestLowHealthAlly.playAfterRepeat("dragon_knight_laying_down_anim1");
+            this.closestLowHealthAlly.playAfterRepeat("dragon_knight_idle_anim1");
+            this.closestLowHealthAlly.setData({ hit_points: this.closestLowHealthAlly.getData('hit_points') - 25 });
             this.uiText1.setText([
-              "HP: 0/" + this.closestLowHealthAlly.getData("total_hit_points"),
+              `HP: ${this.closestLowHealthAlly.getData("hit_points")}/${this.closestLowHealthAlly.getData("total_hit_points")}`,
               "Movement: " + this.closestLowHealthAlly.getData("movement"),
             ]);
+            this.setMeterPercentage1(this.closestLowHealthAlly.getData("hit_points"));
+            this.hasAttacked = true;
+            this.closestLowHealthAlly.setData({ hasUiOpen: false });
+            if (this.closestLowHealthAlly.getData("hit_points") === 0) {
+              const isSleepingAlly = this.closestLowHealthAlly;
+              isSleepingAlly.play("dragon_knight_damage_anim1");
+              isSleepingAlly.playAfterRepeat("dragon_knight_laying_down_anim1");
+              this.uiText1.setText([
+                "HP: 0/" + isSleepingAlly.getData("total_hit_points"),
+                "Movement: " + isSleepingAlly.getData("movement"),
+              ]);
+              this.allies.splice(this.allies.map(ally => ally.data.values.hit_points).indexOf(0), 1);
+              this.time.addEvent({
+                delay: 2000,
+                callback: () => {
+                  //this never executes
+                  isSleepingAlly.setData({ hasUiOpen: false });
+                  this.uiBackground1.visible = false;
+                  this.dragon_knight_portrait.visible = false;
+                  this.healthBarEmpty1.visible = false;
+                  this.healthBar1.visible = false;
+                  this.uiText1.setText([""]);
+                  isSleepingAlly.destroy();
+                }
+              });
+            }
+            //Cleanup
             this.time.addEvent({
-              delay: 2000,
+              delay: 1000,
               callback: () => {
-                //this never executes
-                this.hasAttacked = true;
-                this.closestLowHealthAlly.setData({ hasUiOpen: false });
-                this.uiBackground1.visible = false;
-                this.dragon_knight_portrait.visible = false;
-                this.healthBarEmpty1.visible = false;
-                this.healthBar1.visible = false;
-                this.uiText1.setText([""]);
-                // Remove ally from ally array, replace with sprite at coords of knocked out.
+                this.enemyCount += 1;
+                this.hasMoved = false;
+                this.hasAttacked = false;
+                this.legalMovement = undefined;
+                this.closestMove = undefined;
+                this.enemyPrep = undefined;
+                if (this.enemyCount === this.enemyTotal) {
+                  this.phase = 'player';
+                  this.enemyCount = 0;
+                }
+              }
+            })
+          }
+        } else {
+          // Open the enemy UI, check the UI is open.
+          // console.log("Closest Ally Attack: ", this.closestAlly.getData('coordX'), this.closestAlly.getData('coordY'));
+          this.setMeterPercentage1(this.closestAlly.getData("hit_points"));
+          this.closestAlly.setData({ hasUiOpen: true });
+          this.uiBackground1.visible = true;
+          this.dragon_knight_portrait.visible = true;
+          this.healthBarEmpty1.visible = true;
+          this.healthBar1.visible = true;
+          this.uiText1.setText([
+            "HP: " + this.closestAlly.getData("hit_points") + "/" + this.closestAlly.getData("total_hit_points"),
+            "Movement: " + this.closestAlly.getData("movement"),
+          ]);
+            // Click a button to confirm your attack and launch an attack on the enemy. It should only work if you select a valid tile.
+            // Play the attack animation, reduce hit points of skeleton.
+
+          if (this.closestAlly.getData('hasUiOpen')) {
+            // Play attack animation and then idle after
+            // this.selectedUnit.gameObject.playAfterRepeat("dragon_knight_idle_anim1");
+            this.closestAlly.play("dragon_knight_damage_anim1");
+            this.closestAlly.playAfterRepeat("dragon_knight_idle_anim1");
+            this.closestAlly.setData({ hit_points: this.closestAlly.getData('hit_points') - 25 });
+            this.uiText1.setText([
+              `HP: ${this.closestAlly.getData("hit_points")}/${this.closestAlly.getData("total_hit_points")}`,
+              "Movement: " + this.closestAlly.getData("movement"),
+            ]);
+            this.setMeterPercentage1(this.closestAlly.getData("hit_points"));
+            this.hasAttacked = true;
+            this.closestAlly.setData({ hasUiOpen: false });
+            if (this.closestAlly.getData("hit_points") === 0) {
+              const isSleepingAlly = this.closestAlly;
+              isSleepingAlly.play("dragon_knight_damage_anim1");
+              isSleepingAlly.playAfterRepeat("dragon_knight_laying_down_anim1");
+              this.uiText1.setText([
+                "HP: 0/" + isSleepingAlly.getData("total_hit_points"),
+                "Movement: " + isSleepingAlly.getData("movement"),
+              ]);
+              this.allies.splice(this.allies.map(ally => ally.data.values.hit_points).indexOf(0), 1);
+              this.time.addEvent({
+                delay: 2000,
+                callback: () => {
+                  //this never executes
+                  isSleepingAlly.setData({ hasUiOpen: false });
+                  this.uiBackground1.visible = false;
+                  this.dragon_knight_portrait.visible = false;
+                  this.healthBarEmpty1.visible = false;
+                  this.healthBar1.visible = false;
+                  this.uiText1.setText([""]);
+                  this.add.sprite(isSleepingAlly.getData('coordX'), isSleepingAlly.getData('coordY'), "dragon_knight_downright_laying_down", 2);
+                  isSleepingAlly.destory();
+                }
+              });
+            }
+            //Cleanup
+            this.time.addEvent({
+              delay: 1000,
+              callback: () => {
+                this.enemyCount += 1;
+                this.hasMoved = false;
+                this.hasAttacked = false;
+                this.legalMovement = undefined;
+                this.closestMove = undefined;
+                this.enemyPrep = undefined;
+                if (this.enemyCount === this.enemyTotal) {
+                  this.phase = 'player';
+                  this.enemyCount = 0;
+                }
               }
             });
           }
-          //Cleanup
-          this.enemyCount += 1;
-          this.hasMoved = false;
-          this.hasAttacked = false;
-          this.legalMovement = undefined;
-          this.closestMove = undefined;
-          this.enemyPrep = undefined;
         }
-      }
-
-      // For every enemy that has completed its turn, increment by 1.
-
-      // Check that each enemy has moved.
-      if (this.enemyCount === this.enemyTotal) {
-        this.phase = 'player';
-        this.enemyCount = 0;
       }
     }
   }
