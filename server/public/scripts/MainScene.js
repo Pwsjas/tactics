@@ -428,6 +428,20 @@ export default class MainScene extends Phaser.Scene {
       repeat: 0,
     });
 
+    this.anims.create({
+      key: "dragon_knight_laying_down_anim3",
+      frames: this.anims.generateFrameNumbers("dragon_knight_upright_laying_down"),
+      frameRate: 5,
+      repeat: 0,
+    });
+
+    this.anims.create({
+      key: "dragon_knight_laying_down_anim4",
+      frames: this.anims.generateFrameNumbers("dragon_knight_upleft_laying_down"),
+      frameRate: 5,
+      repeat: 0,
+    });
+
     // Create animations for the sprites based on the spritesheet for the skeleton.
     this.anims.create({
       key: "skeleton_idle_anim1",
@@ -654,6 +668,7 @@ export default class MainScene extends Phaser.Scene {
       this.hasMoved = false;
       this.hasAttacked - false;
       this.legalMovement = undefined;
+      this.selectedUnit = undefined;
       console.log(this.coordinateGrid[3][2].x, this.coordinateGrid[3][2].y)
       console.log(this.dragon_knight1.x, this.dragon_knight1.y)
     }
@@ -1698,6 +1713,10 @@ export default class MainScene extends Phaser.Scene {
             this.closestLowHealthAlly.playAfterRepeat(`${this.closestLowHealthAlly.data.values.animations[directionFromAttack]}`);
             this.closestLowHealthAlly.setData({ hit_points: this.closestLowHealthAlly.getData('hit_points') - 25 });
             this.setMeterPercentage1(this.closestLowHealthAlly.getData("hit_points"));
+            this.uiText1.setText([
+              `HP: ${this.closestLowHealthAlly.getData("hit_points")}/${this.closestLowHealthAlly.getData("total_hit_points")}`,
+              "Movement: " + this.closestLowHealthAlly.getData("movement"),
+            ]);
             this.hasAttacked = true;
             this.closestLowHealthAlly.setData({ hasUiOpen: false });
             if (this.closestLowHealthAlly.getData("hit_points") === 0) {
@@ -1712,8 +1731,8 @@ export default class MainScene extends Phaser.Scene {
               this.closestLowHealthAlly.setData({ hasUiOpen: false });
               if (this.closestLowHealthAlly.getData("hit_points") === 0) {
                 const isSleepingAlly = this.closestLowHealthAlly;
-                isSleepingAlly.play("dragon_knight_damage_anim1");
-                isSleepingAlly.playAfterRepeat("dragon_knight_laying_down_anim1");
+                isSleepingAlly.play(`${this.closestLowHealthAlly.data.values.damage_animations[directionFromAttack]}`);
+                isSleepingAlly.playAfterRepeat(`${this.closestLowHealthAlly.data.values.laying_down_animations[directionFromAttack]}`);
                 this.uiText1.setText([
                   "HP: 0/" + isSleepingAlly.getData("total_hit_points"),
                   "Movement: " + isSleepingAlly.getData("movement"),
@@ -1752,6 +1771,10 @@ export default class MainScene extends Phaser.Scene {
             })
           }
         } else {
+          const attacker = enemy;
+
+          const directionToAttack = findDirection({ x: this.closestLowHealthAlly.getData('coordX'), y: this.closestLowHealthAlly.getData('coordY') }, { x: attacker.getData('coordX'), y: attacker.getData('coordY') });
+          const directionFromAttack = findDirection({ x: attacker.getData('coordX'), y: attacker.getData('coordY') }, { x: this.closestLowHealthAlly.getData('coordX'), y: this.closestLowHealthAlly.getData('coordY') });
           // Open the enemy UI, check the UI is open.
           // console.log("Closest Ally Attack: ", this.closestAlly.getData('coordX'), this.closestAlly.getData('coordY'));
           this.setMeterPercentage1(this.closestAlly.getData("hit_points"));
@@ -1769,9 +1792,10 @@ export default class MainScene extends Phaser.Scene {
 
           if (this.closestAlly.getData('hasUiOpen')) {
             // Play attack animation and then idle after
-            // this.selectedUnit.gameObject.playAfterRepeat("dragon_knight_idle_anim1");
-            this.closestAlly.play("dragon_knight_damage_anim1");
-            this.closestAlly.playAfterRepeat("dragon_knight_idle_anim1");
+            attacker.play(`${attacker.data.values.attack_animations[directionToAttack]}`);
+            attacker.playAfterRepeat(`${attacker.data.values.animations[directionToAttack]}`);
+            this.closestAlly.play(`${this.closestAlly.data.values.damage_animations[directionFromAttack]}`);
+            this.closestAlly.playAfterRepeat(`${this.closestAlly.data.values.animations[directionFromAttack]}`);
             this.closestAlly.setData({ hit_points: this.closestAlly.getData('hit_points') - 25 });
             this.uiText1.setText([
               `HP: ${this.closestAlly.getData("hit_points")}/${this.closestAlly.getData("total_hit_points")}`,
@@ -1782,8 +1806,8 @@ export default class MainScene extends Phaser.Scene {
             this.closestAlly.setData({ hasUiOpen: false });
             if (this.closestAlly.getData("hit_points") === 0) {
               const isSleepingAlly = this.closestAlly;
-              isSleepingAlly.play("dragon_knight_damage_anim1");
-              isSleepingAlly.playAfterRepeat("dragon_knight_laying_down_anim1");
+              isSleepingAlly.play(`${this.closestAlly.data.values.damage_animations[directionFromAttack]}`);
+              isSleepingAlly.playAfterRepeat(`${this.closestAlly.data.values.laying_down_animations[directionFromAttack]}`);
               this.uiText1.setText([
                 "HP: 0/" + isSleepingAlly.getData("total_hit_points"),
                 "Movement: " + isSleepingAlly.getData("movement"),
@@ -1799,7 +1823,6 @@ export default class MainScene extends Phaser.Scene {
                   this.healthBarEmpty1.visible = false;
                   this.healthBar1.visible = false;
                   this.uiText1.setText([""]);
-                  this.add.sprite(isSleepingAlly.getData('coordX'), isSleepingAlly.getData('coordY'), "dragon_knight_downright_laying_down", 2);
                   isSleepingAlly.destory();
                 }
               });
