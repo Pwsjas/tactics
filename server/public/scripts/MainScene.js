@@ -250,8 +250,8 @@ export default class MainScene extends Phaser.Scene {
 
     // Assign placement for skeleton game object on the map.
     this.skeleton_soldier = this.physics.add.sprite(
-      this.coordinateGrid[4][4].x,
-      this.coordinateGrid[4][4].y,
+      this.coordinateGrid[3][4].x,
+      this.coordinateGrid[3][4].y,
       "skeleton_downright_idle"
     );
 
@@ -310,7 +310,7 @@ export default class MainScene extends Phaser.Scene {
       hasMoved: false,
       hasUiOpen: false,
       hasAttacked: false,
-      coordX: 4,
+      coordX: 3,
       coordY: 4,
       animations: {
         down: `skeleton_idle_anim1`,
@@ -541,9 +541,9 @@ export default class MainScene extends Phaser.Scene {
 
       return newUnit;
     }
-    this.dragon_knight1 = generateUnit('dragon_knight', 3, 3);
-    this.dragon_knight2 = generateUnit('dragon_knight', 2, 2);
-    this.dragon_knight3 = generateUnit('dragon_knight', 5, 3);
+    this.dragon_knight1 = generateUnit('dragon_knight', 3, 6);
+    this.dragon_knight2 = generateUnit('dragon_knight', 2, 4);
+    this.dragon_knight3 = generateUnit('dragon_knight', 5, 4);
     this.dragon_knight4 = generateUnit('dragon_knight', 0, 0);
     this.alliesGroup = this.physics.add.group();
     this.alliesGroup.add(this.dragon_knight1)
@@ -715,7 +715,10 @@ export default class MainScene extends Phaser.Scene {
               this.isMoving = false;
               this.hasMoved = true;
               this.movingUnit.gameObject.setData({ hasMoved: true });
-              movePixels(this.movingUnit.gameObject);
+              this.movingUnit.gameObject.x = this.coordinateGrid[this.pathingArray[this.tileMoves].x][this.pathingArray[this.tileMoves].y].x
+              this.movingUnit.gameObject.y = this.coordinateGrid[this.pathingArray[this.tileMoves].x][this.pathingArray[this.tileMoves].y].y
+              console.log(this.coordinateGrid[0][1].x, this.coordinateGrid[0][1].y)
+              console.log(this.movingUnit.gameObject.x, this.movingUnit.gameObject.y)
             }
         } else {
           if (
@@ -877,7 +880,9 @@ export default class MainScene extends Phaser.Scene {
 
     //Findpath
     const findPath = (prevDirection, moveCount, totalMoves) => {
+      console.log("New Tilel", this.tracker.getData('coordX'), this.tracker.getData('coordY'))
       closestTracker = this.physics.closest(this.tracker, Phaser.GameObject);
+      let allInvalid = 0;
       //return if moveCount reached
       if (moveCount === totalMoves) {
         moveTracker(prevDirection);
@@ -886,18 +891,12 @@ export default class MainScene extends Phaser.Scene {
 
       //Check if new location is invalid
       if ((
-        this.tracker.x === closestTracker.gameObject.x && this.tracker.y === closestTracker.gameObject.y)
-        ||
-        (this.invalidTiles.filter((coords) => coords.x === this.tracker.getData("coordX") && coords.y === this.tracker.getData("coordY")).length > 0
-        ||
-        this.tracker.getData('coordX') < 0
-        ||
-        this.tracker.getData('coordY') < 0
-        ||
-        this.tracker.getData('coordX') > 15
-        ||
-        this.tracker.getData('coordY') > 15
-        )) {
+        this.tracker.x === closestTracker.gameObject.x && this.tracker.y === closestTracker.gameObject.y) ||
+        (this.invalidTiles.filter((coords) => coords.x === this.tracker.getData("coordX") && coords.y === this.tracker.getData("coordY")).length > 0||
+        this.tracker.getData('coordX') < 0||
+        this.tracker.getData('coordY') < 0||
+        this.tracker.getData('coordX') > 15||
+        this.tracker.getData('coordY') > 15)) {
         //set tracker to prevDirection
         moveTracker(prevDirection);
         return;
@@ -906,66 +905,69 @@ export default class MainScene extends Phaser.Scene {
       //Repeat in every  direciton, except origin direction
       if (prevDirection === 'left') {
         moveTracker('up');
-        findPath('down', moveCount + 1, totalMoves);
+        if (findPath('down', moveCount + 1, totalMoves)) {allInvalid += 1};
 
         moveTracker('right');
-        findPath('left', moveCount + 1, totalMoves);
+        if (findPath('left', moveCount + 1, totalMoves)) {allInvalid += 1};
 
         moveTracker('down');
-        findPath('up', moveCount + 1, totalMoves);
+        if (findPath('up', moveCount + 1, totalMoves)) {allInvalid += 1};
       }
       if (prevDirection === 'right') {
         moveTracker('up');
-        findPath('down', moveCount + 1, totalMoves);
+        if (findPath('down', moveCount + 1, totalMoves)) {allInvalid += 1};
 
         moveTracker('left');
-        findPath('right', moveCount + 1, totalMoves);
+        if (findPath('right', moveCount + 1, totalMoves)) {allInvalid += 1};
 
         moveTracker('down');
-        findPath('up', moveCount + 1, totalMoves);
+        if (findPath('up', moveCount + 1, totalMoves)) {allInvalid += 1};
       }
       if (prevDirection === 'down') {
         moveTracker('up');
-        findPath('down', moveCount + 1, totalMoves);
+        if (findPath('down', moveCount + 1, totalMoves)) {allInvalid += 1};
 
         moveTracker('right');
-        findPath('left', moveCount + 1, totalMoves);
+        if (findPath('left', moveCount + 1, totalMoves)) {allInvalid += 1};
 
         moveTracker('left');
-        findPath('right', moveCount + 1, totalMoves);
+        if (findPath('right', moveCount + 1, totalMoves)) {allInvalid += 1};
       }
       if (prevDirection === 'up') {
         moveTracker('left');
-        findPath('right', moveCount + 1, totalMoves);
+        if (findPath('right', moveCount + 1, totalMoves)) {allInvalid += 1};
 
         moveTracker('right');
-        findPath('left', moveCount + 1, totalMoves);
+        if (findPath('left', moveCount + 1, totalMoves)) {allInvalid += 1};
 
         moveTracker('down');
-        findPath('up', moveCount + 1, totalMoves);
+        if (findPath('up', moveCount + 1, totalMoves)) {allInvalid += 1};
       }
       //Set Tracker to prevDirection
-      moveTracker(prevDirection);
-      
-      //Check if sprite already exists
-      if (this.legalMovement.filter((coords) => coords.x === this.tracker.getData("coordX") && coords.y === this.tracker.getData("coordY")).length > 0) {
-        return;
+      if (allInvalid !== 3) {
+        moveTracker(prevDirection);
+        
+        //Check if sprite already exists
+        if (this.legalMovement.filter((coords) => coords.x === this.tracker.getData("coordX") && coords.y === this.tracker.getData("coordY")).length > 0) {
+          return;
+        }
       }
-
+        
       //Add location to legalMovement
       this.legalMovement.push({x: this.tracker.getData('coordX'), y: this.tracker.getData('coordY')});
-
+        
       //Render sprite and add it to this.movementGrid
       if (this.phase === 'player') {
-        console.log(this.tracker.getData('coordX'), this.tracker.getData('coordY'))
-        console.log(this.coordinateGrid[this.tracker.getData('coordX')][this.tracker.getData('coordY')].x, this.coordinateGrid[this.tracker.getData('coordX')][this.tracker.getData('coordY')].y + 16)
         this.movementGrid.push(this.add.sprite(
           this.coordinateGrid[this.tracker.getData('coordX')][this.tracker.getData('coordY')].x,
           this.coordinateGrid[this.tracker.getData('coordX')][this.tracker.getData('coordY')].y + 16,
           "movement-tile"
         ));
       }
-
+          
+      if (allInvalid === 3) {
+        moveTracker(prevDirection);
+      }
       return;
     }
 
@@ -1020,24 +1022,34 @@ export default class MainScene extends Phaser.Scene {
               this.tracker.y = this.selectedUnit.y;
               this.legalMovement = [];
               this.movementGrid = [];
-              
+
               moveTracker('up');
+              console.log(this.tracker.getData('coordX'), this.tracker.getData('coordY'))
               findPath('down', 0, this.selectedUnit.gameObject.getData('movement')+ 1);
+              console.log("after", this.tracker.getData('coordX'), this.tracker.getData('coordY'))
       
               moveTracker('down');
+              console.log(this.tracker.getData('coordX'), this.tracker.getData('coordY'))
               findPath('up', 0, this.selectedUnit.gameObject.getData('movement')+ 1);
+              console.log("after", this.tracker.getData('coordX'), this.tracker.getData('coordY'))
       
               moveTracker('right');
+              console.log(this.tracker.getData('coordX'), this.tracker.getData('coordY'))
               findPath('left', 0, this.selectedUnit.gameObject.getData('movement')+ 1); 
+              console.log("after", this.tracker.getData('coordX'), this.tracker.getData('coordY'))
       
               moveTracker('left');
+              console.log(this.tracker.getData('coordX'), this.tracker.getData('coordY'))
               findPath('right', 0, this.selectedUnit.gameObject.getData('movement')+ 1);
+              console.log("after", this.tracker.getData('coordX'), this.tracker.getData('coordY'))
   
               this.selectedUnit.gameObject.setData({hasMovementTiles: true});
+              console.log("Legal Movement: ", this.legalMovement);
             }
           }
   
-          if (Phaser.Input.Keyboard.JustDown(this.inputKeys.q)) {
+          if (Phaser.Input.Keyboard.JustDown(this.inputKeys.p) && this.movementGrid) {
+            console.log('test')
             //Confirm movement is valid
             if (
               this.legalMovement.filter(
@@ -1399,7 +1411,6 @@ export default class MainScene extends Phaser.Scene {
             console.log(this.pathingArray);
 
             this.tileMoves = this.pathingArray.length - 1;
-            console.log(this.tileMoves);
             this.movingUnit = enemy;
             moveEnemyUnit(enemy, this.pathingArray, this.tileMoves);
             this.isMoving = true;
