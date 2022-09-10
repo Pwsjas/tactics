@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!--Stylesheets-->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" href="styles/main-page.css"/>
+
+    <!--Font-->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+    <!--Jquery-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+    <!--JS-->
+    <script src="scripts/mainPage.js"></script>
+
+    <title>Tactics RPG</title>
+  </head>
+  <body>
+    <h1 id="title">Tactics RPG</h1>
+    <section id="image-reel">
+
+      <div id="img1" class="img">
+        <img src="images/img1.png">
+      </div>
+      <div id="img2" class="img">
+        <img src="images/img2.png">
+      </div>
+      <div id="img3" class="img">
+        <img src="images/img3.png">
+      </div>
+      
+    </section>
+    <section id="instructions">
+      <article class="cursor-controls-container">
+        <p>Move your cursor with:</p>
+        <section class="images-container">
+          <div>
+            <img class="key-image" src="https://see.fontimg.com/api/renderfont4/MAYv/eyJyIjoiZnMiLCJoIjo5NywidyI6MTAwMCwiZnMiOjk3LCJmZ2MiOiIjMDAwMDAwIiwiYmdjIjoiI0ZGRkZGRiIsInQiOjF9/dw/key-normal-c-sd.png" alt="Keyboard fonts">
+          </div>
+          <div>
+            <img class="key-image" src="https://see.fontimg.com/api/renderfont4/MAYv/eyJyIjoiZnMiLCJoIjo5NywidyI6MTAwMCwiZnMiOjk3LCJmZ2MiOiIjMDAwMDAwIiwiYmdjIjoiI0ZGRkZGRiIsInQiOjF9/YQ/key-normal-c-sd.png" alt="Keyboard fonts">
+            <img class="key-image" src="https://see.fontimg.com/api/renderfont4/MAYv/eyJyIjoiZnMiLCJoIjo5NywidyI6MTAwMCwiZnMiOjk3LCJmZ2MiOiIjMDAwMDAwIiwiYmdjIjoiI0ZGRkZGRiIsInQiOjF9/cw/key-normal-c-sd.png" alt="Keyboard fonts">
+            <img class="key-image" src="https://see.fontimg.com/api/renderfont4/MAYv/eyJyIjoiZnMiLCJoIjo5NywidyI6MTAwMCwiZnMiOjk3LCJmZ2MiOiIjMDAwMDAwIiwiYmdjIjoiI0ZGRkZGRiIsInQiOjF9/ZA/key-normal-c-sd.png" alt="Keyboard fonts">
+          </div>
+        </section>
+      </article>
+      <article class="select-controls-container">
+        <p>Select a character with:</p>
+        <img class="key-image" src="https://see.fontimg.com/api/renderfont4/MAYv/eyJyIjoiZnMiLCJoIjo5NywidyI6MTAwMCwiZnMiOjk3LCJmZ2MiOiIjMDAwMDAwIiwiYmdjIjoiI0ZGRkZGRiIsInQiOjF9/cQ/key-normal-c-sd.png" alt="Keyboard fonts">
+        <p>(Player or Enemy)</p>
+      </article>
+      <article class="action-controls-container">
+        <p>Perform an action with:</p>
+        <img class="key-image" src="https://see.fontimg.com/api/renderfont4/MAYv/eyJyIjoiZnMiLCJoIjo5NywidyI6MTAwMCwiZnMiOjk3LCJmZ2MiOiIjMDAwMDAwIiwiYmdjIjoiI0ZGRkZGRiIsInQiOjF9/ZQ/key-normal-c-sd.png" alt="Keyboard fonts">
+        <p>(Move)</p>
+        <p>(Attack)</p>
+      </article>
+    </section>
+    <section id="play-here">
+      <h2>
+        Play the game here!
+      </h2>
+      <form action="/game" method="GET">
+        <p>>>>  <button type="submit" class="btn btn-light">Start</button>  <<<</p>
+      </form>
+    </section>
+  </body>
+</html>

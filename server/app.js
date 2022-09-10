@@ -13,6 +13,10 @@ app.use(express.static(__dirname + '/public'));
 
 
 app.get('/', (req, res) => {
+	res.sendFile(__dirname + '/front_page.html');
+})
+
+app.get('/game', (req, res) => {
 	res.sendFile(__dirname + '/index.html');
 })
 

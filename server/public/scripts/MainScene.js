@@ -20,6 +20,8 @@ export default class MainScene extends Phaser.Scene {
     let attackTiles = [];
     let attackGrid = [];
     let isMoving = false;
+    let finishMove = false;
+    let finishAttack = false;
 
     let phase;
     let enemyCount;
@@ -669,8 +671,6 @@ export default class MainScene extends Phaser.Scene {
       this.hasAttacked - false;
       this.legalMovement = undefined;
       this.selectedUnit = undefined;
-      console.log(this.coordinateGrid[3][2].x, this.coordinateGrid[3][2].y)
-      console.log(this.dragon_knight1.x, this.dragon_knight1.y)
     }
     let closestTracker = this.physics.closest(this.tracker, Phaser.GameObject);
     
@@ -707,7 +707,6 @@ export default class MainScene extends Phaser.Scene {
     }
 
     const findDirection = (destination, location) => {
-      console.log(destination, location);
       if (destination.x - location.x > 0 && destination.y - location.y > 0) {
         return 'left';
       } else if (destination.x - location.x > 0 && destination.y - location.y < 0) {
@@ -783,6 +782,7 @@ export default class MainScene extends Phaser.Scene {
               this.movingUnit.setData({ hasMoved: true });
               this.movingUnit.x = this.coordinateGrid[this.pathingArray[this.tileMoves].x][this.pathingArray[this.tileMoves].y].x
               this.movingUnit.y = this.coordinateGrid[this.pathingArray[this.tileMoves].x][this.pathingArray[this.tileMoves].y].y
+              this.finishMove = true;
             }
         } else {
           if (
@@ -806,8 +806,6 @@ export default class MainScene extends Phaser.Scene {
               this.movingUnit.gameObject.setData({ hasMoved: true });
               this.movingUnit.gameObject.x = this.coordinateGrid[this.pathingArray[this.tileMoves].x][this.pathingArray[this.tileMoves].y].x
               this.movingUnit.gameObject.y = this.coordinateGrid[this.pathingArray[this.tileMoves].x][this.pathingArray[this.tileMoves].y].y
-              console.log(this.coordinateGrid[0][1].x, this.coordinateGrid[0][1].y)
-              console.log(this.movingUnit.gameObject.x, this.movingUnit.gameObject.y)
             }
         } else {
           if (
@@ -830,7 +828,6 @@ export default class MainScene extends Phaser.Scene {
 
       //Check if destination has been reached
       if (this.tracker.getData("coordX") === destination.x && this.tracker.getData("coordY") === destination.y) {
-        console.log("FOUND DESTINATION")
         this.pathingArray.push({x: this.tracker.getData('coordX'), y: this.tracker.getData('coordY')});
         moveTracker(prevDirection);
         return true
@@ -1137,7 +1134,6 @@ export default class MainScene extends Phaser.Scene {
           }
   
           if (Phaser.Input.Keyboard.JustDown(this.inputKeys.p) && this.movementGrid) {
-            console.log('test')
             //Confirm movement is valid
             if (
               this.legalMovement.filter(
@@ -1302,6 +1298,8 @@ export default class MainScene extends Phaser.Scene {
             attacker.setData({ hasAttackTiles: false });
             closest.gameObject.setData({ hasUiOpen: false });
             if (closest.gameObject.getData("hit_points") === 0) {
+              this.enemies.splice(this.enemies.map(enemy => enemy.data.values.hit_points).indexOf(0), 1);
+              this.enemyTotal -= 1;
               closest.gameObject.play(`${closest.gameObject.data.values.damage_animations[directionFromAttack]}`);
               closest.gameObject.playAfterRepeat(`${closest.gameObject.data.values.laying_down_animations[directionFromAttack]}`);
               this.uiText2.setText([
@@ -1371,8 +1369,6 @@ export default class MainScene extends Phaser.Scene {
         
         moveTracker('right');
         findPath('left', 0, enemy.getData('movement')+ 1);
-
-        console.log(this.legalMovement);
       }
 
       //  Attack lowest hp and closest if in range
@@ -1409,14 +1405,16 @@ export default class MainScene extends Phaser.Scene {
       const lowHealthAllies = this.allies.filter((ally) => {
         return ally.getData('hit_points') === Math.min(...alliesHealth);
       });
+
       //Physics group of low health allies
       const lowHealthAlliesGroup = this.physics.add.group(); 
       for (const ally of lowHealthAllies) {
         lowHealthAlliesGroup.add(ally);
       }
+
       if (!this.enemyPrep) {
         // Find the closest ally to target.
-        this.closestAlly = this.physics.closest(enemy, this.alliesGroup.children.entries);
+        this.closestAlly = this.physics.closest(enemy, this.alliesGroup.children.entries); //PROBLEM
 
         //Closest low health ally
         this.closestLowHealthAlly = this.physics.closest(enemy, lowHealthAlliesGroup.children.entries);
@@ -1426,12 +1424,13 @@ export default class MainScene extends Phaser.Scene {
           return inRange({x: ally.getData('coordX'), y: ally.getData('coordY')});
         });
         this.enemyPrep = true;
+        console.log("----------------new turn--------------------")
+        console.log(this.alliesInRange)
       }
 
       if (!this.hasMoved) {
         //Check if allies are in range
         if (this.alliesInRange.length > 0 && !this.isMoving) {
-          console.log(this.alliesInRange);
           //Check if low health allies are in range
           if (this.alliesInRange.includes(this.closestLowHealthAlly)) {
             // Move towards lowest health ally, and attack
@@ -1664,24 +1663,8 @@ export default class MainScene extends Phaser.Scene {
             this.isMoving = true;
             this.legalMovement = [];
             this.hasAttacked = true;
-            
-              //Cleanup
-              this.time.addEvent({
-                delay: 1000,
-                callback: () => {
-                  this.enemyCount += 1;
-                  this.hasMoved = false;
-                  this.hasAttacked = false;
-                  this.legalMovement = undefined;
-                  this.closestMove = undefined;
-                  this.enemyPrep = undefined;
 
-                  if (this.enemyCount === this.enemyTotal) {
-                    this.phase = 'player';
-                    this.enemyCount = 0;
-                  }
-                }
-              })
+            this.finishAttack = true;
           }
         }
       }
@@ -1720,55 +1703,28 @@ export default class MainScene extends Phaser.Scene {
             this.hasAttacked = true;
             this.closestLowHealthAlly.setData({ hasUiOpen: false });
             if (this.closestLowHealthAlly.getData("hit_points") === 0) {
-              this.closestLowHealthAlly.play(`${this.closestLowHealthAlly.data.values.damage_animations[directionFromAttack]}`);
-              this.closestLowHealthAlly.playAfterRepeat(`${this.closestLowHealthAlly.data.values.laying_down_animations[directionFromAttack]}`);
+              this.allies.splice(this.allies.map(ally => ally.data.values.hit_points).indexOf(0), 1);
+              const isSleepingAlly = this.closestLowHealthAlly;
+              isSleepingAlly.play(`${this.closestLowHealthAlly.data.values.damage_animations[directionFromAttack]}`);
+              isSleepingAlly.playAfterRepeat(`${this.closestLowHealthAlly.data.values.laying_down_animations[directionFromAttack]}`);
               this.uiText1.setText([
-                `HP: ${this.closestLowHealthAlly.getData("hit_points")}/${this.closestLowHealthAlly.getData("total_hit_points")}`,
-                "Movement: " + this.closestLowHealthAlly.getData("movement"),
+                "HP: 0/" + isSleepingAlly.getData("total_hit_points"),
+                "Movement: " + isSleepingAlly.getData("movement"),
               ]);
-              this.setMeterPercentage1(this.closestLowHealthAlly.getData("hit_points"));
-              this.hasAttacked = true;
-              this.closestLowHealthAlly.setData({ hasUiOpen: false });
-              if (this.closestLowHealthAlly.getData("hit_points") === 0) {
-                const isSleepingAlly = this.closestLowHealthAlly;
-                isSleepingAlly.play(`${this.closestLowHealthAlly.data.values.damage_animations[directionFromAttack]}`);
-                isSleepingAlly.playAfterRepeat(`${this.closestLowHealthAlly.data.values.laying_down_animations[directionFromAttack]}`);
-                this.uiText1.setText([
-                  "HP: 0/" + isSleepingAlly.getData("total_hit_points"),
-                  "Movement: " + isSleepingAlly.getData("movement"),
-                ]);
-                this.allies.splice(this.allies.map(ally => ally.data.values.hit_points).indexOf(0), 1);
-                this.time.addEvent({
-                  delay: 2000,
-                  callback: () => {
-                    //this never executes
-                    isSleepingAlly.setData({ hasUiOpen: false });
-                    this.uiBackground1.visible = false;
-                    this.dragon_knight_portrait.visible = false;
-                    this.healthBarEmpty1.visible = false;
-                    this.healthBar1.visible = false;
-                    this.uiText1.setText([""]);
-                    isSleepingAlly.destroy();
-                  }
-                });
-              }
-            }
-            //Cleanup
-            this.time.addEvent({
-              delay: 1000,
-              callback: () => {
-                this.enemyCount += 1;
-                this.hasMoved = false;
-                this.hasAttacked = false;
-                this.legalMovement = undefined;
-                this.closestMove = undefined;
-                this.enemyPrep = undefined;
-                if (this.enemyCount === this.enemyTotal) {
-                  this.phase = 'player';
-                  this.enemyCount = 0;
+              this.time.addEvent({
+                delay: 2000,
+                callback: () => {
+                  //this never executes
+                  isSleepingAlly.setData({ hasUiOpen: false });
+                  this.uiBackground1.visible = false;
+                  this.dragon_knight_portrait.visible = false;
+                  this.healthBarEmpty1.visible = false;
+                  this.healthBar1.visible = false;
+                  this.uiText1.setText([""]);
+                  isSleepingAlly.destroy();
                 }
-              }
-            })
+              });
+            }
           }
         } else {
           const attacker = enemy;
@@ -1805,6 +1761,7 @@ export default class MainScene extends Phaser.Scene {
             this.hasAttacked = true;
             this.closestAlly.setData({ hasUiOpen: false });
             if (this.closestAlly.getData("hit_points") === 0) {
+              this.allies.splice(this.allies.map(ally => ally.data.values.hit_points).indexOf(0), 1);
               const isSleepingAlly = this.closestAlly;
               isSleepingAlly.play(`${this.closestAlly.data.values.damage_animations[directionFromAttack]}`);
               isSleepingAlly.playAfterRepeat(`${this.closestAlly.data.values.laying_down_animations[directionFromAttack]}`);
@@ -1812,7 +1769,6 @@ export default class MainScene extends Phaser.Scene {
                 "HP: 0/" + isSleepingAlly.getData("total_hit_points"),
                 "Movement: " + isSleepingAlly.getData("movement"),
               ]);
-              this.allies.splice(this.allies.map(ally => ally.data.values.hit_points).indexOf(0), 1);
               this.time.addEvent({
                 delay: 2000,
                 callback: () => {
@@ -1827,24 +1783,31 @@ export default class MainScene extends Phaser.Scene {
                 }
               });
             }
-            //Cleanup
-            this.time.addEvent({
-              delay: 1000,
-              callback: () => {
-                this.enemyCount += 1;
-                this.hasMoved = false;
-                this.hasAttacked = false;
-                this.legalMovement = undefined;
-                this.closestMove = undefined;
-                this.enemyPrep = undefined;
-                if (this.enemyCount === this.enemyTotal) {
-                  this.phase = 'player';
-                  this.enemyCount = 0;
-                }
-              }
-            });
           }
         }
+        this.finishAttack = true;
+      }
+
+      if (this.finishMove && this.finishAttack) {
+        this.finishMove = false;
+        this.finishAttack = false;
+        //Cleanup
+        this.time.addEvent({
+          delay: 1000,
+          callback: () => {
+            this.enemyCount += 1;
+            this.hasMoved = false;
+            this.hasAttacked = false;
+            this.legalMovement = undefined;
+            this.closestMove = undefined;
+            this.enemyPrep = undefined;
+            if (this.enemyCount === this.enemyTotal) {
+              this.phase = 'player';
+              this.enemyCount = 0;
+            }
+            console.log("--------CLEANUP DONE--------")
+          }
+        });
       }
     }
   }
