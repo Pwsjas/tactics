@@ -276,10 +276,10 @@ export default class MainScene extends Phaser.Scene {
         {x: 6, y: 5}, {x: 6, y: 6},
         {x: 7, y: 12}, {x: 7, y: 13},
         {x: 8, y: 11}, {x: 8, y: 12}, {x: 8, y: 13},
-        {x: 9, y: 11}, {x: 9, y: 12}, {x: 9, y: 13},
-        {x: 10, y: 9}, {x: 10, y: 12}, {x: 10, y: 13},
-        {x: 11, y: 9}, {x: 11, y: 10},
-        {x: 12, y: 10}, {x: 12, y: 12},
+        {x: 10, y: 11}, {x: 10, y: 12}, {x: 10, y: 13},
+        {x: 11, y: 9}, {x: 11, y: 12}, {x: 11, y: 13},
+        {x: 12, y: 9}, {x: 12, y: 10},
+        {x: 13, y: 10}, {x: 13, y: 12},
       ];
       this.mapShift = -141;
     }
@@ -1165,11 +1165,10 @@ export default class MainScene extends Phaser.Scene {
       if (this.selectedUnit) {
         if (this.selectedUnit.gameObject.getData('hasMoved')) {
           if (Phaser.Input.Keyboard.JustDown(this.inputKeys.q)) {
-              // Assign the target enemy and attacker.
+            // Assign the target enemy and attacker.
             const attacker = this.selectedUnit.gameObject;
             // Find the orientation of the selected unit to the enemy it wants to attack.
             const directionToAttack = findDirection({ x: closest.gameObject.getData('coordX'), y: closest.gameObject.getData('coordY') }, { x: attacker.getData('coordX'), y: attacker.getData('coordY') });
-          
 
             attacker.play(`${attacker.data.values.animations[directionToAttack]}`);
             // Make sure the target is an enemy, that the cursor is over it, and that it is within the generated attack tiles.
@@ -1187,19 +1186,21 @@ export default class MainScene extends Phaser.Scene {
                 ]);
             }
           }
-        } else {
-          if (this.player.x === closest.x + 16 && this.player.y === closest.y + 16 && this.allies.includes(closest.gameObject)) {
-            if (Phaser.Input.Keyboard.JustDown(this.inputKeys.q)) {
-              this.selectedUnit = closest;
-              this.selectedUnit.gameObject.setData({ hasUiOpen: true });
-            }
-          }
         }
       } else {
-        if (this.player.x === closest.x + 16 && this.player.y === closest.y + 16 && this.allies.includes(closest.gameObject)) {
+        if (this.player.x === closest.x + 16 && this.player.y === closest.y + 16 && this.allies.includes(closest.gameObject) && !closest.gameObject.getData('hasEndedTurn')) {
           if (Phaser.Input.Keyboard.JustDown(this.inputKeys.q)) {
             this.selectedUnit = closest;
             this.selectedUnit.gameObject.setData({ hasUiOpen: true });
+            this.uiBackground1.visible = true;
+            this.dragon_knight_portrait.visible = true;
+            this.healthBarEmpty1.visible = true;
+            this.healthBar1.visible = true;
+            this.uiText1.setText([
+              `HP: ${this.selectedUnit.gameObject.getData("hit_points")}/${this.selectedUnit.gameObject.getData("total_hit_points")}`,
+              "Movement: " + this.selectedUnit.gameObject.getData("movement"),
+            ]);
+            this.setMeterPercentage1(this.selectedUnit.gameObject.getData("hit_points"));
           }
         }
       }
@@ -1207,17 +1208,17 @@ export default class MainScene extends Phaser.Scene {
       // PLAYER //
       ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-      if (this.selectedUnit) {
+      if (this.selectedUnit && !this.selectedUnit.gameObject.getData('hasEndedTurn')) {
   
       ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       // MOVEMENT //
       ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
         //check if unit has moved this turn
-        if (!this.selectedUnit.gameObject.getData("hasMoved")) {
+        if (!this.hasMoved) {
           //check if unit has movement tiles rendered around them
           if (!this.selectedUnit.gameObject.getData("hasMovementTiles")) {
-            if (Phaser.Input.Keyboard.JustDown(this.inputKeys.p)) {
+            if (Phaser.Input.Keyboard.JustDown(this.inputKeys.e)) {
               this.tracker.setData({coordX: this.selectedUnit.gameObject.getData("coordX"), coordY: this.selectedUnit.gameObject.getData("coordY")});
               this.tracker.x = this.selectedUnit.x;
               this.tracker.y = this.selectedUnit.y;
@@ -1249,7 +1250,7 @@ export default class MainScene extends Phaser.Scene {
             }
           }
   
-          if (Phaser.Input.Keyboard.JustDown(this.inputKeys.p) && this.movementGrid) {
+          if (Phaser.Input.Keyboard.JustDown(this.inputKeys.e) && this.movementGrid) {
             //Confirm movement is valid
             if (
               this.legalMovement.filter(
@@ -1321,7 +1322,8 @@ export default class MainScene extends Phaser.Scene {
               this.movingUnit = this.selectedUnit;
               moveUnit(this.selectedUnit, this.pathingArray, this.tileMoves)
               this.isMoving = true;
-              this.legalMovement = [];
+              this.legalMovement = undefined;
+              this.selectedUnit.gameObject.setData({ hasAttackTiles: false });
             }
           }
         
@@ -1330,14 +1332,14 @@ export default class MainScene extends Phaser.Scene {
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         // Check if unit has moved
-        } else if (this.selectedUnit.gameObject.getData('hasMoved') && !this.selectedUnit.gameObject.getData('hasAttacked')) {
+        } else if (this.hasMoved && !this.hasAttacked) {
           // Assign the target enemy and attacker.
           const attacker = this.selectedUnit.gameObject;
           // Find the orientation of the selected unit to the enemy it wants to attack.
           const directionToAttack = findDirection({ x: closest.gameObject.getData('coordX'), y: closest.gameObject.getData('coordY') }, { x: attacker.getData('coordX'), y: attacker.getData('coordY') });
           
           // If yes, check if the surrounding tiles are valid to put the red tiles on. Generate red tiles based on previous check.
-          if (!attacker.getData("hasAttackTiles")) {
+          if (!this.selectedUnit.gameObject.getData("hasAttackTiles")) {
             const x1 = [1, 0, -1, 0];
             const y1 = [0, 1, 0, -1];
             // For Ranged Characters
@@ -1367,7 +1369,7 @@ export default class MainScene extends Phaser.Scene {
                  this.attackTiles.push({ x: attacker.getData('coordX') + x1[i], y: attacker.getData('coordY') + y1[i]});
                 }
               }
-              attacker.setData({ hasAttackTiles: true });
+              this.selectedUnit.gameObject.setData({ hasAttackTiles: true });
               console.log("Attack Grid: ", this.attackTiles);
         }
           // if (Phaser.Input.Keyboard.JustDown(this.inputKeys.k)) {
@@ -1397,9 +1399,14 @@ export default class MainScene extends Phaser.Scene {
             for (const sprite of this.attackGrid) {
               sprite.destroy();
             }
+
+            //Cleanup
             this.allyCount += 1;
             this.hasMoved = false;
-            this.hasAttacked = false;
+            this.selectedUnit.gameObject.setData({hasAttackTiles: false });
+            this.selectedUnit.gameObject.setData({hasMovementTiles: false});
+            this.selectedUnit.gameObject.setData({hasEndedTurn: true});
+            this.selectedUnit = undefined;
           }
 
           if (this.enemies.includes(closest.gameObject) && closest.gameObject.getData('hasUiOpen') && Phaser.Input.Keyboard.JustDown(this.inputKeys.e) && this.attackTiles.filter(
@@ -1425,9 +1432,16 @@ export default class MainScene extends Phaser.Scene {
               "Movement: " + closest.gameObject.getData("movement"),
             ]);
             this.setMeterPercentage2(closest.gameObject.getData("hit_points"));
-            attacker.setData({ hasAttacked: true });
-            attacker.setData({ hasAttackTiles: false });
+            closest.gameObject.setData({ hasAttackTiles: false });
             closest.gameObject.setData({ hasUiOpen: false });
+
+            //Cleanup
+            this.allyCount += 1;
+            this.hasMoved = false;
+            this.selectedUnit.gameObject.setData({hasMovementTiles: false});
+            this.selectedUnit.gameObject.setData({hasEndedTurn: true});
+            this.selectedUnit = undefined;
+            
             if (closest.gameObject.getData("hit_points") === 0) {
               this.enemies.splice(this.enemies.map(enemy => enemy.data.values.hit_points).indexOf(0), 1);
               this.enemyTotal -= 1;
@@ -1440,8 +1454,7 @@ export default class MainScene extends Phaser.Scene {
               this.time.addEvent({
                 delay: 2000,
                 callback: () => {
-                  attacker.setData({ hasAttacked: true });
-                  attacker.setData({ hasAttackTiles: false });
+                  closest.gameObject.setData({ hasAttackTiles: false });
                   closest.gameObject.setData({ hasUiOpen: false });
                   this.uiBackground2.visible = false;
                   this.skeleton_soldier_portrait.visible = false;
@@ -1455,24 +1468,22 @@ export default class MainScene extends Phaser.Scene {
             }
           }
         }
-  
-        //load ui
-        this.uiBackground1.visible = true;
-        this.dragon_knight_portrait.visible = true;
-        this.healthBarEmpty1.visible = true;
-        this.healthBar1.visible = true;
-  
-        if (this.selectedUnit.gameObject.getData("hit_points") <= 0) {
-          this.uiText1.setText([
-            "HP: 0/" + this.selectedUnit.gameObject.getData("total_hit_points"),
-            "Movement: " + this.selectedUnit.gameObject.getData("movement"),
-          ]);
-        } else {
-          this.uiText1.setText([
-            "HP: " + this.selectedUnit.gameObject.getData("hit_points") + "/" + this.selectedUnit.gameObject.getData("total_hit_points"),
-            "Movement: " + this.selectedUnit.gameObject.getData("movement"),
-          ]);
-          this.setMeterPercentage1(this.selectedUnit.gameObject.getData("hit_points"));
+
+        // End player phase
+        if (this.allyCount === this.allyTotal) {
+          this.allyCount = 0;
+
+          this.time.addEvent({
+            delay: 1000,
+            callback: () => {
+              this.phase = 'enemy';
+
+              for (const ally of this.allies) {
+                ally.setData({hasEndedTurn: false});
+              }
+              console.log('--------Player Phase Complete--------');
+            }
+          });
         }
       }
       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1850,6 +1861,7 @@ export default class MainScene extends Phaser.Scene {
             this.closestLowHealthAlly.setData({ hasUiOpen: false });
             if (this.closestLowHealthAlly.getData("hit_points") === 0) {
               this.allies.splice(this.allies.map(ally => ally.data.values.hit_points).indexOf(0), 1);
+              this.allyTotal -= 1;
               this.alliesGroup
               const isSleepingAlly = this.closestLowHealthAlly;
               isSleepingAlly.play(`${this.closestLowHealthAlly.data.values.damage_animations[directionFromAttack]}`);
@@ -1953,7 +1965,7 @@ export default class MainScene extends Phaser.Scene {
               this.phase = 'player';
               this.enemyCount = 0;
             }
-            console.log("--------CLEANUP DONE--------")
+            console.log("--------CLEANUP DONE--------");
           }
         });
       }
