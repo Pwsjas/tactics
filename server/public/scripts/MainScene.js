@@ -1418,6 +1418,7 @@ export default class MainScene extends Phaser.Scene {
               this.enemyTotal -= 1;
               closest.gameObject.play(`${closest.gameObject.data.values.damage_animations[directionFromAttack]}`);
               closest.gameObject.playAfterRepeat(`${closest.gameObject.data.values.laying_down_animations[directionFromAttack]}`);
+              closest.gameObject.data.values.enemyPortrait.visible = true;
               this.uiBackground2.visible = true;
               this.healthBarEmpty2.visible = true;
               this.healthBar2.visible = true;
@@ -1872,6 +1873,9 @@ export default class MainScene extends Phaser.Scene {
                   this.healthBar1.visible = false;
                   this.uiText1.setText([""]);
                   isSleepingAlly.data.values.allyPortrait.visible = false;
+                  for (const ally of this.allies) {
+                    ally.data.values.allyPortrait.visible = false;
+                  }
                   isSleepingAlly.destroy();
                 }
               });
@@ -1931,6 +1935,9 @@ export default class MainScene extends Phaser.Scene {
                   this.healthBar1.visible = false;
                   this.uiText1.setText([""]);
                   isSleepingAlly.data.values.allyPortrait.visible = false;
+                  for (const ally of this.allies) {
+                    ally.data.values.allyPortrait.visible = false;
+                  }
                   isSleepingAlly.destroy();
                 }
               });
