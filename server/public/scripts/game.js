@@ -27,7 +27,7 @@ const config = {
   backgroundColor: '#000000',
   type: Phaser.AUTO,
   parent: 'game',
-  scene: [MainScene, GameOverScene, MapSelectionScene],
+  scene: [MapSelectionScene, MainScene, GameOverScene],
   scale: {
     zoom: 1,
   },

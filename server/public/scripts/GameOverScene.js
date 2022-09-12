@@ -11,11 +11,6 @@ export default class GameOverScene extends Phaser.Scene {
     this.team = data.team;
     this.map = data.map;
     this.message = data.message;
-
-    //testing
-    this.message = "Congratulations";
-    this.map = 'water';
-    this.team = 'dwarfs';
   }
 
   preload() {

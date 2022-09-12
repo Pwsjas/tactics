@@ -1163,8 +1163,14 @@ export default class MainScene extends Phaser.Scene {
               this.tracker.setData({coordX: this.selectedUnit.gameObject.getData("coordX"), coordY: this.selectedUnit.gameObject.getData("coordY")});
               this.tracker.x = this.selectedUnit.x;
               this.tracker.y = this.selectedUnit.y;
-              this.legalMovement = [];
+              this.legalMovement = [{x: this.selectedUnit.gameObject.getData('coordX'), y: this.selectedUnit.gameObject.getData('coordY')}];
               this.movementGrid = [];
+
+              this.movementGrid.push(this.add.sprite(
+                this.coordinateGrid[this.selectedUnit.gameObject.getData('coordX')][this.selectedUnit.gameObject.getData('coordY')].x,
+                this.coordinateGrid[this.selectedUnit.gameObject.getData('coordX')][this.selectedUnit.gameObject.getData('coordY')].y + 16,
+                "movement-tile"
+              ));
 
               moveTracker('up');
               console.log(this.tracker.getData('coordX'), this.tracker.getData('coordY'))
@@ -1456,6 +1462,7 @@ export default class MainScene extends Phaser.Scene {
                 this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
                   this.scene.start('GameOverScene', {map: this.map, team: this.team, message: "Congratulations!"});
                 })
+                return;
               }
               if (this.allies.length === 0) {
                 //Game Over Scene
@@ -1464,6 +1471,7 @@ export default class MainScene extends Phaser.Scene {
                 this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
                   this.scene.start('GameOverScene', {map: this.map, team: this.team, message: "Game Over"});
                 })
+                return;
               }
               
               this.phase = 'enemy';
