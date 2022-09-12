@@ -207,6 +207,15 @@ export default class MainScene extends Phaser.Scene {
     // Camera that zooms in on the main level.
     this.cameras.main.zoom = 2;
 
+    this.invalidTiles = [
+      {x: 4, y: 5}, {x: 4, y: 6},
+      {x: 5, y: 5}, {x: 5, y: 6}, {x: 5, y: 7},
+      {x: 6, y: 4}, {x: 6, y: 5}, {x: 6, y: 6}, {x: 6, y: 7}, {x: 6, y: 8}, {x: 6, y: 9},
+      {x: 7, y: 4}, {x: 7, y: 5}, {x: 7, y: 6}, {x: 7, y: 7}, {x: 7, y: 8}, {x: 7, y: 9},
+      {x: 8, y: 4}, {x: 8, y: 5}, {x: 8, y: 6}, {x: 8, y: 7}, {x: 8, y: 8}, {x: 8, y: 9},
+      {x: 9, y: 6}, {x: 9, y: 7}, {x: 9, y: 8}
+    ];
+
     if (this.map === 'desert') {
         //Desert Zone invalid Tiles
       this.invalidTiles = [
