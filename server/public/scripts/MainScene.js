@@ -12,6 +12,7 @@ export default class MainScene extends Phaser.Scene {
     let movementGrid = [];
     let legalMovement = [];
     let invalidTiles = [];
+    let liftedTiles = [];
 
     //# of movements for the current movement sequence
     let tileMoves;
@@ -26,6 +27,8 @@ export default class MainScene extends Phaser.Scene {
     let phase;
     let enemyCount;
     let enemyTotal;
+    let allyCount;
+    let allyTotal;
     let sortedLegalMovement;
     let closestMove;
     let hasMoved;
@@ -35,10 +38,15 @@ export default class MainScene extends Phaser.Scene {
     let closestAlly;
     let closestLowHealthAlly
     let alliesInRange;
+
+    let map;
+    let mapShift;
+    let tileName;
   }
 
   // Preload assets into the game engine.
   preload() {
+    this.map = 'water';
     //Preload UI
     this.load.image('ui1', 'assets/ui/ui1.png');
     this.load.image('ui2', 'assets/ui/ui2.png');
@@ -47,9 +55,21 @@ export default class MainScene extends Phaser.Scene {
     this.load.image('health-bar', 'assets/ui/ui-health-bar.png')
     this.load.image('health-bar-empty', 'assets/ui/ui-empty-health-bar.png')
 
-    // Preload the tiles for the map, and the layout of the map itself in a JSON object.
-    this.load.image("tiles", "assets/Isometric-tiles.png");
-    this.load.tilemapTiledJSON("tilemap16", "assets/tilemap16.json");
+    //Load tilemap.png
+    this.load.image("tiles", "assets/tilemap.png");
+
+    //Load tilemap.json based on map selections
+    if (this.map === 'desert') {
+      this.load.tilemapTiledJSON("tilemap16", "assets/desert-zone.json");
+    }
+    
+    if (this.map === 'water') {
+      this.load.tilemapTiledJSON("tilemap16", "assets/water-land.json");
+    }
+
+    if (this.map === 'lava') {
+      this.load.tilemapTiledJSON("tilemap16", "assets/lava-world.json");
+    }
 
     // Preload the cursor and movement tile assets and assign it as a controllable character.
     this.load.image("cursor", "assets/cursor.png");
@@ -224,8 +244,10 @@ export default class MainScene extends Phaser.Scene {
 
   // Create objects in the game engine based on assets.
   create() {
+    this.map = 'water';
     // Camera that zooms in on the main level.
     this.cameras.main.zoom = 2;
+
     this.invalidTiles = [
       {x: 4, y: 5}, {x: 4, y: 6},
       {x: 5, y: 5}, {x: 5, y: 6}, {x: 5, y: 7},
@@ -235,13 +257,86 @@ export default class MainScene extends Phaser.Scene {
       {x: 9, y: 6}, {x: 9, y: 7}, {x: 9, y: 8}
     ];
 
+    if (this.map === 'desert') {
+        //Desert Zone invalid Tiles
+      this.invalidTiles = [
+        {x: 0, y: 0}, {x: 0, y: 1}, {x: 0, y: 2},
+        {x: 1, y: 0}, {x: 1, y: 1},
+        {x: 2, y: 0},
+        {x: 4, y: 5}, {x: 4, y: 6}, 
+        {x: 5, y: 4}, {x: 5, y: 5}, {x: 5, y: 6}, {x: 5, y: 7}, 
+        {x: 6, y: 4}, {x: 6, y: 5}, {x: 6, y: 6}, {x: 6, y: 7}, {x: 6, y: 8}, 
+        {x: 7, y: 4}, {x: 7, y: 5}, {x: 7, y: 6}, {x: 7, y: 7}, {x: 7, y: 8}, {x: 7, y: 9}, 
+        {x: 8, y: 5}, {x: 8, y: 6}, {x: 8, y: 7}, {x: 8, y: 8}, {x: 8, y: 9}, {x: 8, y: 10}, 
+        {x: 9, y: 7}, {x: 9, y: 8}, {x: 9, y: 9}, {x: 9, y: 10}, 
+        {x: 10, y:9}, 
+      ];
+      this.mapShift = -141;
+    }
+
+    if (this.map === 'water') {
+      //Water Land Invalid Tiles
+      this.invalidTiles = [
+        {x: 2, y: 2}, {x: 2, y: 3},
+        {x: 3, y: 2}, {x: 3, y: 3}, {x: 2, y: 3},
+        {x: 4, y: 3}, {x: 4, y: 5}, {x: 4, y: 6},
+        {x: 5, y: 5}, {x: 5, y: 6},
+        {x: 6, y: 5}, {x: 6, y: 6},
+        {x: 7, y: 12}, {x: 7, y: 13},
+        {x: 8, y: 11}, {x: 8, y: 12}, {x: 8, y: 13},
+        {x: 10, y: 11}, {x: 10, y: 12}, {x: 10, y: 13},
+        {x: 11, y: 9}, {x: 11, y: 12}, {x: 11, y: 13},
+        {x: 12, y: 9}, {x: 12, y: 10},
+        {x: 13, y: 10}, {x: 13, y: 12},
+      ];
+      this.mapShift = -141;
+    }
+
+    if (this.map === 'lava') {
+      // Lava World Invalid Tiles
+      this.invalidTiles = [
+        {x: 2, y: 4}, {x: 2, y: 5}, {x: 2, y: 6},
+        {x: 3, y: 3}, {x: 3, y: 4}, {x: 3, y: 5}, {x: 3, y: 6},
+        {x: 4, y: 3}, {x: 4, y: 4}, {x: 4, y: 5}, {x: 4, y: 6},
+        {x: 5, y: 3}, {x: 5, y: 4}, {x: 5, y: 5}, {x: 5, y: 6},
+        {x: 6, y: 3}, {x: 6, y: 4}, {x: 6, y: 5}, {x: 6, y: 10},
+        {x: 7, y: 8}, {x: 7, y: 9}, {x: 7, y: 10},
+        {x: 8, y: 8}, {x: 8, y: 8}, {x: 8, y: 10}, {x: 8, y: 1},
+        {x: 9, y: 8}, {x: 9, y: 9}, {x: 9, y: 10}, {x: 9, y: 11}, {x: 9, y: 12},
+        {x: 10, y: 3}, {x: 10, y: 4}, {x: 10, y: 7}, {x: 10, y: 8}, {x: 10, y: 9}, {x: 10, y: 10}, {x: 10, y: 11}, {x: 10, y: 12}, {x: 10, y: 13},
+        {x: 11, y: 1}, {x: 11, y: 2}, {x: 11, y: 3}, {x: 11, y: 4}, {x: 11, y: 8}, {x: 11, y: 9}, {x: 11, y: 10}, {x: 11, y: 11}, {x: 11, y: 12},
+        {x: 12, y: 2}, {x: 12, y: 3}, {x: 12, y: 4}, {x: 12, y: 5}, {x: 12, y: 9}, {x: 12, y: 10}, {x: 12, y: 11},
+      ]
+      this.mapShift = -144;
+    }
+
+
+    if (this.map === 'desert' || this.map === 'lava') {
+      this.tileName = 'Gio Tiles';
+      this.tileLayers = 3;
+    }
+
+    if (this.map === 'water') {
+      this.tileName = 'gioTiles32';
+      if (this.map === 'water') {
+        this.tileLayers = 9;
+      } else {
+        this.tileLayers = 3;
+      }
+    }
+
+    console.log(this.map);
+    console.log(this.tileName);
+    
     // Create the tile map based on assets.
     const map = this.make.tilemap({ key: "tilemap16" });
-    const tileset = map.addTilesetImage("punyTiles", "tiles", 32, 32, 0, 0);
+    const tileset = map.addTilesetImage(this.tileName, "tiles", 32, 32, 0, 0); //Changed
 
     // Function that determines position of the tile map on the screen, and renders the cursor over it.
     // Accepts the x and y coords of the map, as well as the size of the map in tiles. (Only works for square maps, has to be the same number of tiles on both sides.)
-    map.createLayer("Tile Layer 1", tileset, 624, 232); // 640, 360
+    for (let i = 1; i <= this.tileLayers; i++) {
+      map.createLayer(`Tile Layer ${i}`, tileset, 624, this.mapShift);
+    };
 
     //Create an array of tile coordinates relating tile number to pixel values
     const createTileArray = (x, y, size) => {
@@ -255,7 +350,7 @@ export default class MainScene extends Phaser.Scene {
         for (let j = 0; j < size; j++) {
           output[i].push({
             x: x + 16 + i * 16 + j * -16,
-            y: y + i * 8 + j * 8,
+            y: y + 8 + i * 8 + j * 8,
           });
         }
       }
@@ -562,14 +657,14 @@ export default class MainScene extends Phaser.Scene {
       left: Phaser.Input.Keyboard.KeyCodes.A,
       right: Phaser.Input.Keyboard.KeyCodes.D,
       q: Phaser.Input.Keyboard.KeyCodes.Q,
-      h: Phaser.Input.Keyboard.KeyCodes.H,
       p: Phaser.Input.Keyboard.KeyCodes.P,
       k: Phaser.Input.Keyboard.KeyCodes.K,
       l: Phaser.Input.Keyboard.KeyCodes.L,
       z: Phaser.Input.Keyboard.KeyCodes.Z,
+      e: Phaser.Input.Keyboard.KeyCodes.E,
     });
 
-    this.physics.world.step(0);
+    this.physics.world.step(1);
 
     //Generate allied and enemy units
     const generateUnit = (unitType, x, y, health) => {
@@ -621,12 +716,13 @@ export default class MainScene extends Phaser.Scene {
 
       return newUnit;
     }
-    this.dragon_knight1 = generateUnit('dragon_knight', 3, 6, 100);
-    this.dragon_knight2 = generateUnit('dragon_knight', 2, 4, 100);
-    this.dragon_knight3 = generateUnit('dragon_knight', 5, 4, 100);
-    this.dragon_knight4 = generateUnit('dragon_knight', 0, 0, 100);
-    this.skeleton_soldier1 = generateUnit('skeleton', 4, 4, 75);
-    this.skeleton_soldier2 = generateUnit('skeleton', 4, 10, 75);
+    this.dragon_knight1 = generateUnit('dragon_knight', 11, 4, 100);
+    this.dragon_knight2 = generateUnit('dragon_knight', 9, 3, 100);
+    this.dragon_knight3 = generateUnit('dragon_knight', 10, 6, 100);
+    this.dragon_knight4 = generateUnit('dragon_knight', 12, 5, 100);
+    this.skeleton_soldier1 = generateUnit('skeleton', 3, 12, 75);
+    this.skeleton_soldier2 = generateUnit('skeleton', 4, 11, 75);
+    console.log(this.dragon_knight1)
     this.alliesGroup = this.physics.add.group();
     this.alliesGroup.add(this.dragon_knight1)
     this.alliesGroup.add(this.dragon_knight2)
@@ -639,6 +735,8 @@ export default class MainScene extends Phaser.Scene {
     this.phase = 'player';
     this.enemyCount = 0;
     this.enemyTotal = this.enemies.length;
+    this.allyCount = 0;
+    this.allyTotal = this.allies.length;
   };
 
   // Functions that determines the length of the health bar.
@@ -1023,13 +1121,11 @@ export default class MainScene extends Phaser.Scene {
         if (findPath('up', moveCount + 1, totalMoves)) {allInvalid += 1};
       }
       //Set Tracker to prevDirection
-      if (allInvalid !== 3) {
-        moveTracker(prevDirection);
         
         //Check if sprite already exists
-        if (this.legalMovement.filter((coords) => coords.x === this.tracker.getData("coordX") && coords.y === this.tracker.getData("coordY")).length > 0) {
-          return;
-        }
+      if (this.legalMovement.filter((coords) => coords.x === this.tracker.getData("coordX") && coords.y === this.tracker.getData("coordY")).length > 0) {
+        moveTracker(prevDirection);
+        return;
       }
         
       //Add location to legalMovement
@@ -1037,16 +1133,14 @@ export default class MainScene extends Phaser.Scene {
         
       //Render sprite and add it to this.movementGrid
       if (this.phase === 'player') {
-        this.movementGrid.push(this.add.sprite(
-          this.coordinateGrid[this.tracker.getData('coordX')][this.tracker.getData('coordY')].x,
-          this.coordinateGrid[this.tracker.getData('coordX')][this.tracker.getData('coordY')].y + 16,
-          "movement-tile"
-        ));
+          this.movementGrid.push(this.add.sprite(
+            this.coordinateGrid[this.tracker.getData('coordX')][this.tracker.getData('coordY')].x,
+            this.coordinateGrid[this.tracker.getData('coordX')][this.tracker.getData('coordY')].y + 16,
+            "movement-tile"
+          ));
       }
-          
-      if (allInvalid === 3) {
-        moveTracker(prevDirection);
-      }
+      
+      moveTracker(prevDirection);
       return;
     }
 
@@ -1075,27 +1169,64 @@ export default class MainScene extends Phaser.Scene {
       }
   
       // Coordinates adjustment to target individual character sprites on the map.
-      if (this.player.x === closest.x + 16 && this.player.y === closest.y + 16 && this.allies.includes(closest.gameObject)) {
-        if (Phaser.Input.Keyboard.JustDown(this.inputKeys.q)) {
-          this.selectedUnit = closest;
-          this.selectedUnit.gameObject.setData({ hasUiOpen: true });
+      //UNIT SELECTION
+      if (this.selectedUnit) {
+        if (this.selectedUnit.gameObject.getData('hasMoved')) {
+          if (Phaser.Input.Keyboard.JustDown(this.inputKeys.q)) {
+            // Assign the target enemy and attacker.
+            const attacker = this.selectedUnit.gameObject;
+            // Find the orientation of the selected unit to the enemy it wants to attack.
+            const directionToAttack = findDirection({ x: closest.gameObject.getData('coordX'), y: closest.gameObject.getData('coordY') }, { x: attacker.getData('coordX'), y: attacker.getData('coordY') });
+
+            attacker.play(`${attacker.data.values.animations[directionToAttack]}`);
+            // Make sure the target is an enemy, that the cursor is over it, and that it is within the generated attack tiles.
+            if (this.enemies.includes(closest.gameObject) && this.player.x === closest.x + 16 && this.player.y === closest.y + 16) {
+                // Open the enemy UI, check the UI is open.
+                this.setMeterPercentage2(closest.gameObject.getData("hit_points"));
+                closest.gameObject.setData({ hasUiOpen: true });
+                this.uiBackground2.visible = true;
+                this.skeleton_soldier_portrait.visible = true;
+                this.healthBarEmpty2.visible = true;
+                this.healthBar2.visible = true;
+                this.uiText2.setText([
+                  "HP: " + closest.gameObject.getData("hit_points") + "/" + closest.gameObject.getData("total_hit_points"),
+                  "Movement: " + closest.gameObject.getData("movement"),
+                ]);
+            }
+          }
+        }
+      } else {
+        if (this.player.x === closest.x + 16 && this.player.y === closest.y + 16 && this.allies.includes(closest.gameObject) && !closest.gameObject.getData('hasEndedTurn')) {
+          if (Phaser.Input.Keyboard.JustDown(this.inputKeys.q)) {
+            this.selectedUnit = closest;
+            this.selectedUnit.gameObject.setData({ hasUiOpen: true });
+            this.uiBackground1.visible = true;
+            this.dragon_knight_portrait.visible = true;
+            this.healthBarEmpty1.visible = true;
+            this.healthBar1.visible = true;
+            this.uiText1.setText([
+              `HP: ${this.selectedUnit.gameObject.getData("hit_points")}/${this.selectedUnit.gameObject.getData("total_hit_points")}`,
+              "Movement: " + this.selectedUnit.gameObject.getData("movement"),
+            ]);
+            this.setMeterPercentage1(this.selectedUnit.gameObject.getData("hit_points"));
+          }
         }
       }
       ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       // PLAYER //
       ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
-      if (this.selectedUnit) {
+      if (this.selectedUnit && !this.selectedUnit.gameObject.getData('hasEndedTurn')) {
   
       ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
       // MOVEMENT //
       ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   
         //check if unit has moved this turn
-        if (!this.selectedUnit.gameObject.getData("hasMoved")) {
+        if (!this.hasMoved) {
           //check if unit has movement tiles rendered around them
           if (!this.selectedUnit.gameObject.getData("hasMovementTiles")) {
-            if (Phaser.Input.Keyboard.JustDown(this.inputKeys.p)) {
+            if (Phaser.Input.Keyboard.JustDown(this.inputKeys.e)) {
               this.tracker.setData({coordX: this.selectedUnit.gameObject.getData("coordX"), coordY: this.selectedUnit.gameObject.getData("coordY")});
               this.tracker.x = this.selectedUnit.x;
               this.tracker.y = this.selectedUnit.y;
@@ -1127,7 +1258,7 @@ export default class MainScene extends Phaser.Scene {
             }
           }
   
-          if (Phaser.Input.Keyboard.JustDown(this.inputKeys.p) && this.movementGrid) {
+          if (Phaser.Input.Keyboard.JustDown(this.inputKeys.e) && this.movementGrid) {
             //Confirm movement is valid
             if (
               this.legalMovement.filter(
@@ -1199,7 +1330,8 @@ export default class MainScene extends Phaser.Scene {
               this.movingUnit = this.selectedUnit;
               moveUnit(this.selectedUnit, this.pathingArray, this.tileMoves)
               this.isMoving = true;
-              this.legalMovement = [];
+              this.legalMovement = undefined;
+              this.selectedUnit.gameObject.setData({ hasAttackTiles: false });
             }
           }
         
@@ -1208,14 +1340,14 @@ export default class MainScene extends Phaser.Scene {
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         // Check if unit has moved
-        } else if (this.selectedUnit.gameObject.getData('hasMoved') && !this.selectedUnit.gameObject.getData('hasAttacked')) {
+        } else if (this.hasMoved && !this.hasAttacked) {
           // Assign the target enemy and attacker.
           const attacker = this.selectedUnit.gameObject;
           // Find the orientation of the selected unit to the enemy it wants to attack.
           const directionToAttack = findDirection({ x: closest.gameObject.getData('coordX'), y: closest.gameObject.getData('coordY') }, { x: attacker.getData('coordX'), y: attacker.getData('coordY') });
           
           // If yes, check if the surrounding tiles are valid to put the red tiles on. Generate red tiles based on previous check.
-          if (!attacker.getData("hasAttackTiles")) {
+          if (!this.selectedUnit.gameObject.getData("hasAttackTiles")) {
             const x1 = [1, 0, -1, 0];
             const y1 = [0, 1, 0, -1];
             // For Ranged Characters
@@ -1245,31 +1377,51 @@ export default class MainScene extends Phaser.Scene {
                  this.attackTiles.push({ x: attacker.getData('coordX') + x1[i], y: attacker.getData('coordY') + y1[i]});
                 }
               }
-              attacker.setData({ hasAttackTiles: true });
+              this.selectedUnit.gameObject.setData({ hasAttackTiles: true });
               console.log("Attack Grid: ", this.attackTiles);
         }
-          if (Phaser.Input.Keyboard.JustDown(this.inputKeys.k)) {
-            attacker.play(`${attacker.data.values.animations[directionToAttack]}`);
-            // Make sure the target is an enemy, that the cursor is over it, and that it is within the generated attack tiles.
-            if (this.enemies.includes(closest.gameObject) && this.player.x === closest.x + 16 && this.player.y === closest.y + 16 && this.attackTiles.filter(
-              (coords) =>
-              coords.x === this.player.getData("coordX") &&
-              coords.y === this.player.getData("coordY")
-              ).length > 0) {
-                // Open the enemy UI, check the UI is open.
-                this.setMeterPercentage2(closest.gameObject.getData("hit_points"));
-                closest.gameObject.setData({ hasUiOpen: true });
-                this.uiBackground2.visible = true;
-                this.skeleton_soldier_portrait.visible = true;
-                this.healthBarEmpty2.visible = true;
-                this.healthBar2.visible = true;
-                this.uiText2.setText([
-                  "HP: " + closest.gameObject.getData("hit_points") + "/" + closest.gameObject.getData("total_hit_points"),
-                  "Movement: " + closest.gameObject.getData("movement"),
-                ]);
+          // if (Phaser.Input.Keyboard.JustDown(this.inputKeys.k)) {
+          //   attacker.play(`${attacker.data.values.animations[directionToAttack]}`);
+          //   // Make sure the target is an enemy, that the cursor is over it, and that it is within the generated attack tiles.
+          //   if (this.enemies.includes(closest.gameObject) && this.player.x === closest.x + 16 && this.player.y === closest.y + 16 && this.attackTiles.filter(
+          //     (coords) =>
+          //     coords.x === this.player.getData("coordX") &&
+          //     coords.y === this.player.getData("coordY")
+          //     ).length > 0) {
+          //       // Open the enemy UI, check the UI is open.
+          //       this.setMeterPercentage2(closest.gameObject.getData("hit_points"));
+          //       closest.gameObject.setData({ hasUiOpen: true });
+          //       this.uiBackground2.visible = true;
+          //       this.skeleton_soldier_portrait.visible = true;
+          //       this.healthBarEmpty2.visible = true;
+          //       this.healthBar2.visible = true;
+          //       this.uiText2.setText([
+          //         "HP: " + closest.gameObject.getData("hit_points") + "/" + closest.gameObject.getData("total_hit_points"),
+          //         "Movement: " + closest.gameObject.getData("movement"),
+          //       ]);
+          //   }
+          // }
+
+          if (this.player.x === closest.x + 16 && this.player.y === closest.y + 16 && this.allies.includes(closest.gameObject) && Phaser.Input.Keyboard.JustDown(this.inputKeys.e)) {
+            // Destroy the targeting sprites
+            for (const sprite of this.attackGrid) {
+              sprite.destroy();
             }
+
+            //Cleanup
+            this.allyCount += 1;
+            this.hasMoved = false;
+            this.selectedUnit.gameObject.setData({hasAttackTiles: false });
+            this.selectedUnit.gameObject.setData({hasMovementTiles: false});
+            this.selectedUnit.gameObject.setData({hasEndedTurn: true});
+            this.selectedUnit = undefined;
           }
-          if (this.enemies.includes(closest.gameObject) && closest.gameObject.getData('hasUiOpen') && Phaser.Input.Keyboard.JustDown(this.inputKeys.l)) {
+
+          if (this.enemies.includes(closest.gameObject) && closest.gameObject.getData('hasUiOpen') && Phaser.Input.Keyboard.JustDown(this.inputKeys.e) && this.attackTiles.filter(
+            (coords) =>
+            coords.x === this.player.getData("coordX") &&
+            coords.y === this.player.getData("coordY")
+            ).length > 0)  {
             // Destroy the targeting sprites
             for (const sprite of this.attackGrid) {
               sprite.destroy();
@@ -1288,9 +1440,16 @@ export default class MainScene extends Phaser.Scene {
               "Movement: " + closest.gameObject.getData("movement"),
             ]);
             this.setMeterPercentage2(closest.gameObject.getData("hit_points"));
-            attacker.setData({ hasAttacked: true });
-            attacker.setData({ hasAttackTiles: false });
+            closest.gameObject.setData({ hasAttackTiles: false });
             closest.gameObject.setData({ hasUiOpen: false });
+
+            //Cleanup
+            this.allyCount += 1;
+            this.hasMoved = false;
+            this.selectedUnit.gameObject.setData({hasMovementTiles: false});
+            this.selectedUnit.gameObject.setData({hasEndedTurn: true});
+            this.selectedUnit = undefined;
+            
             if (closest.gameObject.getData("hit_points") === 0) {
               this.enemies.splice(this.enemies.map(enemy => enemy.data.values.hit_points).indexOf(0), 1);
               this.enemyTotal -= 1;
@@ -1303,8 +1462,7 @@ export default class MainScene extends Phaser.Scene {
               this.time.addEvent({
                 delay: 2000,
                 callback: () => {
-                  attacker.setData({ hasAttacked: true });
-                  attacker.setData({ hasAttackTiles: false });
+                  closest.gameObject.setData({ hasAttackTiles: false });
                   closest.gameObject.setData({ hasUiOpen: false });
                   this.uiBackground2.visible = false;
                   this.skeleton_soldier_portrait.visible = false;
@@ -1318,24 +1476,22 @@ export default class MainScene extends Phaser.Scene {
             }
           }
         }
-  
-        //load ui
-        this.uiBackground1.visible = true;
-        this.dragon_knight_portrait.visible = true;
-        this.healthBarEmpty1.visible = true;
-        this.healthBar1.visible = true;
-  
-        if (this.selectedUnit.gameObject.getData("hit_points") <= 0) {
-          this.uiText1.setText([
-            "HP: 0/" + this.selectedUnit.gameObject.getData("total_hit_points"),
-            "Movement: " + this.selectedUnit.gameObject.getData("movement"),
-          ]);
-        } else {
-          this.uiText1.setText([
-            "HP: " + this.selectedUnit.gameObject.getData("hit_points") + "/" + this.selectedUnit.gameObject.getData("total_hit_points"),
-            "Movement: " + this.selectedUnit.gameObject.getData("movement"),
-          ]);
-          this.setMeterPercentage1(this.selectedUnit.gameObject.getData("hit_points"));
+
+        // End player phase
+        if (this.allyCount === this.allyTotal) {
+          this.allyCount = 0;
+
+          this.time.addEvent({
+            delay: 1000,
+            callback: () => {
+              this.phase = 'enemy';
+
+              for (const ally of this.allies) {
+                ally.setData({hasEndedTurn: false});
+              }
+              console.log('--------Player Phase Complete--------');
+            }
+          });
         }
       }
       ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1349,7 +1505,7 @@ export default class MainScene extends Phaser.Scene {
         this.tracker.setData({coordX: enemy.getData("coordX"), coordY: enemy.getData("coordY")});
         this.tracker.x = enemy.x;
         this.tracker.y = enemy.y;
-        this.legalMovement = [];
+        this.legalMovement = [{x: enemy.getData('coordX'), y: enemy.getData('coordY')}];
         this.movementGrid = [];
   
         moveTracker('up');
@@ -1363,6 +1519,8 @@ export default class MainScene extends Phaser.Scene {
         
         moveTracker('right');
         findPath('left', 0, enemy.getData('movement')+ 1);
+
+        console.log(this.legalMovement)
       }
 
       //  Attack lowest hp and closest if in range
@@ -1420,6 +1578,7 @@ export default class MainScene extends Phaser.Scene {
         this.enemyPrep = true;
         console.log("----------------new turn--------------------")
         console.log(this.alliesInRange)
+        console.log(this.legalMovement)
       }
 
       if (!this.hasMoved) {
@@ -1505,17 +1664,23 @@ export default class MainScene extends Phaser.Scene {
           } else {
             // Move towards closest ally, and attack
             console.log("Closest Ally Move: ", this.closestAlly.getData('coordX'), this.closestAlly.getData('coordY'));
-            const viableMoves = this.legalMovement.filter((move) => {
+            let viableMoves = [];
+            let allyNumber = 0;
+            while (viableMoves.length < 1) {
+              viableMoves = this.legalMovement.filter((move) => {
                 if (
-                  move.x === this.closestAlly.getData('coordX') + 1 && move.y === this.closestAlly.getData('coordY') ||
-                  move.x === this.closestAlly.getData('coordX') - 1 && move.y === this.closestAlly.getData('coordY') ||
-                  move.x === this.closestAlly.getData('coordX') && move.y === this.closestAlly.getData('coordY') + 1 ||
-                  move.x === this.closestAlly.getData('coordX') && move.y === this.closestAlly.getData('coordY') - 1
+                  move.x === this.alliesInRange[allyNumber].getData('coordX') + 1 && move.y === this.alliesInRange[allyNumber].getData('coordY') ||
+                  move.x === this.alliesInRange[allyNumber].getData('coordX') - 1 && move.y === this.alliesInRange[allyNumber].getData('coordY') ||
+                  move.x === this.alliesInRange[allyNumber].getData('coordX') && move.y === this.alliesInRange[allyNumber].getData('coordY') + 1 ||
+                  move.x === this.alliesInRange[allyNumber].getData('coordX') && move.y === this.alliesInRange[allyNumber].getData('coordY') - 1
                 ) {
                   return true;
                 }
                 return false;
             });
+            allyNumber += 1;
+            }
+            this.closestAlly = this.alliesInRange[allyNumber - 1];
             
             //findMovementPath
             this.pathingArray = [];
@@ -1607,6 +1772,12 @@ export default class MainScene extends Phaser.Scene {
             let direction = findDirection(this.closestMove, {x: enemy.getData('coordX'), y: enemy.getData('coordY')});
             //Decide the starting direction of the findMovementPath algorithm
             const decideOrientation = () => {
+              if (enemy.getData('coordX') === this.closestMove.x && enemy.getData('coordY') === this.closestMove.y) {
+                this.pathingArray.push(this.closestMove);
+                enemy.setData({direction: null});
+                return;
+              }
+
               if (direction === 'up') {
                 moveTracker('up');
                 if (findMovementPath('down', 0, enemy.getData('movement')+ 1, {x: this.closestMove.x, y: this.closestMove.y})) {return}
@@ -1698,6 +1869,8 @@ export default class MainScene extends Phaser.Scene {
             this.closestLowHealthAlly.setData({ hasUiOpen: false });
             if (this.closestLowHealthAlly.getData("hit_points") === 0) {
               this.allies.splice(this.allies.map(ally => ally.data.values.hit_points).indexOf(0), 1);
+              this.allyTotal -= 1;
+              this.alliesGroup
               const isSleepingAlly = this.closestLowHealthAlly;
               isSleepingAlly.play(`${this.closestLowHealthAlly.data.values.damage_animations[directionFromAttack]}`);
               isSleepingAlly.playAfterRepeat(`${this.closestLowHealthAlly.data.values.laying_down_animations[directionFromAttack]}`);
@@ -1715,16 +1888,17 @@ export default class MainScene extends Phaser.Scene {
                   this.healthBarEmpty1.visible = false;
                   this.healthBar1.visible = false;
                   this.uiText1.setText([""]);
+                  console.log(isSleepingAlly)
                   isSleepingAlly.destroy();
                 }
               });
             }
           }
-        } else {
+        } else if (this.alliesInRange.includes(this.closestAlly)) {
           const attacker = enemy;
 
-          const directionToAttack = findDirection({ x: this.closestLowHealthAlly.getData('coordX'), y: this.closestLowHealthAlly.getData('coordY') }, { x: attacker.getData('coordX'), y: attacker.getData('coordY') });
-          const directionFromAttack = findDirection({ x: attacker.getData('coordX'), y: attacker.getData('coordY') }, { x: this.closestLowHealthAlly.getData('coordX'), y: this.closestLowHealthAlly.getData('coordY') });
+          const directionToAttack = findDirection({ x: this.closestAlly.getData('coordX'), y: this.closestAlly.getData('coordY') }, { x: attacker.getData('coordX'), y: attacker.getData('coordY') });
+          const directionFromAttack = findDirection({ x: attacker.getData('coordX'), y: attacker.getData('coordY') }, { x: this.closestAlly.getData('coordX'), y: this.closestAlly.getData('coordY') });
           // Open the enemy UI, check the UI is open.
           // console.log("Closest Ally Attack: ", this.closestAlly.getData('coordX'), this.closestAlly.getData('coordY'));
           this.setMeterPercentage1(this.closestAlly.getData("hit_points"));
@@ -1766,14 +1940,14 @@ export default class MainScene extends Phaser.Scene {
               this.time.addEvent({
                 delay: 2000,
                 callback: () => {
-                  //this never executes
                   isSleepingAlly.setData({ hasUiOpen: false });
                   this.uiBackground1.visible = false;
                   this.dragon_knight_portrait.visible = false;
                   this.healthBarEmpty1.visible = false;
                   this.healthBar1.visible = false;
                   this.uiText1.setText([""]);
-                  isSleepingAlly.destory();
+                  console.log(isSleepingAlly);
+                  isSleepingAlly.destroy();
                 }
               });
             }
@@ -1799,7 +1973,7 @@ export default class MainScene extends Phaser.Scene {
               this.phase = 'player';
               this.enemyCount = 0;
             }
-            console.log("--------CLEANUP DONE--------")
+            console.log("--------CLEANUP DONE--------");
           }
         });
       }
