@@ -1488,6 +1488,23 @@ export default class MainScene extends Phaser.Scene {
           this.time.addEvent({
             delay: 1000,
             callback: () => {
+              if (this.enemies.length === 0) {
+                //Game Victory Scene
+                this.cameras.main.fadeOut(1000, 0, 0, 0)
+              
+                this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+                  this.scene.start('GameOverScene', {map: this.map, team: this.team, message: "Congratulations!"});
+                })
+              }
+              if (this.allies.length === 0) {
+                //Game Over Scene
+                this.cameras.main.fadeOut(1000, 0, 0, 0)
+              
+                this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+                  this.scene.start('GameOverScene', {map: this.map, team: this.team, message: "Game Over"});
+                })
+              }
+              
               this.phase = 'enemy';
 
               for (const ally of this.allies) {
@@ -2009,6 +2026,23 @@ export default class MainScene extends Phaser.Scene {
         this.time.addEvent({
           delay: 1000,
           callback: () => {
+            if (this.enemies.length === 0) {
+              //Game Victory Scene
+              this.cameras.main.fadeOut(1000, 0, 0, 0)
+            
+              this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+                this.scene.start('GameOverScene', {map: this.map, team: this.team, message: "Congratulations!"});
+              })
+            }
+            if (this.allies.length === 0) {
+              //Game Over Scene
+              this.cameras.main.fadeOut(1000, 0, 0, 0)
+            
+              this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+                this.scene.start('GameOverScene', {map: this.map, team: this.team, message: "Game Over"});
+              })
+            }
+
             this.enemyCount += 1;
             this.hasMoved = false;
             this.hasAttacked = false;

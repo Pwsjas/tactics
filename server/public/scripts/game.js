@@ -24,10 +24,10 @@ import GameOverScene from "./GameOverScene.js";
 const config = {
   width: 1280,
   height: 720,
-  backgroundColor: '#444444',
+  backgroundColor: '#000000',
   type: Phaser.AUTO,
   parent: 'game',
-  scene: [MapSelectionScene, MainScene, GameOverScene],
+  scene: [MainScene, GameOverScene, MapSelectionScene],
   scale: {
     zoom: 1,
   },
