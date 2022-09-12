@@ -53,7 +53,6 @@ export default class MainScene extends Phaser.Scene {
 
   // Preload assets into the game engine.
   preload() {
-    this.map = 'water';
     //Preload UI
     this.load.image('ui1', 'assets/ui/ui1.png');
     this.load.image('ui2', 'assets/ui/ui2.png');
