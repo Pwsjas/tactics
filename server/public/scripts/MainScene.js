@@ -541,7 +541,7 @@ export default class MainScene extends Phaser.Scene {
     }
 
     const createEnemyPortrait = (unit) => {
-      return this.add.sprite(886, 236, `${unit}_idle_anim2`).setScale(1.5);
+      return this.add.sprite(888, 236, `${unit}_idle_anim2`).setScale(1.5);
     }
 
     //Generate allied and enemy units
@@ -589,11 +589,14 @@ export default class MainScene extends Phaser.Scene {
           right: `${unitType}_laying_down_anim3`,
           up: `${unitType}_laying_down_anim4`
         },
-        portrait: createAllyPortrait(unitType)
+        allyPortrait: createAllyPortrait(unitType),
+        enemyPortrait: createEnemyPortrait(unitType),
       });
       newUnit.play(newUnit.data.values.animations.down);
-      newUnit.data.values.portrait.play(`${unitType}_idle_anim1`);
-      newUnit.data.values.portrait.visible = false;
+      newUnit.data.values.allyPortrait.play(`${unitType}_idle_anim1`);
+      newUnit.data.values.enemyPortrait.play(`${unitType}_idle_anim2`);
+      newUnit.data.values.allyPortrait.visible = false;
+      newUnit.data.values.enemyPortrait.visible = false;
       
       return newUnit;
     };
@@ -604,54 +607,18 @@ export default class MainScene extends Phaser.Scene {
       this.ally2 = generateUnit('human_archer', 2, 13, 100);
       this.ally3 = generateUnit('human_thief', 2, 11, 100);
       this.ally4 = generateUnit('dragon_knight', 4, 13, 100);
-      // this.ally1_portrait = createAllyPortrait('human_fighter');
-      // this.ally2_portrait = createAllyPortrait('human_archer');
-      // this.ally3_portrait = createAllyPortrait('human_thief');
-      // this.ally4_portrait = createAllyPortrait('dragon_knight');
-      // this.ally1_portrait.play('human_fighter_idle_anim1');
-      // this.ally2_portrait.play('human_archer_idle_anim1');
-      // this.ally3_portrait.play('human_thief_idle_anim1');
-      // this.ally4_portrait.play('dragon_knight_idle_anim1');
-      // this.ally1_portrait.visible = false;
-      // this.ally2_portrait.visible = false;
-      // this.ally3_portrait.visible = false;
-      // this.ally4_portrait.visible = false;
     }
     if (this.team === "dwarfs") {
       this.ally1 = generateUnit('dwarf_captain', 4, 11, 100);
       this.ally2 = generateUnit('dwarf_hunter', 2, 13, 100);
       this.ally3 = generateUnit('dwarf_worker', 2, 11, 100);
       this.ally4 = generateUnit('dwarf_blacksmith', 4, 13, 100);
-      this.ally1_portrait = createAllyPortrait('dwarf_captain');
-      // this.ally2_portrait = createAllyPortrait('dwarf_hunter');
-      // this.ally3_portrait = createAllyPortrait('dwarf_worker');
-      // this.ally4_portrait = createAllyPortrait('dwarf_blacksmith');
-      // this.ally1_portrait.play('dwarf_captain_idle_anim1');
-      // this.ally2_portrait.play('dwarf_hunter_idle_anim1');
-      // this.ally3_portrait.play('dwarf_worker_idle_anim1');
-      // this.ally4_portrait.play('dwarf_blacksmith_idle_anim1');
-      // this.ally1_portrait.visible = false;
-      // this.ally2_portrait.visible = false;
-      // this.ally3_portrait.visible = false;
-      // this.ally4_portrait.visible = false;
     }
     if (this.team === "elves") {
       this.ally1 = generateUnit('elf_elder', 4, 11, 100);
       this.ally2 = generateUnit('elf_recruit', 2, 13, 100);
       this.ally3 = generateUnit('elf_stalker', 2, 11, 100);
       this.ally4 = generateUnit('elf_warrior', 4, 13, 100);
-      // this.ally1_portrait = createAllyPortrait('elf_elder');
-      // this.ally2_portrait = createAllyPortrait('elf_recruit');
-      // this.ally3_portrait = createAllyPortrait('elf_stalker');
-      // this.ally4_portrait = createAllyPortrait('elf_warrior');
-      // this.ally1_portrait.play('elf_elder_idle_anim1');
-      // this.ally2_portrait.play('elf_recruit_idle_anim1');
-      // this.ally3_portrait.play('elf_stalker_idle_anim1');
-      // this.ally4_portrait.play('elf_warrior_idle_anim1');
-      // this.ally1_portrait.visible = false;
-      // this.ally2_portrait.visible = false;
-      // this.ally3_portrait.visible = false;
-      // this.ally4_portrait.visible = false;
     }
 
     //Create enemies based on map selection
@@ -660,36 +627,18 @@ export default class MainScene extends Phaser.Scene {
       this.enemy2 = generateUnit('orc_soldier', 13, 2, 100);
       this.enemy3 = generateUnit('orc_soldier', 13, 0, 100);
       this.enemy4 = generateUnit('orc_soldier', 15, 2, 100);
-      // this.enemy1_portrait = createEnemyPortrait('orc_shogun');
-      // this.enemy2_portrait = createEnemyPortrait('orc_soldier');
-      // this.enemy1_portrait.play('orc_shogun_idle_anim2');
-      // this.enemy2_portrait.play('orc_soldier_idle_anim2');
-      // this.enemy1_portrait.visible = false;
-      // this.enemy2_portrait.visible = false;
     }
     if (this.map === 'desert') {
       this.enemy1 = generateUnit('skeleton_shaman', 15, 0, 150);
       this.enemy2 = generateUnit('skeleton', 13, 2, 100);
       this.enemy3 = generateUnit('skeleton', 13, 0, 100);
       this.enemy4 = generateUnit('skeleton', 15, 2, 100);
-      // this.enemy1_portrait = createEnemyPortrait('skeleton_shaman');
-      // this.enemy2_portrait = createEnemyPortrait('skeleton');
-      // this.enemy1_portrait.play('skeleton_shaman_idle_anim2');
-      // this.enemy2_portrait.play('skeleton_idle_anim2');
-      // this.enemy1_portrait.visible = false;
-      // this.enemy2_portrait.visible = false;
     }
     if (this.map === 'lava') {
       this.enemy1 = generateUnit('demon_shaman', 15, 0, 150);
       this.enemy2 = generateUnit('demon_soldier', 13, 2, 100);
       this.enemy3 = generateUnit('demon_soldier', 13, 0, 100);
       this.enemy4 = generateUnit('demon_soldier', 15, 2, 100);
-      // this.enemy1_portrait = createEnemyPortrait('demon_shaman');
-      // this.enemy2_portrait = createEnemyPortrait('demon_soldier');
-      // this.enemy1_portrait.play('demon_shaman_idle_anim2');
-      // this.enemy2_portrait.play('demon_soldier_idle_anim2');
-      // this.enemy1_portrait.visible = false;
-      // this.enemy2_portrait.visible = false;
     }
 
     this.alliesGroup = this.physics.add.group();
@@ -709,14 +658,18 @@ export default class MainScene extends Phaser.Scene {
   };
 
   // Functions that determines the length of the health bar.
-  setMeterPercentage1(percent = 100) {
-    const width = 100 * percent / 100;
-	  this.healthBar1.displayWidth = width;
+  setMeterPercentage1(percent) {
+    this.healthBar1.displayWidth = percent;
   };
-  setMeterPercentage2(percent = 100) {
-    const width = 100 * percent / 100;
+  setMeterPercentage2(percent, boss = false) {
+    let width;
+    if (boss) {
+      width = 100 * percent / 150;
+    } else {
+      width = percent;
+    }
     this.healthBar2.displayWidth = width;
-  }
+  };
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   // UPDATE //
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1150,71 +1103,38 @@ export default class MainScene extends Phaser.Scene {
             attacker.play(`${attacker.data.values.animations[directionToAttack]}`);
             // Make sure the target is an enemy, that the cursor is over it, and that it is within the generated attack tiles.
             if (this.enemies.includes(closest.gameObject) && this.player.x === closest.x + 16 && this.player.y === closest.y + 16) {
-                // Open the enemy UI, check the UI is open.
+              for (const enemy of this.enemies) {
+                enemy.data.values.enemyPortrait.visible = false;
+              }
+              // Open the enemy UI, check the UI is open.
+              if (closest.gameObject === this.enemy1) {
+                this.setMeterPercentage2(closest.gameObject.getData('hit_points'), true);
+              } else {
                 this.setMeterPercentage2(closest.gameObject.getData("hit_points"));
-                closest.gameObject.setData({ hasUiOpen: true });
-                this.uiBackground2.visible = true;
-                this.enemy1_portrait.visible = false;
-                this.enemy2_portrait.visible = false;
-                if (this.enemy1) {
-                  if (closest.gameObject.data.list.animations.down === this.enemy1.data.list.animations.down) {
-                    this.enemy1_portrait.visible = true;
-                  }
-                }
-                if (this.enemy2) {
-                  if (closest.gameObject.data.list.animations.down === this.enemy2.data.list.animations.down) {
-                    this.enemy2_portrait.visible = true;
-                  }
-                }
-                if (this.enemy3) {
-                  if (closest.gameObject.data.list.animations.down === this.enemy3.data.list.animations.down) {
-                    this.enemy2_portrait.visible = true;
-                  }
-                }
-                if (this.enemy4) {
-                  if (closest.gameObject.data.list.animations.down === this.enemy4.data.list.animations.down) {
-                    this.enemy2_portrait.visible = true;
-                  }
-                }
-                this.healthBarEmpty2.visible = true;
-                this.healthBar2.visible = true;
-                this.uiText2.setText([
-                  "HP: " + closest.gameObject.getData("hit_points") + "/" + closest.gameObject.getData("total_hit_points"),
-                  "Movement: " + closest.gameObject.getData("movement"),
-                ]);
+              }
+              // if (closest.gameObject === this.enemy1)
+              closest.gameObject.setData({ hasUiOpen: true });
+              closest.gameObject.data.values.enemyPortrait.visible = true;
+              this.uiBackground2.visible = true;
+              this.healthBarEmpty2.visible = true;
+              this.healthBar2.visible = true;
+              this.uiText2.setText([
+                "HP: " + closest.gameObject.getData("hit_points") + "/" + closest.gameObject.getData("total_hit_points"),
+                "Movement: " + closest.gameObject.getData("movement"),
+              ]);
             }
           }
         }
       } else {
         if (this.player.x === closest.x + 16 && this.player.y === closest.y + 16 && this.allies.includes(closest.gameObject) && !closest.gameObject.getData('hasEndedTurn')) {
           if (Phaser.Input.Keyboard.JustDown(this.inputKeys.q)) {
+            for (const ally of this.allies) {
+              ally.data.values.allyPortrait.visible = false;
+            }
             this.selectedUnit = closest;
             this.selectedUnit.gameObject.setData({ hasUiOpen: true });
+            this.selectedUnit.gameObject.data.values.allyPortrait.visible = true;
             this.uiBackground1.visible = true;
-            this.ally1_portrait.visible = false;
-            this.ally2_portrait.visible = false;
-            this.ally3_portrait.visible = false;
-            this.ally4_portrait.visible = false;
-            if (this.ally1) {
-              if (this.selectedUnit.gameObject.data.list.animations.down === this.ally1.data.list.animations.down) {
-                this.ally1_portrait.visible = true;
-              }
-            }
-            if (this.ally2) {
-              if (this.selectedUnit.gameObject.data.list.animations.down === this.ally2.data.list.animations.down) {
-                this.ally2_portrait.visible = true;
-              }
-            }
-            if (this.ally3) {
-              if (this.selectedUnit.gameObject.data.list.animations.down === this.ally3.data.list.animations.down) {
-                this.ally3_portrait.visible = true;
-              }
-            }
-            if (this.ally4) {
-              if (this.selectedUnit.gameObject.data.list.animations.down === this.ally4.data.list.animations.down) {
-                this.ally4_portrait.visible = true;
-              }
-            }
             this.healthBarEmpty1.visible = true;
             this.healthBar1.visible = true;
             this.uiText1.setText([
@@ -1427,7 +1347,21 @@ export default class MainScene extends Phaser.Scene {
             this.selectedUnit.gameObject.setData({hasAttackTiles: false });
             this.selectedUnit.gameObject.setData({hasMovementTiles: false});
             this.selectedUnit.gameObject.setData({hasEndedTurn: true});
+            this.selectedUnit.gameObject.data.values.allyPortrait.visible = false;
+            this.uiBackground1.visible = false;
+            this.healthBarEmpty1.visible = false;
+            this.healthBar1.visible = false;
+            this.uiText1.setText([""]);
             this.selectedUnit = undefined;
+            this.uiBackground2.visible = false;
+            this.healthBarEmpty2.visible = false;
+            this.healthBar2.visible = false;
+            this.uiText2.setText([""]);
+            for (const enemy of this.enemies) {
+              enemy.data.values.enemyPortrait.visible = false;
+              enemy.setData({ hasAttackTiles: false });
+              enemy.setData({ hasUiOpen: false });
+            }
           }
 
           if (this.enemies.includes(closest.gameObject) && closest.gameObject.getData('hasUiOpen') && Phaser.Input.Keyboard.JustDown(this.inputKeys.e) && this.attackTiles.filter(
@@ -1452,24 +1386,43 @@ export default class MainScene extends Phaser.Scene {
               `HP: ${closest.gameObject.getData("hit_points")}/${closest.gameObject.getData("total_hit_points")}`,
               "Movement: " + closest.gameObject.getData("movement"),
             ]);
-            this.setMeterPercentage2(closest.gameObject.getData("hit_points"));
-            closest.gameObject.setData({ hasAttackTiles: false });
-            closest.gameObject.setData({ hasUiOpen: false });
+            if (closest.gameObject === this.enemy1) {
+              this.setMeterPercentage2(closest.gameObject.getData('hit_points'), true);
+            } else {
+              this.setMeterPercentage2(closest.gameObject.getData("hit_points"));
+            }
 
             //Cleanup
             this.allyCount += 1;
             this.hasMoved = false;
             this.selectedUnit.gameObject.setData({hasMovementTiles: false});
             this.selectedUnit.gameObject.setData({hasEndedTurn: true});
+            this.selectedUnit.gameObject.data.values.allyPortrait.visible = false;
+            this.uiBackground1.visible = false;
+            this.healthBarEmpty1.visible = false;
+            this.healthBar1.visible = false;
+            this.uiText1.setText([""]);
             this.selectedUnit = undefined;
+            this.uiBackground2.visible = false;
+            this.healthBarEmpty2.visible = false;
+            this.healthBar2.visible = false;
+            this.uiText2.setText([""]);
+            for (const enemy of this.enemies) {
+              enemy.data.values.enemyPortrait.visible = false;
+              enemy.setData({ hasAttackTiles: false });
+              enemy.setData({ hasUiOpen: false });
+            }
             
             if (closest.gameObject.getData("hit_points") === 0) {
               this.enemies.splice(this.enemies.map(enemy => enemy.data.values.hit_points).indexOf(0), 1);
               this.enemyTotal -= 1;
               closest.gameObject.play(`${closest.gameObject.data.values.damage_animations[directionFromAttack]}`);
               closest.gameObject.playAfterRepeat(`${closest.gameObject.data.values.laying_down_animations[directionFromAttack]}`);
+              this.uiBackground2.visible = true;
+              this.healthBarEmpty2.visible = true;
+              this.healthBar2.visible = true;
               this.uiText2.setText([
-                "HP: 0/" + closest.gameObject.getData("total_hit_points"),
+                `HP: 0/${closest.gameObject.getData("total_hit_points")}`,
                 "Movement: " + closest.gameObject.getData("movement"),
               ]);
               this.time.addEvent({
@@ -1478,11 +1431,10 @@ export default class MainScene extends Phaser.Scene {
                   closest.gameObject.setData({ hasAttackTiles: false });
                   closest.gameObject.setData({ hasUiOpen: false });
                   this.uiBackground2.visible = false;
-                  this.skeleton_soldier_portrait.visible = false;
                   this.healthBarEmpty2.visible = false;
                   this.healthBar2.visible = false;
+                  closest.gameObject.data.values.enemyPortrait.visible = false;
                   this.uiText2.setText([""]);
-                  this.add.sprite(closest.gameObject.getData('coordX'), closest.gameObject.getData('coordY'), "skeleton_downright_laying_down", 2);
                   closest.gameObject.destroy();
                 }
               });
@@ -1850,6 +1802,7 @@ export default class MainScene extends Phaser.Scene {
       // Check if enemy has attacked.
       if (this.hasMoved && !this.hasAttacked) {
         if (this.alliesInRange.includes(this.closestLowHealthAlly)) {
+          this.closestLowHealthAlly.data.values.allyPortrait.visible = false;
           // Assign the target enemy and attacker.
           const attacker = enemy;
           // Find the orientation of the selected unit to the enemy it wants to attack.
@@ -1858,31 +1811,8 @@ export default class MainScene extends Phaser.Scene {
           // Open the enemy UI, check the UI is open.
           this.setMeterPercentage1(this.closestLowHealthAlly.getData("hit_points"));
           this.closestLowHealthAlly.setData({ hasUiOpen: true });
+          this.closestLowHealthAlly.data.values.allyPortrait.visible = true;
           this.uiBackground1.visible = true;
-          this.ally1_portrait.visible = false;
-          this.ally2_portrait.visible = false;
-          this.ally3_portrait.visible = false;
-          this.ally4_portrait.visible = false;
-          if (this.ally1) {
-            if (this.closestLowHealthAlly.data.list.animations.down === this.ally1.data.list.animations.down) {
-              this.ally1_portrait.visible = true;
-            }
-          }
-          if (this.ally2) {
-            if (this.closestLowHealthAlly.data.list.animations.down === this.ally2.data.list.animations.down) {
-              this.ally2_portrait.visible = true;
-            }
-          }
-          if (this.ally3) {
-            if (this.closestLowHealthAlly.data.list.animations.down === this.ally3.data.list.animations.down) {
-              this.ally3_portrait.visible = true;
-            }
-          }
-          if (this.ally4) {
-            if (this.closestLowHealthAlly.data.list.animations.down === this.ally4.data.list.animations.down) {
-              this.ally4_portrait.visible = true;
-            }
-          }
           this.healthBarEmpty1.visible = true;
           this.healthBar1.visible = true;
           this.uiText1.setText([
@@ -1904,6 +1834,7 @@ export default class MainScene extends Phaser.Scene {
             this.hasAttacked = true;
             this.closestLowHealthAlly.setData({ hasUiOpen: false });
             if (this.closestLowHealthAlly.getData("hit_points") === 0) {
+              this.closestLowHealthAlly.data.values.allyPortrait.visible = true;
               this.allies.splice(this.allies.map(ally => ally.data.values.hit_points).indexOf(0), 1);
               this.allyTotal -= 1;
               this.alliesGroup
@@ -1923,12 +1854,14 @@ export default class MainScene extends Phaser.Scene {
                   this.healthBarEmpty1.visible = false;
                   this.healthBar1.visible = false;
                   this.uiText1.setText([""]);
+                  isSleepingAlly.data.values.allyPortrait.visible = false;
                   isSleepingAlly.destroy();
                 }
               });
             }
           }
         } else if (this.alliesInRange.includes(this.closestAlly)) {
+          this.closestAlly.data.values.allyPortrait.visible = false;
           const attacker = enemy;
 
           const directionToAttack = findDirection({ x: this.closestAlly.getData('coordX'), y: this.closestAlly.getData('coordY') }, { x: attacker.getData('coordX'), y: attacker.getData('coordY') });
@@ -1937,31 +1870,8 @@ export default class MainScene extends Phaser.Scene {
           // console.log("Closest Ally Attack: ", this.closestAlly.getData('coordX'), this.closestAlly.getData('coordY'));
           this.setMeterPercentage1(this.closestAlly.getData("hit_points"));
           this.closestAlly.setData({ hasUiOpen: true });
+          this.closestAlly.data.values.allyPortrait.visible = true;
           this.uiBackground1.visible = true;
-          this.ally1_portrait.visible = false;
-          this.ally2_portrait.visible = false;
-          this.ally3_portrait.visible = false;
-          this.ally4_portrait.visible = false;
-          if (this.ally1) {
-            if (this.closestAlly.data.list.animations.down === this.ally1.data.list.animations.down) {
-              this.ally1_portrait.visible = true;
-            }
-          }
-          if (this.ally2) {
-            if (this.closestAlly.data.list.animations.down === this.ally2.data.list.animations.down) {
-              this.ally2_portrait.visible = true;
-            }
-          }
-          if (this.ally3) {
-            if (this.closestAlly.data.list.animations.down === this.ally3.data.list.animations.down) {
-              this.ally3_portrait.visible = true;
-            }
-          }
-          if (this.ally4) {
-            if (this.closestAlly.data.list.animations.down === this.ally4.data.list.animations.down) {
-              this.ally4_portrait.visible = true;
-            }
-          }
           this.healthBarEmpty1.visible = true;
           this.healthBar1.visible = true;
           this.uiText1.setText([
@@ -1986,6 +1896,7 @@ export default class MainScene extends Phaser.Scene {
             this.hasAttacked = true;
             this.closestAlly.setData({ hasUiOpen: false });
             if (this.closestAlly.getData("hit_points") === 0) {
+              this.closestAlly.data.values.allyPortrait.visible = true;
               this.allies.splice(this.allies.map(ally => ally.data.values.hit_points).indexOf(0), 1);
               const isSleepingAlly = this.closestAlly;
               isSleepingAlly.play(`${this.closestAlly.data.values.damage_animations[directionFromAttack]}`);
@@ -2002,6 +1913,7 @@ export default class MainScene extends Phaser.Scene {
                   this.healthBarEmpty1.visible = false;
                   this.healthBar1.visible = false;
                   this.uiText1.setText([""]);
+                  isSleepingAlly.data.values.allyPortrait.visible = false;
                   isSleepingAlly.destroy();
                 }
               });
