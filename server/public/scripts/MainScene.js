@@ -42,12 +42,16 @@ export default class MainScene extends Phaser.Scene {
     let map;
     let mapShift;
     let tileName;
+
+  }
+
+  init(data) {
+    this.map = data.map;
+    this.team = data.team;
   }
 
   // Preload assets into the game engine.
   preload() {
-    this.map = 'water';
-
     //Preload UI
     this.load.image('ui1', 'assets/ui/ui1.png');
     this.load.image('ui2', 'assets/ui/ui2.png');
@@ -78,174 +82,127 @@ export default class MainScene extends Phaser.Scene {
     this.load.image("attack-tile", "assets/attack-tile.png");
     this.load.image("character", "assets/cursor.png");
 
-    // Preload the spritesheets and animations for the dragon_knight character
-    this.load.spritesheet(
-      "dragon_knight_downright_idle",
-      "assets/dragon-knight/dragon-knight-downright-idle.png",
-      { frameWidth: 32, frameHeight: 32 }
-    );
-    this.load.spritesheet(
-      "dragon_knight_downleft_idle",
-      "assets/dragon-knight/dragon-knight-downleft-idle.png",
-      { frameWidth: 32, frameHeight: 32 }
-    );
-    this.load.spritesheet(
-      "dragon_knight_upright_idle",
-      "assets/dragon-knight/dragon-knight-upright-idle.png",
-      { frameWidth: 32, frameHeight: 32 }
-    );
-    this.load.spritesheet(
-      "dragon_knight_upleft_idle",
-      "assets/dragon-knight/dragon-knight-upleft-idle.png",
-      { frameWidth: 32, frameHeight: 32 }
-    );
-    this.load.spritesheet(
-      "dragon_knight_downright_attacking",
-      "assets/dragon-knight/dragon-knight-downright-attacking.png",
-      { frameWidth: 32, frameHeight: 32 }
-    );
-    this.load.spritesheet(
-      "dragon_knight_downleft_attacking",
-      "assets/dragon-knight/dragon-knight-downleft-attacking.png",
-      { frameWidth: 32, frameHeight: 32 }
-    );
-    this.load.spritesheet(
-      "dragon_knight_upright_attacking",
-      "assets/dragon-knight/dragon-knight-upright-attacking.png",
-      { frameWidth: 32, frameHeight: 32 }
-    );
-    this.load.spritesheet(
-      "dragon_knight_upleft_attacking",
-      "assets/dragon-knight/dragon-knight-upleft-attacking.png",
-      { frameWidth: 32, frameHeight: 32 }
-    );
-    this.load.spritesheet(
-      "dragon_knight_downright_damage",
-      "assets/dragon-knight/dragon-knight-downright-damage.png",
-      { frameWidth: 32, frameHeight: 32 }
-    );
-    this.load.spritesheet(
-      "dragon_knight_downleft_damage",
-      "assets/dragon-knight/dragon-knight-downleft-damage.png",
-      { frameWidth: 32, frameHeight: 32 }
-    );
-    this.load.spritesheet(
-      "dragon_knight_upright_damage",
-      "assets/dragon-knight/dragon-knight-upright-damage.png",
-      { frameWidth: 32, frameHeight: 32 }
-    );
-    this.load.spritesheet(
-      "dragon_knight_upleft_damage",
-      "assets/dragon-knight/dragon-knight-upleft-damage.png",
-      { frameWidth: 32, frameHeight: 32 }
-    );
-    this.load.spritesheet(
-      "dragon_knight_downright_laying_down",
-      "assets/dragon-knight/dragon-knight-downright-laying-down.png",
-      { frameWidth: 32, frameHeight: 32 }
-    );
-    this.load.spritesheet(
-      "dragon_knight_downleft_laying_down",
-      "assets/dragon-knight/dragon-knight-downleft-laying-down.png",
-      { frameWidth: 32, frameHeight: 32 }
-    );
-    this.load.spritesheet(
-      "dragon_knight_upright_laying_down",
-      "assets/dragon-knight/dragon-knight-upright-laying-down.png",
-      { frameWidth: 32, frameHeight: 32 }
-    );
-    this.load.spritesheet(
-      "dragon_knight_upleft_laying_down",
-      "assets/dragon-knight/dragon-knight-upleft-laying-down.png",
-      { frameWidth: 32, frameHeight: 32 }
-    );
+    const spriteSheetLoader = (unit, unitDash) => {
+      this.load.spritesheet(
+        `${unit}_downright_idle`,
+        `assets/${unitDash}/${unitDash}-downright-idle.png`,
+        { frameWidth: 32, frameHeight: 32 }
+      );
+      this.load.spritesheet(
+        `${unit}_downleft_idle`,
+        `assets/${unitDash}/${unitDash}-downleft-idle.png`,
+        { frameWidth: 32, frameHeight: 32 }
+      );
+      this.load.spritesheet(
+        `${unit}_upright_idle`,
+        `assets/${unitDash}/${unitDash}-upright-idle.png`,
+        { frameWidth: 32, frameHeight: 32 }
+      );
+      this.load.spritesheet(
+        `${unit}_upleft_idle`,
+        `assets/${unitDash}/${unitDash}-upleft-idle.png`,
+        { frameWidth: 32, frameHeight: 32 }
+      );
+      this.load.spritesheet(
+        `${unit}_downright_attacking`,
+        `assets/${unitDash}/${unitDash}-downright-attacking.png`,
+        { frameWidth: 32, frameHeight: 32 }
+      );
+      this.load.spritesheet(
+        `${unit}_downleft_attacking`,
+        `assets/${unitDash}/${unitDash}-downleft-attacking.png`,
+        { frameWidth: 32, frameHeight: 32 }
+      );
+      this.load.spritesheet(
+        `${unit}_upright_attacking`,
+        `assets/${unitDash}/${unitDash}-upright-attacking.png`,
+        { frameWidth: 32, frameHeight: 32 }
+      );
+      this.load.spritesheet(
+        `${unit}_upleft_attacking`,
+        `assets/${unitDash}/${unitDash}-upleft-attacking.png`,
+        { frameWidth: 32, frameHeight: 32 }
+      );
+      this.load.spritesheet(
+        `${unit}_downright_damage`,
+        `assets/${unitDash}/${unitDash}-downright-damage.png`,
+        { frameWidth: 32, frameHeight: 32 }
+      );
+      this.load.spritesheet(
+        `${unit}_downleft_damage`,
+        `assets/${unitDash}/${unitDash}-downleft-damage.png`,
+        { frameWidth: 32, frameHeight: 32 }
+      );
+      this.load.spritesheet(
+        `${unit}_upright_damage`,
+        `assets/${unitDash}/${unitDash}-upright-damage.png`,
+        { frameWidth: 32, frameHeight: 32 }
+      );
+      this.load.spritesheet(
+        `${unit}_upleft_damage`,
+        `assets/${unitDash}/${unitDash}-upleft-damage.png`,
+        { frameWidth: 32, frameHeight: 32 }
+      );
+      this.load.spritesheet(
+        `${unit}_downright_laying_down`,
+        `assets/${unitDash}/${unitDash}-downright-laying-down.png`,
+        { frameWidth: 32, frameHeight: 32 }
+      );
+      this.load.spritesheet(
+        `${unit}_downleft_laying_down`,
+        `assets/${unitDash}/${unitDash}-downleft-laying-down.png`,
+        { frameWidth: 32, frameHeight: 32 }
+      );
+      this.load.spritesheet(
+        `${unit}_upright_laying_down`,
+        `assets/${unitDash}/${unitDash}-upright-laying-down.png`,
+        { frameWidth: 32, frameHeight: 32 }
+      );
+      this.load.spritesheet(
+        `${unit}_upleft_laying_down`,
+        `assets/${unitDash}/${unitDash}-upleft-laying-down.png`,
+        { frameWidth: 32, frameHeight: 32 }
+      );
+    }
 
-    // Preload the spritesheets and animations for the skeleton character
-    this.load.spritesheet(
-      "skeleton_downright_idle",
-      "assets/skeleton/skeleton-downright-idle.png",
-      { frameWidth: 32, frameHeight: 32 }
-    );
-    this.load.spritesheet(
-      "skeleton_downleft_idle",
-      "assets/skeleton/skeleton-downleft-idle.png",
-      { frameWidth: 32, frameHeight: 32 }
-    );
-    this.load.spritesheet(
-      "skeleton_upright_idle",
-      "assets/skeleton/skeleton-upright-idle.png",
-      { frameWidth: 32, frameHeight: 32 }
-    );
-    this.load.spritesheet(
-      "skeleton_upleft_idle",
-      "assets/skeleton/skeleton-upleft-idle.png",
-      { frameWidth: 32, frameHeight: 32 }
-    );
-    this.load.spritesheet(
-      "skeleton_downright_attacking",
-      "assets/skeleton/skeleton-downright-attacking.png",
-      { frameWidth: 32, frameHeight: 32 }
-    );
-    this.load.spritesheet(
-      "skeleton_downleft_attacking",
-      "assets/skeleton/skeleton-downleft-attacking.png",
-      { frameWidth: 32, frameHeight: 32 }
-    );
-    this.load.spritesheet(
-      "skeleton_upright_attacking",
-      "assets/skeleton/skeleton-upright-attacking.png",
-      { frameWidth: 32, frameHeight: 32 }
-    );
-    this.load.spritesheet(
-      "skeleton_upleft_attacking",
-      "assets/skeleton/skeleton-upleft-attacking.png",
-      { frameWidth: 32, frameHeight: 32 }
-    );
-    this.load.spritesheet(
-      "skeleton_downright_damage",
-      "assets/skeleton/skeleton-downright-damage.png",
-      { frameWidth: 32, frameHeight: 32 }
-    );
-    this.load.spritesheet(
-      "skeleton_downleft_damage",
-      "assets/skeleton/skeleton-downleft-damage.png",
-      { frameWidth: 32, frameHeight: 32 }
-    );
-    this.load.spritesheet(
-      "skeleton_upright_damage",
-      "assets/skeleton/skeleton-upright-damage.png",
-      { frameWidth: 32, frameHeight: 32 }
-    );
-    this.load.spritesheet(
-      "skeleton_upleft_damage",
-      "assets/skeleton/skeleton-upleft-damage.png",
-      { frameWidth: 32, frameHeight: 32 }
-    );
-    this.load.spritesheet(
-      "skeleton_downright_laying_down",
-      "assets/skeleton/skeleton-downright-laying-down.png",
-      { frameWidth: 32, frameHeight: 32 }
-    );
-    this.load.spritesheet(
-      "skeleton_downleft_laying_down",
-      "assets/skeleton/skeleton-downleft-laying-down.png",
-      { frameWidth: 32, frameHeight: 32 }
-    );
-    this.load.spritesheet(
-      "skeleton_upright_laying_down",
-      "assets/skeleton/skeleton-upright-laying-down.png",
-      { frameWidth: 32, frameHeight: 32 }
-    );
-    this.load.spritesheet(
-      "skeleton_upleft_laying_down",
-      "assets/skeleton/skeleton-upleft-laying-down.png",
-      { frameWidth: 32, frameHeight: 32 }
-    );
+    //load spritesheets
+    if (this.team === 'dwarfs') {
+      spriteSheetLoader('dwarf_worker', 'dwarf-worker');
+      spriteSheetLoader('dwarf_blacksmith', 'dwarf-blacksmith');
+      spriteSheetLoader('dwarf_captain', 'dwarf-captain');
+      spriteSheetLoader('dwarf_hunter', 'dwarf-hunter');
+    }
+    if (this.team === 'elves') {
+      spriteSheetLoader('elf_elder', 'elf-elder');
+      spriteSheetLoader('elf_recruit', 'elf-recruit');
+      spriteSheetLoader('elf_stalker', 'elf-stalker');
+      spriteSheetLoader('elf_warrior', 'elf-warrior');
+    }
+    if (this.team ==='humans') {
+      spriteSheetLoader('human_fighter', 'human-fighter');
+      spriteSheetLoader('human_archer', 'human-archer');
+      spriteSheetLoader('human_thief', 'human-thief');
+      spriteSheetLoader('dragon_knight', 'dragon-knight');
+    }
+
+    if (this.map === 'lava') {
+      spriteSheetLoader('demon_soldier', 'demon-soldier');
+      spriteSheetLoader('demon_shaman', 'demon-shaman');
+    }
+    if (this.map === 'water') {
+      spriteSheetLoader('orc_shogun', 'orc-shogun');
+      spriteSheetLoader('orc_soldier', 'orc-soldier');
+    }
+    if (this.map === 'desert') {
+      spriteSheetLoader('skeleton', 'skeleton');
+      spriteSheetLoader('skeleton_shaman', 'skeleton-shaman');
+    }
+    // spriteSheetLoader('dragon_knight', 'dragon-knight');
+    // spriteSheetLoader('skeleton', 'skeleton');
   }
 
   // Create objects in the game engine based on assets.
   create() {
-    this.map = 'water';
     // Camera that zooms in on the main level.
     this.cameras.main.zoom = 2;
 
@@ -293,7 +250,7 @@ export default class MainScene extends Phaser.Scene {
         {x: 5, y: 3}, {x: 5, y: 4}, {x: 5, y: 5}, {x: 5, y: 6},
         {x: 6, y: 3}, {x: 6, y: 4}, {x: 6, y: 5}, {x: 6, y: 10},
         {x: 7, y: 8}, {x: 7, y: 9}, {x: 7, y: 10},
-        {x: 8, y: 8}, {x: 8, y: 8}, {x: 8, y: 10}, {x: 8, y: 1},
+        {x: 8, y: 8}, {x: 8, y: 8}, {x: 8, y: 10}, {x: 8, y: 11},
         {x: 9, y: 8}, {x: 9, y: 9}, {x: 9, y: 10}, {x: 9, y: 11}, {x: 9, y: 12},
         {x: 10, y: 3}, {x: 10, y: 4}, {x: 10, y: 7}, {x: 10, y: 8}, {x: 10, y: 9}, {x: 10, y: 10}, {x: 10, y: 11}, {x: 10, y: 12}, {x: 10, y: 13},
         {x: 11, y: 1}, {x: 11, y: 2}, {x: 11, y: 3}, {x: 11, y: 4}, {x: 11, y: 8}, {x: 11, y: 9}, {x: 11, y: 10}, {x: 11, y: 11}, {x: 11, y: 12},
@@ -376,13 +333,6 @@ export default class MainScene extends Phaser.Scene {
     this.uiBackground1 = this.add.sprite(395, 304, "ui1").setScale(0.5);
     this.uiBackground2 = this.add.sprite(887, 304, "ui2").setScale(0.5);
     
-    // Assign a floating sprite as a character portrait and a health bar within the UI
-    this.dragon_knight_portrait = this.add.sprite(394, 236, "dragon_knight_downright_idle").setScale(1.5);
-    this.skeleton_soldier_portrait = this.add.sprite(886, 236, "skeleton_downleft_idle").setScale(1.5);
-    
-    const x = 344;
-    const y = 260;
-    
     // Background shadow for the health bar
 	  this.healthBarEmpty1 = this.add.image(344, 260, 'health-bar-empty').setOrigin(0, 0.5).setScale(0.4);
 	  this.healthBarEmpty1.displayWidth = 100;
@@ -405,242 +355,159 @@ export default class MainScene extends Phaser.Scene {
     // Set UI to invisible until a unit is selected.
     this.uiBackground1.visible = false;
     this.uiBackground2.visible = false;
-    this.dragon_knight_portrait.visible = false;
-    this.skeleton_soldier_portrait.visible = false;
     this.healthBarEmpty1.visible = false;
     this.healthBar1.visible = false;
     this.healthBarEmpty2.visible = false;
     this.healthBar2.visible = false;
 
     // Create animations for the sprites based on the spritesheet for the dragon knight.
-    this.anims.create({
-      key: "dragon_knight_idle_anim1",
-      frames: this.anims.generateFrameNumbers("dragon_knight_downright_idle"),
-      frameRate: 5,
-      repeat: -1,
-    });
+    
+    const animationCreator = (unit) => {
+      this.anims.create({
+        key: `${unit}_idle_anim1`,
+        frames: this.anims.generateFrameNumbers(`${unit}_downright_idle`),
+        frameRate: 5,
+        repeat: -1,
+      });
 
-    this.anims.create({
-      key: "dragon_knight_idle_anim2",
-      frames: this.anims.generateFrameNumbers("dragon_knight_downleft_idle"),
-      frameRate: 5,
-      repeat: -1,
-    });
+      this.anims.create({
+        key: `${unit}_idle_anim2`,
+        frames: this.anims.generateFrameNumbers(`${unit}_downleft_idle`),
+        frameRate: 5,
+        repeat: -1,
+      });
+  
+      this.anims.create({
+        key: `${unit}_idle_anim3`,
+        frames: this.anims.generateFrameNumbers(`${unit}_upright_idle`),
+        frameRate: 5,
+        repeat: -1,
+      });
+  
+      this.anims.create({
+        key: `${unit}_idle_anim4`,
+        frames: this.anims.generateFrameNumbers(`${unit}_upleft_idle`),
+        frameRate: 5,
+        repeat: -1,
+      });
+  
+      this.anims.create({
+        key: `${unit}_attacking_anim1`,
+        frames: this.anims.generateFrameNumbers(`${unit}_downright_attacking`),
+        frameRate: 5,
+        repeat: 0,
+      });
+  
+      this.anims.create({
+        key: `${unit}_attacking_anim2`,
+        frames: this.anims.generateFrameNumbers(`${unit}_downleft_attacking`),
+        frameRate: 5,
+        repeat: 0,
+      });
+  
+      this.anims.create({
+        key: `${unit}_attacking_anim3`,
+        frames: this.anims.generateFrameNumbers(`${unit}_upright_attacking`),
+        frameRate: 5,
+        repeat: 0,
+      });
+  
+      this.anims.create({
+        key: `${unit}_attacking_anim4`,
+        frames: this.anims.generateFrameNumbers(`${unit}_upleft_attacking`),
+        frameRate: 5,
+        repeat: -1,
+      });
+  
+      this.anims.create({
+        key: `${unit}_damage_anim1`,
+        frames: this.anims.generateFrameNumbers(`${unit}_downright_damage`),
+        frameRate: 5,
+        repeat: 0,
+      });
+  
+      this.anims.create({
+        key: `${unit}_damage_anim2`,
+        frames: this.anims.generateFrameNumbers(`${unit}_downleft_damage`),
+        frameRate: 5,
+        repeat: 0,
+      });
+  
+      this.anims.create({
+        key: `${unit}_damage_anim3`,
+        frames: this.anims.generateFrameNumbers(`${unit}_upright_damage`),
+        frameRate: 5,
+        repeat: 0,
+      });
+  
+      this.anims.create({
+        key: `${unit}_damage_anim4`,
+        frames: this.anims.generateFrameNumbers(`${unit}_upleft_damage`),
+        frameRate: 5,
+        repeat: 0,
+      });
+  
+      this.anims.create({
+        key: `${unit}_laying_down_anim1`,
+        frames: this.anims.generateFrameNumbers(`${unit}_downright_laying_down`),
+        frameRate: 5,
+        repeat: 0,
+      });
+  
+      this.anims.create({
+        key: `${unit}_laying_down_anim2`,
+        frames: this.anims.generateFrameNumbers(`${unit}_downleft_laying_down`),
+        frameRate: 5,
+        repeat: 0,
+      });
+  
+      this.anims.create({
+        key: `${unit}_laying_down_anim3`,
+        frames: this.anims.generateFrameNumbers(`${unit}_upright_laying_down`),
+        frameRate: 5,
+        repeat: 0,
+      });
+  
+      this.anims.create({
+        key: `${unit}_laying_down_anim4`,
+        frames: this.anims.generateFrameNumbers(`${unit}_upleft_laying_down`),
+        frameRate: 5,
+        repeat: 0,
+      });
+    };
 
-    this.anims.create({
-      key: "dragon_knight_idle_anim3",
-      frames: this.anims.generateFrameNumbers("dragon_knight_upright_idle"),
-      frameRate: 5,
-      repeat: -1,
-    });
+    if (this.team === 'dwarfs') {
+      animationCreator('dwarf_worker');
+      animationCreator('dwarf_blacksmith');
+      animationCreator('dwarf_captain');
+      animationCreator('dwarf_hunter');
+    }
+    if (this.team === 'elves') {
+      animationCreator('elf_elder');
+      animationCreator('elf_recruit');
+      animationCreator('elf_stalker');
+      animationCreator('elf_warrior');
+    }
+    if (this.team === 'humans') {
+      animationCreator('human_fighter');
+      animationCreator('human_archer');
+      animationCreator('human_thief');
+      animationCreator('dragon_knight');
+    }
 
-    this.anims.create({
-      key: "dragon_knight_idle_anim4",
-      frames: this.anims.generateFrameNumbers("dragon_knight_upleft_idle"),
-      frameRate: 5,
-      repeat: -1,
-    });
+    if (this.map === 'desert') {
+      animationCreator('skeleton');
+      animationCreator('skeleton_shaman');
+    }
+    if (this.map === 'lava') {
+      animationCreator('demon_shaman');
+      animationCreator('demon_soldier');
+    }
+    if (this.map === 'water') {
+      animationCreator('orc_shogun');
+      animationCreator('orc_soldier');
+    }
 
-    this.anims.create({
-      key: "dragon_knight_attacking_anim1",
-      frames: this.anims.generateFrameNumbers("dragon_knight_downright_attacking"),
-      frameRate: 5,
-      repeat: 0,
-    });
-
-    this.anims.create({
-      key: "dragon_knight_attacking_anim2",
-      frames: this.anims.generateFrameNumbers("dragon_knight_downleft_attacking"),
-      frameRate: 5,
-      repeat: 0,
-    });
-
-    this.anims.create({
-      key: "dragon_knight_attacking_anim3",
-      frames: this.anims.generateFrameNumbers("dragon_knight_upright_attacking"),
-      frameRate: 5,
-      repeat: 0,
-    });
-
-    this.anims.create({
-      key: "dragon_knight_attacking_anim4",
-      frames: this.anims.generateFrameNumbers("dragon_knight_upleft_attacking"),
-      frameRate: 5,
-      repeat: -1,
-    });
-
-    this.anims.create({
-      key: "dragon_knight_damage_anim1",
-      frames: this.anims.generateFrameNumbers("dragon_knight_downright_damage"),
-      frameRate: 5,
-      repeat: 0,
-    });
-
-    this.anims.create({
-      key: "dragon_knight_damage_anim2",
-      frames: this.anims.generateFrameNumbers("dragon_knight_downleft_damage"),
-      frameRate: 5,
-      repeat: 0,
-    });
-
-    this.anims.create({
-      key: "dragon_knight_damage_anim3",
-      frames: this.anims.generateFrameNumbers("dragon_knight_upright_damage"),
-      frameRate: 5,
-      repeat: 0,
-    });
-
-    this.anims.create({
-      key: "dragon_knight_damage_anim4",
-      frames: this.anims.generateFrameNumbers("dragon_knight_upleft_damage"),
-      frameRate: 5,
-      repeat: 0,
-    });
-
-    this.anims.create({
-      key: "dragon_knight_laying_down_anim1",
-      frames: this.anims.generateFrameNumbers("dragon_knight_downright_laying_down"),
-      frameRate: 5,
-      repeat: 0,
-    });
-
-    this.anims.create({
-      key: "dragon_knight_laying_down_anim2",
-      frames: this.anims.generateFrameNumbers("dragon_knight_downleft_laying_down"),
-      frameRate: 5,
-      repeat: 0,
-    });
-
-    this.anims.create({
-      key: "dragon_knight_laying_down_anim3",
-      frames: this.anims.generateFrameNumbers("dragon_knight_upright_laying_down"),
-      frameRate: 5,
-      repeat: 0,
-    });
-
-    this.anims.create({
-      key: "dragon_knight_laying_down_anim4",
-      frames: this.anims.generateFrameNumbers("dragon_knight_upleft_laying_down"),
-      frameRate: 5,
-      repeat: 0,
-    });
-
-    // Create animations for the sprites based on the spritesheet for the skeleton.
-    this.anims.create({
-      key: "skeleton_idle_anim1",
-      frames: this.anims.generateFrameNumbers("skeleton_downright_idle"),
-      frameRate: 5,
-      repeat: -1,
-    });
-
-    this.anims.create({
-      key: "skeleton_idle_anim2",
-      frames: this.anims.generateFrameNumbers("skeleton_downleft_idle"),
-      frameRate: 5,
-      repeat: -1,
-    });
-
-    this.anims.create({
-      key: "skeleton_idle_anim3",
-      frames: this.anims.generateFrameNumbers("skeleton_upright_idle"),
-      frameRate: 5,
-      repeat: -1,
-    });
-
-    this.anims.create({
-      key: "skeleton_idle_anim4",
-      frames: this.anims.generateFrameNumbers("skeleton_upleft_idle"),
-      frameRate: 5,
-      repeat: -1,
-    });
-
-    this.anims.create({
-      key: "skeleton_attacking_anim1",
-      frames: this.anims.generateFrameNumbers("skeleton_downright_attacking"),
-      frameRate: 5,
-      repeat: 0,
-    });
-
-    this.anims.create({
-      key: "skeleton_attacking_anim2",
-      frames: this.anims.generateFrameNumbers("skeleton_downleft_attacking"),
-      frameRate: 5,
-      repeat: 0,
-    });
-
-    this.anims.create({
-      key: "skeleton_attacking_anim3",
-      frames: this.anims.generateFrameNumbers("skeleton_upright_attacking"),
-      frameRate: 5,
-      repeat: 0,
-    });
-
-    this.anims.create({
-      key: "skeleton_attacking_anim4",
-      frames: this.anims.generateFrameNumbers("skeleton_upleft_attacking"),
-      frameRate: 5,
-      repeat: 0,
-    });
-
-    this.anims.create({
-      key: "skeleton_damage_anim1",
-      frames: this.anims.generateFrameNumbers("skeleton_downright_damage"),
-      frameRate: 5,
-      repeat: 0,
-    });
-
-    this.anims.create({
-      key: "skeleton_damage_anim2",
-      frames: this.anims.generateFrameNumbers("skeleton_downleft_damage"),
-      frameRate: 5,
-      repeat: 0,
-    });
-
-    this.anims.create({
-      key: "skeleton_damage_anim3",
-      frames: this.anims.generateFrameNumbers("skeleton_upright_damage"),
-      frameRate: 5,
-      repeat: 0,
-    });
-
-    this.anims.create({
-      key: "skeleton_damage_anim4",
-      frames: this.anims.generateFrameNumbers("skeleton_upleft_damage"),
-      frameRate: 5,
-      repeat: 0,
-    });
-
-    this.anims.create({
-      key: "skeleton_laying_down_anim1",
-      frames: this.anims.generateFrameNumbers("skeleton_downright_laying_down"),
-      frameRate: 5,
-      repeat: 0,
-    });
-
-    this.anims.create({
-      key: "skeleton_laying_down_anim2",
-      frames: this.anims.generateFrameNumbers("skeleton_downleft_laying_down"),
-      frameRate: 5,
-      repeat: 0,
-    });
-
-    this.anims.create({
-      key: "skeleton_laying_down_anim3",
-      frames: this.anims.generateFrameNumbers("skeleton_upright_laying_down"),
-      frameRate: 5,
-      repeat: 0,
-    });
-
-    this.anims.create({
-      key: "skeleton_laying_down_anim4",
-      frames: this.anims.generateFrameNumbers("skeleton_upleft_laying_down"),
-      frameRate: 5,
-      repeat: 0,
-    });
-
-    // Play those animations.
-    this.dragon_knight_portrait.play("dragon_knight_idle_anim1");
-    this.skeleton_soldier_portrait.play("skeleton_idle_anim2");
 
     // Add keyboard input.
     this.inputKeys = this.input.keyboard.addKeys({
@@ -657,6 +524,15 @@ export default class MainScene extends Phaser.Scene {
     });
 
     this.physics.world.step(1);
+
+    // Assign a floating sprite as a character portrait and a health bar within the UI
+    const createAllyPortrait = (unit) => {
+      return this.add.sprite(394, 236, `${unit}_idle_anim1`).setScale(1.5);
+    }
+
+    const createEnemyPortrait = (unit) => {
+      return this.add.sprite(886, 236, `${unit}_idle_anim2`).setScale(1.5);
+    }
 
     //Generate allied and enemy units
     const generateUnit = (unitType, x, y, health) => {
@@ -702,27 +578,118 @@ export default class MainScene extends Phaser.Scene {
           left: `${unitType}_laying_down_anim2`,
           right: `${unitType}_laying_down_anim3`,
           up: `${unitType}_laying_down_anim4`
-        }
+        },
+        portrait: createAllyPortrait(unitType)
       });
       newUnit.play(newUnit.data.values.animations.down);
-
+      newUnit.data.values.portrait.play(`${unitType}_idle_anim1`);
+      newUnit.data.values.portrait.visible = false;
+      
       return newUnit;
+    };
+
+    //Create units based on team selection
+    if (this.team === "humans") {
+      this.ally1 = generateUnit('human_fighter', 4, 11, 100);
+      this.ally2 = generateUnit('human_archer', 2, 13, 100);
+      this.ally3 = generateUnit('human_thief', 2, 11, 100);
+      this.ally4 = generateUnit('dragon_knight', 4, 13, 100);
+      // this.ally1_portrait = createAllyPortrait('human_fighter');
+      // this.ally2_portrait = createAllyPortrait('human_archer');
+      // this.ally3_portrait = createAllyPortrait('human_thief');
+      // this.ally4_portrait = createAllyPortrait('dragon_knight');
+      // this.ally1_portrait.play('human_fighter_idle_anim1');
+      // this.ally2_portrait.play('human_archer_idle_anim1');
+      // this.ally3_portrait.play('human_thief_idle_anim1');
+      // this.ally4_portrait.play('dragon_knight_idle_anim1');
+      // this.ally1_portrait.visible = false;
+      // this.ally2_portrait.visible = false;
+      // this.ally3_portrait.visible = false;
+      // this.ally4_portrait.visible = false;
     }
-    this.dragon_knight1 = generateUnit('dragon_knight', 11, 4, 100);
-    this.dragon_knight2 = generateUnit('dragon_knight', 9, 3, 100);
-    this.dragon_knight3 = generateUnit('dragon_knight', 10, 6, 100);
-    this.dragon_knight4 = generateUnit('dragon_knight', 12, 5, 100);
-    this.skeleton_soldier1 = generateUnit('skeleton', 3, 12, 75);
-    this.skeleton_soldier2 = generateUnit('skeleton', 4, 11, 75);
-    console.log(this.dragon_knight1)
+    if (this.team === "dwarfs") {
+      this.ally1 = generateUnit('dwarf_captain', 4, 11, 100);
+      this.ally2 = generateUnit('dwarf_hunter', 2, 13, 100);
+      this.ally3 = generateUnit('dwarf_worker', 2, 11, 100);
+      this.ally4 = generateUnit('dwarf_blacksmith', 4, 13, 100);
+      this.ally1_portrait = createAllyPortrait('dwarf_captain');
+      // this.ally2_portrait = createAllyPortrait('dwarf_hunter');
+      // this.ally3_portrait = createAllyPortrait('dwarf_worker');
+      // this.ally4_portrait = createAllyPortrait('dwarf_blacksmith');
+      // this.ally1_portrait.play('dwarf_captain_idle_anim1');
+      // this.ally2_portrait.play('dwarf_hunter_idle_anim1');
+      // this.ally3_portrait.play('dwarf_worker_idle_anim1');
+      // this.ally4_portrait.play('dwarf_blacksmith_idle_anim1');
+      // this.ally1_portrait.visible = false;
+      // this.ally2_portrait.visible = false;
+      // this.ally3_portrait.visible = false;
+      // this.ally4_portrait.visible = false;
+    }
+    if (this.team === "elves") {
+      this.ally1 = generateUnit('elf_elder', 4, 11, 100);
+      this.ally2 = generateUnit('elf_recruit', 2, 13, 100);
+      this.ally3 = generateUnit('elf_stalker', 2, 11, 100);
+      this.ally4 = generateUnit('elf_warrior', 4, 13, 100);
+      // this.ally1_portrait = createAllyPortrait('elf_elder');
+      // this.ally2_portrait = createAllyPortrait('elf_recruit');
+      // this.ally3_portrait = createAllyPortrait('elf_stalker');
+      // this.ally4_portrait = createAllyPortrait('elf_warrior');
+      // this.ally1_portrait.play('elf_elder_idle_anim1');
+      // this.ally2_portrait.play('elf_recruit_idle_anim1');
+      // this.ally3_portrait.play('elf_stalker_idle_anim1');
+      // this.ally4_portrait.play('elf_warrior_idle_anim1');
+      // this.ally1_portrait.visible = false;
+      // this.ally2_portrait.visible = false;
+      // this.ally3_portrait.visible = false;
+      // this.ally4_portrait.visible = false;
+    }
+
+    //Create enemies based on map selection
+    if (this.map === 'water') {
+      this.enemy1 = generateUnit('orc_shogun', 15, 0, 150);
+      this.enemy2 = generateUnit('orc_soldier', 13, 2, 100);
+      this.enemy3 = generateUnit('orc_soldier', 13, 0, 100);
+      this.enemy4 = generateUnit('orc_soldier', 15, 2, 100);
+      // this.enemy1_portrait = createEnemyPortrait('orc_shogun');
+      // this.enemy2_portrait = createEnemyPortrait('orc_soldier');
+      // this.enemy1_portrait.play('orc_shogun_idle_anim2');
+      // this.enemy2_portrait.play('orc_soldier_idle_anim2');
+      // this.enemy1_portrait.visible = false;
+      // this.enemy2_portrait.visible = false;
+    }
+    if (this.map === 'desert') {
+      this.enemy1 = generateUnit('skeleton_shaman', 15, 0, 150);
+      this.enemy2 = generateUnit('skeleton', 13, 2, 100);
+      this.enemy3 = generateUnit('skeleton', 13, 0, 100);
+      this.enemy4 = generateUnit('skeleton', 15, 2, 100);
+      // this.enemy1_portrait = createEnemyPortrait('skeleton_shaman');
+      // this.enemy2_portrait = createEnemyPortrait('skeleton');
+      // this.enemy1_portrait.play('skeleton_shaman_idle_anim2');
+      // this.enemy2_portrait.play('skeleton_idle_anim2');
+      // this.enemy1_portrait.visible = false;
+      // this.enemy2_portrait.visible = false;
+    }
+    if (this.map === 'lava') {
+      this.enemy1 = generateUnit('demon_shaman', 15, 0, 150);
+      this.enemy2 = generateUnit('demon_soldier', 13, 2, 100);
+      this.enemy3 = generateUnit('demon_soldier', 13, 0, 100);
+      this.enemy4 = generateUnit('demon_soldier', 15, 2, 100);
+      // this.enemy1_portrait = createEnemyPortrait('demon_shaman');
+      // this.enemy2_portrait = createEnemyPortrait('demon_soldier');
+      // this.enemy1_portrait.play('demon_shaman_idle_anim2');
+      // this.enemy2_portrait.play('demon_soldier_idle_anim2');
+      // this.enemy1_portrait.visible = false;
+      // this.enemy2_portrait.visible = false;
+    }
+
     this.alliesGroup = this.physics.add.group();
-    this.alliesGroup.add(this.dragon_knight1)
-    this.alliesGroup.add(this.dragon_knight2)
-    this.alliesGroup.add(this.dragon_knight3)
-    this.alliesGroup.add(this.dragon_knight4)
+    this.alliesGroup.add(this.ally1);
+    this.alliesGroup.add(this.ally2);
+    this.alliesGroup.add(this.ally3);
+    this.alliesGroup.add(this.ally4);
     
-    this.allies = [this.dragon_knight1, this.dragon_knight2, this.dragon_knight3, this.dragon_knight4];
-    this.enemies = [this.skeleton_soldier1, this.skeleton_soldier2];
+    this.allies = [this.ally1, this.ally2, this.ally3, this.ally4];
+    this.enemies = [this.enemy1, this.enemy2, this.enemy3, this.enemy4];
 
     this.phase = 'player';
     this.enemyCount = 0;
@@ -737,7 +704,7 @@ export default class MainScene extends Phaser.Scene {
 	  this.healthBar1.displayWidth = width;
   };
   setMeterPercentage2(percent = 100) {
-    const width = 100 * percent / 75;
+    const width = 100 * percent / 100;
     this.healthBar2.displayWidth = width;
   }
   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1177,7 +1144,28 @@ export default class MainScene extends Phaser.Scene {
                 this.setMeterPercentage2(closest.gameObject.getData("hit_points"));
                 closest.gameObject.setData({ hasUiOpen: true });
                 this.uiBackground2.visible = true;
-                this.skeleton_soldier_portrait.visible = true;
+                this.enemy1_portrait.visible = false;
+                this.enemy2_portrait.visible = false;
+                if (this.enemy1) {
+                  if (closest.gameObject.data.list.animations.down === this.enemy1.data.list.animations.down) {
+                    this.enemy1_portrait.visible = true;
+                  }
+                }
+                if (this.enemy2) {
+                  if (closest.gameObject.data.list.animations.down === this.enemy2.data.list.animations.down) {
+                    this.enemy2_portrait.visible = true;
+                  }
+                }
+                if (this.enemy3) {
+                  if (closest.gameObject.data.list.animations.down === this.enemy3.data.list.animations.down) {
+                    this.enemy2_portrait.visible = true;
+                  }
+                }
+                if (this.enemy4) {
+                  if (closest.gameObject.data.list.animations.down === this.enemy4.data.list.animations.down) {
+                    this.enemy2_portrait.visible = true;
+                  }
+                }
                 this.healthBarEmpty2.visible = true;
                 this.healthBar2.visible = true;
                 this.uiText2.setText([
@@ -1193,7 +1181,30 @@ export default class MainScene extends Phaser.Scene {
             this.selectedUnit = closest;
             this.selectedUnit.gameObject.setData({ hasUiOpen: true });
             this.uiBackground1.visible = true;
-            this.dragon_knight_portrait.visible = true;
+            this.ally1_portrait.visible = false;
+            this.ally2_portrait.visible = false;
+            this.ally3_portrait.visible = false;
+            this.ally4_portrait.visible = false;
+            if (this.ally1) {
+              if (this.selectedUnit.gameObject.data.list.animations.down === this.ally1.data.list.animations.down) {
+                this.ally1_portrait.visible = true;
+              }
+            }
+            if (this.ally2) {
+              if (this.selectedUnit.gameObject.data.list.animations.down === this.ally2.data.list.animations.down) {
+                this.ally2_portrait.visible = true;
+              }
+            }
+            if (this.ally3) {
+              if (this.selectedUnit.gameObject.data.list.animations.down === this.ally3.data.list.animations.down) {
+                this.ally3_portrait.visible = true;
+              }
+            }
+            if (this.ally4) {
+              if (this.selectedUnit.gameObject.data.list.animations.down === this.ally4.data.list.animations.down) {
+                this.ally4_portrait.visible = true;
+              }
+            }
             this.healthBarEmpty1.visible = true;
             this.healthBar1.visible = true;
             this.uiText1.setText([
@@ -1838,7 +1849,30 @@ export default class MainScene extends Phaser.Scene {
           this.setMeterPercentage1(this.closestLowHealthAlly.getData("hit_points"));
           this.closestLowHealthAlly.setData({ hasUiOpen: true });
           this.uiBackground1.visible = true;
-          this.dragon_knight_portrait.visible = true;
+          this.ally1_portrait.visible = false;
+          this.ally2_portrait.visible = false;
+          this.ally3_portrait.visible = false;
+          this.ally4_portrait.visible = false;
+          if (this.ally1) {
+            if (this.closestLowHealthAlly.data.list.animations.down === this.ally1.data.list.animations.down) {
+              this.ally1_portrait.visible = true;
+            }
+          }
+          if (this.ally2) {
+            if (this.closestLowHealthAlly.data.list.animations.down === this.ally2.data.list.animations.down) {
+              this.ally2_portrait.visible = true;
+            }
+          }
+          if (this.ally3) {
+            if (this.closestLowHealthAlly.data.list.animations.down === this.ally3.data.list.animations.down) {
+              this.ally3_portrait.visible = true;
+            }
+          }
+          if (this.ally4) {
+            if (this.closestLowHealthAlly.data.list.animations.down === this.ally4.data.list.animations.down) {
+              this.ally4_portrait.visible = true;
+            }
+          }
           this.healthBarEmpty1.visible = true;
           this.healthBar1.visible = true;
           this.uiText1.setText([
@@ -1876,11 +1910,9 @@ export default class MainScene extends Phaser.Scene {
                   //this never executes
                   isSleepingAlly.setData({ hasUiOpen: false });
                   this.uiBackground1.visible = false;
-                  this.dragon_knight_portrait.visible = false;
                   this.healthBarEmpty1.visible = false;
                   this.healthBar1.visible = false;
                   this.uiText1.setText([""]);
-                  console.log(isSleepingAlly)
                   isSleepingAlly.destroy();
                 }
               });
@@ -1896,7 +1928,30 @@ export default class MainScene extends Phaser.Scene {
           this.setMeterPercentage1(this.closestAlly.getData("hit_points"));
           this.closestAlly.setData({ hasUiOpen: true });
           this.uiBackground1.visible = true;
-          this.dragon_knight_portrait.visible = true;
+          this.ally1_portrait.visible = false;
+          this.ally2_portrait.visible = false;
+          this.ally3_portrait.visible = false;
+          this.ally4_portrait.visible = false;
+          if (this.ally1) {
+            if (this.closestAlly.data.list.animations.down === this.ally1.data.list.animations.down) {
+              this.ally1_portrait.visible = true;
+            }
+          }
+          if (this.ally2) {
+            if (this.closestAlly.data.list.animations.down === this.ally2.data.list.animations.down) {
+              this.ally2_portrait.visible = true;
+            }
+          }
+          if (this.ally3) {
+            if (this.closestAlly.data.list.animations.down === this.ally3.data.list.animations.down) {
+              this.ally3_portrait.visible = true;
+            }
+          }
+          if (this.ally4) {
+            if (this.closestAlly.data.list.animations.down === this.ally4.data.list.animations.down) {
+              this.ally4_portrait.visible = true;
+            }
+          }
           this.healthBarEmpty1.visible = true;
           this.healthBar1.visible = true;
           this.uiText1.setText([
@@ -1934,11 +1989,9 @@ export default class MainScene extends Phaser.Scene {
                 callback: () => {
                   isSleepingAlly.setData({ hasUiOpen: false });
                   this.uiBackground1.visible = false;
-                  this.dragon_knight_portrait.visible = false;
                   this.healthBarEmpty1.visible = false;
                   this.healthBar1.visible = false;
                   this.uiText1.setText([""]);
-                  console.log(isSleepingAlly);
                   isSleepingAlly.destroy();
                 }
               });
