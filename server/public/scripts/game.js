@@ -1,5 +1,6 @@
 import MainScene from "./MainScene.js";
 import MapSelectionScene from "./MapSelectionScene.js";
+import GameOverScene from "./GameOverScene.js";
 
 // class CharacterGameObject extends Phaser.GameObjects.Image {
 //   constructor (scene, x, y) {
@@ -26,7 +27,7 @@ const config = {
   backgroundColor: '#444444',
   type: Phaser.AUTO,
   parent: 'game',
-  scene: [MapSelectionScene, MainScene],
+  scene: [MapSelectionScene, MainScene, GameOverScene],
   scale: {
     zoom: 1,
   },

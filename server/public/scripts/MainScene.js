@@ -48,6 +48,7 @@ export default class MainScene extends Phaser.Scene {
   init(data) {
     this.map = data.map;
     this.team = data.team;
+    this.cameras.main.fadeIn(2000, 0, 0, 0)
   }
 
   // Preload assets into the game engine.

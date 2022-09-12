@@ -1,4 +1,4 @@
-export default class MainScene extends Phaser.Scene {
+export default class MapSelectionScene extends Phaser.Scene {
   constructor() {
     super("MapSelectionScene");
 
@@ -35,10 +35,13 @@ export default class MainScene extends Phaser.Scene {
     this.load.image('dwarf-hunter', 'assets/unit-images/dwarf-hunter.png')
 
     //Background
-    this.load.image('background', 'assets/batthern.png')
+    this.load.image('background', 'assets/bg.png')
   }
 
   create() {
+    //Background
+    this.bg = this.add.sprite(0,0,'background').scale = 5;
+    
     // Rectangle for selection
     this.r1 = this.add.rectangle(240, 200, 400, 230, 0x6666ff);
     this.r2 = this.add.rectangle(240, 460, 170, 70);
@@ -97,7 +100,7 @@ export default class MainScene extends Phaser.Scene {
         //Call new Scene
         this.cameras.main.fadeOut(1000, 0, 0, 0)
       
-        this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, (cam, effect) => {
+        this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
           this.scene.start('MainScene', {map: this.map, team: this.team});
         })
       }
