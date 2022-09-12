@@ -39,9 +39,6 @@ export default class MainScene extends Phaser.Scene {
 
   // Preload assets into the game engine.
   preload() {
-    // Preload background
-    this.load.image('background', 'assets/background.png');
-
     //Preload UI
     this.load.image('ui1', 'assets/ui/ui1.png');
     this.load.image('ui2', 'assets/ui/ui2.png');
@@ -237,9 +234,6 @@ export default class MainScene extends Phaser.Scene {
       {x: 8, y: 4}, {x: 8, y: 5}, {x: 8, y: 6}, {x: 8, y: 7}, {x: 8, y: 8}, {x: 8, y: 9},
       {x: 9, y: 6}, {x: 9, y: 7}, {x: 9, y: 8}
     ];
-
-    //Create the background
-    this.add.image(0, 0, 'background').setOrigin(0, 0).setScale(1.7);
 
     // Create the tile map based on assets.
     const map = this.make.tilemap({ key: "tilemap16" });
