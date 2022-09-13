@@ -426,7 +426,7 @@ export default class MainScene extends Phaser.Scene {
         key: `${unit}_attacking_anim4`,
         frames: this.anims.generateFrameNumbers(`${unit}_upleft_attacking`),
         frameRate: 5,
-        repeat: -1,
+        repeat: 0,
       });
   
       this.anims.create({
@@ -545,7 +545,7 @@ export default class MainScene extends Phaser.Scene {
     }
 
     //Generate allied and enemy units
-    const generateUnit = (unitType, x, y, health) => {
+    const generateUnit = (unitType, x, y, health, team = 'ally') => {
       const newUnit = this.physics.add.sprite(
         this.coordinateGrid[x][y].x,
         this.coordinateGrid[x][y].y,
@@ -557,7 +557,7 @@ export default class MainScene extends Phaser.Scene {
         turn: true,
         selected: false,
         state: null,
-        movement: 3,
+        movement: 8,
         total_hit_points: health,
         hit_points: health,
         hasMoved: false,
@@ -589,14 +589,19 @@ export default class MainScene extends Phaser.Scene {
           right: `${unitType}_laying_down_anim3`,
           up: `${unitType}_laying_down_anim4`
         },
-        allyPortrait: createAllyPortrait(unitType),
-        enemyPortrait: createEnemyPortrait(unitType),
       });
-      newUnit.play(newUnit.data.values.animations.down);
-      newUnit.data.values.allyPortrait.play(`${unitType}_idle_anim1`);
-      newUnit.data.values.enemyPortrait.play(`${unitType}_idle_anim2`);
-      newUnit.data.values.allyPortrait.visible = false;
-      newUnit.data.values.enemyPortrait.visible = false;
+
+      if (team === 'enemy') {
+        newUnit.setData({enemyPortrait: createEnemyPortrait(unitType)})
+        newUnit.play(newUnit.data.values.animations.left);
+        newUnit.data.values.enemyPortrait.play(`${unitType}_idle_anim2`);
+        newUnit.data.values.enemyPortrait.visible = false;
+      } else {
+        newUnit.setData({allyPortrait: createAllyPortrait(unitType)})
+        newUnit.play(newUnit.data.values.animations.down);
+        newUnit.data.values.allyPortrait.play(`${unitType}_idle_anim1`);
+        newUnit.data.values.allyPortrait.visible = false;
+      }
       
       return newUnit;
     };
@@ -623,22 +628,22 @@ export default class MainScene extends Phaser.Scene {
 
     //Create enemies based on map selection
     if (this.map === 'water') {
-      this.enemy1 = generateUnit('orc_shogun', 15, 0, 150);
-      this.enemy2 = generateUnit('orc_soldier', 13, 2, 100);
-      this.enemy3 = generateUnit('orc_soldier', 13, 0, 100);
-      this.enemy4 = generateUnit('orc_soldier', 15, 2, 100);
+      this.enemy1 = generateUnit('orc_shogun', 15, 0, 150, 'enemy');
+      this.enemy2 = generateUnit('orc_soldier', 13, 2, 100, 'enemy');
+      this.enemy3 = generateUnit('orc_soldier', 13, 0, 100, 'enemy');
+      this.enemy4 = generateUnit('orc_soldier', 15, 2, 100, 'enemy');
     }
     if (this.map === 'desert') {
-      this.enemy1 = generateUnit('skeleton_shaman', 15, 0, 150);
-      this.enemy2 = generateUnit('skeleton', 13, 2, 100);
-      this.enemy3 = generateUnit('skeleton', 13, 0, 100);
-      this.enemy4 = generateUnit('skeleton', 15, 2, 100);
+      this.enemy1 = generateUnit('skeleton_shaman', 15, 0, 150, 'enemy');
+      this.enemy2 = generateUnit('skeleton', 13, 2, 100, 'enemy');
+      this.enemy3 = generateUnit('skeleton', 13, 0, 100, 'enemy');
+      this.enemy4 = generateUnit('skeleton', 15, 2, 100, 'enemy');
     }
     if (this.map === 'lava') {
-      this.enemy1 = generateUnit('demon_shaman', 15, 0, 150);
-      this.enemy2 = generateUnit('demon_soldier', 13, 2, 100);
-      this.enemy3 = generateUnit('demon_soldier', 13, 0, 100);
-      this.enemy4 = generateUnit('demon_soldier', 15, 2, 100);
+      this.enemy1 = generateUnit('demon_shaman', 15, 0, 150, 'enemy');
+      this.enemy2 = generateUnit('demon_soldier', 13, 2, 100, 'enemy');
+      this.enemy3 = generateUnit('demon_soldier', 13, 0, 100, 'enemy');
+      this.enemy4 = generateUnit('demon_soldier', 15, 2, 100, 'enemy');
     }
 
     this.alliesGroup = this.physics.add.group();
@@ -687,7 +692,102 @@ export default class MainScene extends Phaser.Scene {
       this.selectedUnit = undefined;
     }
     let closestTracker = this.physics.closest(this.tracker, Phaser.GameObject);
+
+    let closest = this.physics.closest(this.player, Phaser.GameObject);
+  
+    //Cursor Movement
+      if (Phaser.Input.Keyboard.JustDown(this.inputKeys.up)) {
+        this.player.x -= 16;
+        this.player.y -= 8;
+        this.player.setData({ coordX: this.player.getData("coordX") - 1 });
+      }
+      if (Phaser.Input.Keyboard.JustDown(this.inputKeys.left)) {
+        this.player.x -= 16;
+        this.player.y += 8;
+        this.player.setData({ coordY: this.player.getData("coordY") + 1 });
+      }
+      if (Phaser.Input.Keyboard.JustDown(this.inputKeys.down)) {
+        this.player.x += 16;
+        this.player.y += 8;
+        this.player.setData({ coordX: this.player.getData("coordX") + 1 });
+      }
+      if (Phaser.Input.Keyboard.JustDown(this.inputKeys.right)) {
+        this.player.x += 16;
+        this.player.y -= 8;
+        this.player.setData({ coordY: this.player.getData("coordY") - 1 });
+      }
+
+      const showHoverUI = () => {
+
+        if (this.allies.includes(closest.gameObject) && this.player.getData('coordX') === closest.gameObject.getData('coordX') && this.player.getData('coordY') === closest.gameObject.getData('coordY')) {
+          for (const ally of this.allies) {
+              ally.data.values.allyPortrait.visible = false;
+              this.uiBackground1.visible = false;
+              this.healthBarEmpty1.visible = false;
+              this.healthBar1.visible = false;
+              this.uiText1.setText(['']);
+          } 
+          for (const ally of this.allies) {
+            if (this.player.getData('coordX') === ally.getData('coordX') && this.player.getData('coordY') === ally.getData('coordY')) {
+              ally.data.values.allyPortrait.visible = true;
+              this.uiBackground1.visible = true;
+              this.setMeterPercentage1(ally.getData('hit_points'));
+              this.healthBarEmpty1.visible = true;
+              this.healthBar1.visible = true;
+              this.uiText1.setText([
+                "HP: " + ally.getData("hit_points") + "/" + ally.getData("total_hit_points"),
+                "Movement: " + ally.getData("movement"),
+              ]);
+            }
+          } 
+        } else if (this.enemies.includes(closest.gameObject) && this.player.getData('coordX') === closest.gameObject.getData('coordX') && this.player.getData('coordY') === closest.gameObject.getData('coordY')) {
+          for (const enemy of this.enemies) {
+              enemy.data.values.enemyPortrait.visible = false;
+              this.uiBackground2.visible = false;
+              this.healthBarEmpty2.visible = false;
+              this.healthBar2.visible = false;
+              this.uiText2.setText(['']);
+          } 
+          for (const enemy of this.enemies) {
+            if (this.player.getData('coordX') === enemy.getData('coordX') && this.player.getData('coordY') === enemy.getData('coordY')) {
+              enemy.data.values.enemyPortrait.visible = true;
+              this.uiBackground2.visible = true;
+              if (enemy === this.enemy1) {
+                this.setMeterPercentage2(enemy.getData('hit_points'), true);
+              } else {
+                this.setMeterPercentage2(enemy.getData('hit_points'));
+              }
+              this.healthBarEmpty2.visible = true;
+              this.healthBar2.visible = true;
+              this.uiText2.setText([
+                "HP: " + enemy.getData("hit_points") + "/" + enemy.getData("total_hit_points"),
+                "Movement: " + enemy.getData("movement"),
+              ]);
+            }
+          } 
+        } else if (this.selectedUnit) {
+          for (const ally of this.allies) {
+            ally.data.values.allyPortrait.visible = false;
+            this.uiBackground1.visible = false;
+            this.healthBarEmpty1.visible = false;
+            this.healthBar1.visible = false;
+            this.uiText1.setText(['']);
+          } 
+
+          this.selectedUnit.gameObject.data.values.allyPortrait.visible = true;
+          this.uiBackground1.visible = true;
+          this.setMeterPercentage1(this.selectedUnit.gameObject.getData('hit_points'));
+          this.healthBarEmpty1.visible = true;
+          this.healthBar1.visible = true;
+          this.uiText1.setText([
+            "HP: " + this.selectedUnit.gameObject.getData("hit_points") + "/" + this.selectedUnit.gameObject.getData("total_hit_points"),
+            "Movement: " + this.selectedUnit.gameObject.getData("movement"),
+          ]);
+        }
+      }
     
+      showHoverUI();
+
     //Move the Tracker object up down left or right given a direction
     const moveTracker = (direction) => {
       if (direction === 'left') {
@@ -1066,29 +1166,9 @@ export default class MainScene extends Phaser.Scene {
       return;
     }
 
+    if (!this.isMoving) {
+
     if (this.phase === 'player') {
-      let closest = this.physics.closest(this.player, Phaser.GameObject);
-  
-      if (Phaser.Input.Keyboard.JustDown(this.inputKeys.up)) {
-        this.player.x -= 16;
-        this.player.y -= 8;
-        this.player.setData({ coordX: this.player.getData("coordX") - 1 });
-      }
-      if (Phaser.Input.Keyboard.JustDown(this.inputKeys.left)) {
-        this.player.x -= 16;
-        this.player.y += 8;
-        this.player.setData({ coordY: this.player.getData("coordY") + 1 });
-      }
-      if (Phaser.Input.Keyboard.JustDown(this.inputKeys.down)) {
-        this.player.x += 16;
-        this.player.y += 8;
-        this.player.setData({ coordX: this.player.getData("coordX") + 1 });
-      }
-      if (Phaser.Input.Keyboard.JustDown(this.inputKeys.right)) {
-        this.player.x += 16;
-        this.player.y -= 8;
-        this.player.setData({ coordY: this.player.getData("coordY") - 1 });
-      }
   
       // Coordinates adjustment to target individual character sprites on the map.
       //UNIT SELECTION
@@ -1173,27 +1253,18 @@ export default class MainScene extends Phaser.Scene {
               ));
 
               moveTracker('up');
-              console.log(this.tracker.getData('coordX'), this.tracker.getData('coordY'))
-              findPath('down', 0, this.selectedUnit.gameObject.getData('movement')+ 1);
-              console.log("after", this.tracker.getData('coordX'), this.tracker.getData('coordY'))
+              findPath('down', 0, this.selectedUnit.gameObject.getData('movement'));
       
               moveTracker('down');
-              console.log(this.tracker.getData('coordX'), this.tracker.getData('coordY'))
-              findPath('up', 0, this.selectedUnit.gameObject.getData('movement')+ 1);
-              console.log("after", this.tracker.getData('coordX'), this.tracker.getData('coordY'))
+              findPath('up', 0, this.selectedUnit.gameObject.getData('movement'));
       
               moveTracker('right');
-              console.log(this.tracker.getData('coordX'), this.tracker.getData('coordY'))
-              findPath('left', 0, this.selectedUnit.gameObject.getData('movement')+ 1); 
-              console.log("after", this.tracker.getData('coordX'), this.tracker.getData('coordY'))
+              findPath('left', 0, this.selectedUnit.gameObject.getData('movement')); 
       
               moveTracker('left');
-              console.log(this.tracker.getData('coordX'), this.tracker.getData('coordY'))
-              findPath('right', 0, this.selectedUnit.gameObject.getData('movement')+ 1);
-              console.log("after", this.tracker.getData('coordX'), this.tracker.getData('coordY'))
+              findPath('right', 0, this.selectedUnit.gameObject.getData('movement'));
   
               this.selectedUnit.gameObject.setData({hasMovementTiles: true});
-              console.log("Legal Movement: ", this.legalMovement);
             }
           }
   
@@ -1219,43 +1290,43 @@ export default class MainScene extends Phaser.Scene {
 
                 if (direction === 'up') {
                   moveTracker('up');
-                  if (findMovementPath('down', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                  if (findMovementPath('down', 0, this.selectedUnit.gameObject.getData('movement'), {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
                   moveTracker('left');
-                  if (findMovementPath('right', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                  if (findMovementPath('right', 0, this.selectedUnit.gameObject.getData('movement'), {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
                   moveTracker('down');
-                  if (findMovementPath('up', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                  if (findMovementPath('up', 0, this.selectedUnit.gameObject.getData('movement'), {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
                   moveTracker('right');
-                  if (findMovementPath('left', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                  if (findMovementPath('left', 0, this.selectedUnit.gameObject.getData('movement'), {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
                 }
                 if (direction === 'down') {
                   moveTracker('down');
-                  if (findMovementPath('up', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                  if (findMovementPath('up', 0, this.selectedUnit.gameObject.getData('movement'), {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
                   moveTracker('right');
-                  if (findMovementPath('left', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                  if (findMovementPath('left', 0, this.selectedUnit.gameObject.getData('movement'), {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
                   moveTracker('up');
-                  if (findMovementPath('down', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                  if (findMovementPath('down', 0, this.selectedUnit.gameObject.getData('movement'), {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
                   moveTracker('left');
-                  if (findMovementPath('right', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                  if (findMovementPath('right', 0, this.selectedUnit.gameObject.getData('movement'), {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
                 }
                 if (direction === 'right') {
                   moveTracker('right');
-                  if (findMovementPath('left', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                  if (findMovementPath('left', 0, this.selectedUnit.gameObject.getData('movement'), {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
                   moveTracker('up');
-                  if (findMovementPath('down', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                  if (findMovementPath('down', 0, this.selectedUnit.gameObject.getData('movement'), {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
                   moveTracker('left');
-                  if (findMovementPath('right', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                  if (findMovementPath('right', 0, this.selectedUnit.gameObject.getData('movement'), {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
                   moveTracker('down');
-                  if (findMovementPath('up', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                  if (findMovementPath('up', 0, this.selectedUnit.gameObject.getData('movement'), {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
                 }
                 if (direction === 'left') {
                   moveTracker('left');
-                  if (findMovementPath('right', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                  if (findMovementPath('right', 0, this.selectedUnit.gameObject.getData('movement'), {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
                   moveTracker('down');
-                  if (findMovementPath('up', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                  if (findMovementPath('up', 0, this.selectedUnit.gameObject.getData('movement'), {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
                   moveTracker('right');
-                  if (findMovementPath('left', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                  if (findMovementPath('left', 0, this.selectedUnit.gameObject.getData('movement'), {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
                   moveTracker('up');
-                  if (findMovementPath('down', 0, this.selectedUnit.gameObject.getData('movement')+ 1, {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
+                  if (findMovementPath('down', 0, this.selectedUnit.gameObject.getData('movement'), {x: this.player.getData('coordX'), y: this.player.getData('coordY')})) {return}
                 }
               }
               decideOrientation();
@@ -1319,27 +1390,6 @@ export default class MainScene extends Phaser.Scene {
               this.selectedUnit.gameObject.setData({ hasAttackTiles: true });
               console.log("Attack Grid: ", this.attackTiles);
         }
-          // if (Phaser.Input.Keyboard.JustDown(this.inputKeys.k)) {
-          //   attacker.play(`${attacker.data.values.animations[directionToAttack]}`);
-          //   // Make sure the target is an enemy, that the cursor is over it, and that it is within the generated attack tiles.
-          //   if (this.enemies.includes(closest.gameObject) && this.player.x === closest.x + 16 && this.player.y === closest.y + 16 && this.attackTiles.filter(
-          //     (coords) =>
-          //     coords.x === this.player.getData("coordX") &&
-          //     coords.y === this.player.getData("coordY")
-          //     ).length > 0) {
-          //       // Open the enemy UI, check the UI is open.
-          //       this.setMeterPercentage2(closest.gameObject.getData("hit_points"));
-          //       closest.gameObject.setData({ hasUiOpen: true });
-          //       this.uiBackground2.visible = true;
-          //       this.skeleton_soldier_portrait.visible = true;
-          //       this.healthBarEmpty2.visible = true;
-          //       this.healthBar2.visible = true;
-          //       this.uiText2.setText([
-          //         "HP: " + closest.gameObject.getData("hit_points") + "/" + closest.gameObject.getData("total_hit_points"),
-          //         "Movement: " + closest.gameObject.getData("movement"),
-          //       ]);
-          //   }
-          // }
 
           if (this.player.x === closest.x + 16 && this.player.y === closest.y + 16 && this.allies.includes(closest.gameObject) && Phaser.Input.Keyboard.JustDown(this.inputKeys.e)) {
             // Destroy the targeting sprites
@@ -1353,24 +1403,11 @@ export default class MainScene extends Phaser.Scene {
             this.selectedUnit.gameObject.setData({hasAttackTiles: false });
             this.selectedUnit.gameObject.setData({hasMovementTiles: false});
             this.selectedUnit.gameObject.setData({hasEndedTurn: true});
-            this.selectedUnit.gameObject.data.values.allyPortrait.visible = false;
-            this.uiBackground1.visible = false;
-            this.healthBarEmpty1.visible = false;
-            this.healthBar1.visible = false;
-            this.uiText1.setText([""]);
             this.selectedUnit = undefined;
-            this.uiBackground2.visible = false;
-            this.healthBarEmpty2.visible = false;
-            this.healthBar2.visible = false;
-            this.uiText2.setText([""]);
-            for (const enemy of this.enemies) {
-              enemy.data.values.enemyPortrait.visible = false;
-              enemy.setData({ hasAttackTiles: false });
-              enemy.setData({ hasUiOpen: false });
-            }
+            
           }
 
-          if (this.enemies.includes(closest.gameObject) && closest.gameObject.getData('hasUiOpen') && Phaser.Input.Keyboard.JustDown(this.inputKeys.e) && this.attackTiles.filter(
+          if (this.enemies.includes(closest.gameObject) && Phaser.Input.Keyboard.JustDown(this.inputKeys.e) && this.attackTiles.filter(
             (coords) =>
             coords.x === this.player.getData("coordX") &&
             coords.y === this.player.getData("coordY")
@@ -1403,21 +1440,8 @@ export default class MainScene extends Phaser.Scene {
             this.hasMoved = false;
             this.selectedUnit.gameObject.setData({hasMovementTiles: false});
             this.selectedUnit.gameObject.setData({hasEndedTurn: true});
-            this.selectedUnit.gameObject.data.values.allyPortrait.visible = false;
-            this.uiBackground1.visible = false;
-            this.healthBarEmpty1.visible = false;
-            this.healthBar1.visible = false;
-            this.uiText1.setText([""]);
             this.selectedUnit = undefined;
-            this.uiBackground2.visible = false;
-            this.healthBarEmpty2.visible = false;
-            this.healthBar2.visible = false;
-            this.uiText2.setText([""]);
-            for (const enemy of this.enemies) {
-              enemy.data.values.enemyPortrait.visible = false;
-              enemy.setData({ hasAttackTiles: false });
-              enemy.setData({ hasUiOpen: false });
-            }
+           
             
             if (closest.gameObject.getData("hit_points") === 0) {
               this.enemies.splice(this.enemies.map(enemy => enemy.data.values.hit_points).indexOf(0), 1);
@@ -1491,6 +1515,29 @@ export default class MainScene extends Phaser.Scene {
     } else if (this.phase === 'enemy') {
       let enemy = this.enemies[this.enemyCount];
 
+      const showEnemyUI = () => {
+        for (const enemy of this.enemies) {
+          enemy.data.values.enemyPortrait.visible = false;
+          this.uiBackground2.visible = false;
+          this.healthBarEmpty2.visible = false;
+          this.healthBar2.visible = false;
+          this.uiText2.setText(['']);
+        } 
+        enemy.data.values.enemyPortrait.visible = true;
+        this.uiBackground2.visible = true;
+        if (enemy === this.enemy1) {
+          this.setMeterPercentage2(enemy.getData('hit_points'), true);
+        } else {
+          this.setMeterPercentage2(enemy.getData('hit_points'));
+        }
+        this.healthBarEmpty2.visible = true;
+        this.healthBar2.visible = true;
+        this.uiText2.setText([
+          "HP: " + enemy.getData("hit_points") + "/" + enemy.getData("total_hit_points"),
+          "Movement: " + enemy.getData("movement"),
+        ]);
+      }
+
       //Generate legalMovement
       if (!this.legalMovement) {
         this.tracker.setData({coordX: enemy.getData("coordX"), coordY: enemy.getData("coordY")});
@@ -1500,16 +1547,16 @@ export default class MainScene extends Phaser.Scene {
         this.movementGrid = [];
   
         moveTracker('up');
-        findPath('down', 0, enemy.getData('movement')+ 1);
+        findPath('down', 0, enemy.getData('movement'));
   
         moveTracker('down');
-        findPath('up', 0, enemy.getData('movement')+ 1);
+        findPath('up', 0, enemy.getData('movement'));
         
         moveTracker('left');
-        findPath('right', 0, enemy.getData('movement')+ 1);
+        findPath('right', 0, enemy.getData('movement'));
         
         moveTracker('right');
-        findPath('left', 0, enemy.getData('movement')+ 1);
+        findPath('left', 0, enemy.getData('movement'));
 
         console.log(this.legalMovement)
       }
@@ -1570,6 +1617,8 @@ export default class MainScene extends Phaser.Scene {
         console.log("----------------new turn--------------------")
         console.log(this.alliesInRange)
         console.log(this.legalMovement)
+
+        showEnemyUI();
       }
 
       if (!this.hasMoved) {
@@ -1605,43 +1654,43 @@ export default class MainScene extends Phaser.Scene {
 
               if (direction === 'up') {
                 moveTracker('up');
-                if (findMovementPath('down', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                if (findMovementPath('down', 0, enemy.getData('movement'), {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
                 moveTracker('left');
-                if (findMovementPath('right', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                if (findMovementPath('right', 0, enemy.getData('movement'), {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
                 moveTracker('down');
-                if (findMovementPath('up', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                if (findMovementPath('up', 0, enemy.getData('movement'), {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
                 moveTracker('right');
-                if (findMovementPath('left', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                if (findMovementPath('left', 0, enemy.getData('movement'), {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
               }
               if (direction === 'down') {
                 moveTracker('down');
-                if (findMovementPath('up', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                if (findMovementPath('up', 0, enemy.getData('movement'), {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
                 moveTracker('right');
-                if (findMovementPath('left', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                if (findMovementPath('left', 0, enemy.getData('movement'), {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
                 moveTracker('up');
-                if (findMovementPath('down', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                if (findMovementPath('down', 0, enemy.getData('movement'), {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
                 moveTracker('left');
-                if (findMovementPath('right', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                if (findMovementPath('right', 0, enemy.getData('movement'), {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
               }
               if (direction === 'right') {
                 moveTracker('right');
-                if (findMovementPath('left', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                if (findMovementPath('left', 0, enemy.getData('movement'), {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
                 moveTracker('up');
-                if (findMovementPath('down', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                if (findMovementPath('down', 0, enemy.getData('movement'), {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
                 moveTracker('left');
-                if (findMovementPath('right', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                if (findMovementPath('right', 0, enemy.getData('movement'), {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
                 moveTracker('down');
-                if (findMovementPath('up', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                if (findMovementPath('up', 0, enemy.getData('movement'), {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
               }
               if (direction === 'left') {
                 moveTracker('left');
-                if (findMovementPath('right', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                if (findMovementPath('right', 0, enemy.getData('movement'), {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
                 moveTracker('down');
-                if (findMovementPath('up', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                if (findMovementPath('up', 0, enemy.getData('movement'), {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
                 moveTracker('right');
-                if (findMovementPath('left', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                if (findMovementPath('left', 0, enemy.getData('movement'), {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
                 moveTracker('up');
-                if (findMovementPath('down', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                if (findMovementPath('down', 0, enemy.getData('movement'), {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
               }
             }
             decideOrientation();
@@ -1687,43 +1736,43 @@ export default class MainScene extends Phaser.Scene {
 
               if (direction === 'up') {
                 moveTracker('up');
-                if (findMovementPath('down', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                if (findMovementPath('down', 0, enemy.getData('movement'), {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
                 moveTracker('left');
-                if (findMovementPath('right', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                if (findMovementPath('right', 0, enemy.getData('movement'), {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
                 moveTracker('down');
-                if (findMovementPath('up', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                if (findMovementPath('up', 0, enemy.getData('movement'), {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
                 moveTracker('right');
-                if (findMovementPath('left', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                if (findMovementPath('left', 0, enemy.getData('movement'), {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
               }
               if (direction === 'down') {
                 moveTracker('down');
-                if (findMovementPath('up', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                if (findMovementPath('up', 0, enemy.getData('movement'), {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
                 moveTracker('right');
-                if (findMovementPath('left', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                if (findMovementPath('left', 0, enemy.getData('movement'), {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
                 moveTracker('up');
-                if (findMovementPath('down', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                if (findMovementPath('down', 0, enemy.getData('movement'), {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
                 moveTracker('left');
-                if (findMovementPath('right', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                if (findMovementPath('right', 0, enemy.getData('movement'), {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
               }
               if (direction === 'right') {
                 moveTracker('right');
-                if (findMovementPath('left', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                if (findMovementPath('left', 0, enemy.getData('movement'), {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
                 moveTracker('up');
-                if (findMovementPath('down', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                if (findMovementPath('down', 0, enemy.getData('movement'), {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
                 moveTracker('left');
-                if (findMovementPath('right', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                if (findMovementPath('right', 0, enemy.getData('movement'), {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
                 moveTracker('down');
-                if (findMovementPath('up', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                if (findMovementPath('up', 0, enemy.getData('movement'), {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
               }
               if (direction === 'left') {
                 moveTracker('left');
-                if (findMovementPath('right', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                if (findMovementPath('right', 0, enemy.getData('movement'), {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
                 moveTracker('down');
-                if (findMovementPath('up', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                if (findMovementPath('up', 0, enemy.getData('movement'), {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
                 moveTracker('right');
-                if (findMovementPath('left', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                if (findMovementPath('left', 0, enemy.getData('movement'), {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
                 moveTracker('up');
-                if (findMovementPath('down', 0, enemy.getData('movement')+ 1, {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
+                if (findMovementPath('down', 0, enemy.getData('movement'), {x: viableMoves[0].x, y: viableMoves[0].y})) {return}
               }
             }
             decideOrientation();
@@ -1771,43 +1820,43 @@ export default class MainScene extends Phaser.Scene {
 
               if (direction === 'up') {
                 moveTracker('up');
-                if (findMovementPath('down', 0, enemy.getData('movement')+ 1, {x: this.closestMove.x, y: this.closestMove.y})) {return}
+                if (findMovementPath('down', 0, enemy.getData('movement'), {x: this.closestMove.x, y: this.closestMove.y})) {return}
                 moveTracker('left');
-                if (findMovementPath('right', 0, enemy.getData('movement')+ 1, {x: this.closestMove.x, y: this.closestMove.y})) {return}
+                if (findMovementPath('right', 0, enemy.getData('movement'), {x: this.closestMove.x, y: this.closestMove.y})) {return}
                 moveTracker('down');
-                if (findMovementPath('up', 0, enemy.getData('movement')+ 1, {x: this.closestMove.x, y: this.closestMove.y})) {return}
+                if (findMovementPath('up', 0, enemy.getData('movement'), {x: this.closestMove.x, y: this.closestMove.y})) {return}
                 moveTracker('right');
-                if (findMovementPath('left', 0, enemy.getData('movement')+ 1, {x: this.closestMove.x, y: this.closestMove.y})) {return}
+                if (findMovementPath('left', 0, enemy.getData('movement'), {x: this.closestMove.x, y: this.closestMove.y})) {return}
               }
               if (direction === 'down') {
                 moveTracker('down');
-                if (findMovementPath('up', 0, enemy.getData('movement')+ 1, {x: this.closestMove.x, y: this.closestMove.y})) {return}
+                if (findMovementPath('up', 0, enemy.getData('movement'), {x: this.closestMove.x, y: this.closestMove.y})) {return}
                 moveTracker('right');
-                if (findMovementPath('left', 0, enemy.getData('movement')+ 1, {x: this.closestMove.x, y: this.closestMove.y})) {return}
+                if (findMovementPath('left', 0, enemy.getData('movement'), {x: this.closestMove.x, y: this.closestMove.y})) {return}
                 moveTracker('up');
-                if (findMovementPath('down', 0, enemy.getData('movement')+ 1, {x: this.closestMove.x, y: this.closestMove.y})) {return}
+                if (findMovementPath('down', 0, enemy.getData('movement'), {x: this.closestMove.x, y: this.closestMove.y})) {return}
                 moveTracker('left');
-                if (findMovementPath('right', 0, enemy.getData('movement')+ 1, {x: this.closestMove.x, y: this.closestMove.y})) {return}
+                if (findMovementPath('right', 0, enemy.getData('movement'), {x: this.closestMove.x, y: this.closestMove.y})) {return}
               }
               if (direction === 'right') {
                 moveTracker('right');
-                if (findMovementPath('left', 0, enemy.getData('movement')+ 1, {x: this.closestMove.x, y: this.closestMove.y})) {return}
+                if (findMovementPath('left', 0, enemy.getData('movement'), {x: this.closestMove.x, y: this.closestMove.y})) {return}
                 moveTracker('up');
-                if (findMovementPath('down', 0, enemy.getData('movement')+ 1, {x: this.closestMove.x, y: this.closestMove.y})) {return}
+                if (findMovementPath('down', 0, enemy.getData('movement'), {x: this.closestMove.x, y: this.closestMove.y})) {return}
                 moveTracker('left');
-                if (findMovementPath('right', 0, enemy.getData('movement')+ 1, {x: this.closestMove.x, y: this.closestMove.y})) {return}
+                if (findMovementPath('right', 0, enemy.getData('movement'), {x: this.closestMove.x, y: this.closestMove.y})) {return}
                 moveTracker('down');
-                if (findMovementPath('up', 0, enemy.getData('movement')+ 1, {x: this.closestMove.x, y: this.closestMove.y})) {return}
+                if (findMovementPath('up', 0, enemy.getData('movement'), {x: this.closestMove.x, y: this.closestMove.y})) {return}
               }
               if (direction === 'left') {
                 moveTracker('left');
-                if (findMovementPath('right', 0, enemy.getData('movement')+ 1, {x: this.closestMove.x, y: this.closestMove.y})) {return}
+                if (findMovementPath('right', 0, enemy.getData('movement'), {x: this.closestMove.x, y: this.closestMove.y})) {return}
                 moveTracker('down');
-                if (findMovementPath('up', 0, enemy.getData('movement')+ 1, {x: this.closestMove.x, y: this.closestMove.y})) {return}
+                if (findMovementPath('up', 0, enemy.getData('movement'), {x: this.closestMove.x, y: this.closestMove.y})) {return}
                 moveTracker('right');
-                if (findMovementPath('left', 0, enemy.getData('movement')+ 1, {x: this.closestMove.x, y: this.closestMove.y})) {return}
+                if (findMovementPath('left', 0, enemy.getData('movement'), {x: this.closestMove.x, y: this.closestMove.y})) {return}
                 moveTracker('up');
-                if (findMovementPath('down', 0, enemy.getData('movement')+ 1, {x: this.closestMove.x, y: this.closestMove.y})) {return}
+                if (findMovementPath('down', 0, enemy.getData('movement'), {x: this.closestMove.x, y: this.closestMove.y})) {return}
               }
             }
             decideOrientation();
@@ -1846,7 +1895,7 @@ export default class MainScene extends Phaser.Scene {
             "Movement: " + this.closestLowHealthAlly.getData("movement"),
           ]);
 
-          if (this.closestLowHealthAlly.getData('hasUiOpen')) {
+          
             attacker.play(`${attacker.data.values.attack_animations[directionToAttack]}`);
             attacker.playAfterRepeat(`${attacker.data.values.animations[directionToAttack]}`);
             this.closestLowHealthAlly.play(`${this.closestLowHealthAlly.data.values.damage_animations[directionFromAttack]}`);
@@ -1887,7 +1936,7 @@ export default class MainScene extends Phaser.Scene {
                   isSleepingAlly.destroy();
                 }
               });
-            }
+            
           }
         } else if (this.alliesInRange.includes(this.closestAlly)) {
           this.closestAlly.data.values.allyPortrait.visible = false;
@@ -1910,7 +1959,7 @@ export default class MainScene extends Phaser.Scene {
             // Click a button to confirm your attack and launch an attack on the enemy. It should only work if you select a valid tile.
             // Play the attack animation, reduce hit points of skeleton.
 
-          if (this.closestAlly.getData('hasUiOpen')) {
+     
             // Play attack animation and then idle after
             attacker.play(`${attacker.data.values.attack_animations[directionToAttack]}`);
             attacker.playAfterRepeat(`${attacker.data.values.animations[directionToAttack]}`);
@@ -1949,7 +1998,7 @@ export default class MainScene extends Phaser.Scene {
                   isSleepingAlly.destroy();
                 }
               });
-            }
+            
           }
         }
         this.finishAttack = true;
@@ -1994,5 +2043,6 @@ export default class MainScene extends Phaser.Scene {
         });
       }
     }
+  }
   }
 }

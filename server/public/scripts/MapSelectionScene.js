@@ -35,12 +35,12 @@ export default class MapSelectionScene extends Phaser.Scene {
     this.load.image('dwarf-hunter', 'assets/unit-images/dwarf-hunter.png')
 
     //Background
-    this.load.image('background', 'assets/bg.png')
+    //this.load.image('background', 'assets/bg.png')
   }
 
   create() {
     //Background
-    this.bg = this.add.sprite(0,0,'background').scale = 5;
+    //this.bg = this.add.sprite(0,0,'background').scale = 5;
     
     // Rectangle for selection
     this.r1 = this.add.rectangle(240, 200, 400, 230, 0x6666ff);
