@@ -181,7 +181,6 @@ export default class MapSelectionScene extends Phaser.Scene {
           // Move to Character Select
           this.r1.setFillStyle(0x5DBB63);
         }
-        console.log(this.map, this.team);
       }
   
       if (Phaser.Input.Keyboard.JustDown(this.inputKeys.w)) {

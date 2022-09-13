@@ -283,9 +283,6 @@ export default class MainScene extends Phaser.Scene {
         this.tileLayers = 3;
       }
     }
-
-    console.log(this.map);
-    console.log(this.tileName);
     
     // Create the tile map based on assets.
     const map = this.make.tilemap({ key: "tilemap16" });
@@ -557,7 +554,7 @@ export default class MainScene extends Phaser.Scene {
         turn: true,
         selected: false,
         state: null,
-        movement: 8,
+        movement: 3,
         total_hit_points: health,
         hit_points: health,
         hasMoved: false,
@@ -1330,7 +1327,6 @@ export default class MainScene extends Phaser.Scene {
                 }
               }
               decideOrientation();
-              console.log(this.pathingArray);
   
               //Cleanup movement grid
               for (const sprite of this.movementGrid) {
@@ -1388,7 +1384,6 @@ export default class MainScene extends Phaser.Scene {
                 }
               }
               this.selectedUnit.gameObject.setData({ hasAttackTiles: true });
-              console.log("Attack Grid: ", this.attackTiles);
         }
 
           if (this.player.x === closest.x + 16 && this.player.y === closest.y + 16 && this.allies.includes(closest.gameObject) && Phaser.Input.Keyboard.JustDown(this.inputKeys.e)) {
@@ -1504,7 +1499,6 @@ export default class MainScene extends Phaser.Scene {
               for (const ally of this.allies) {
                 ally.setData({hasEndedTurn: false});
               }
-              console.log('--------Player Phase Complete--------');
             }
           });
         }
@@ -1558,7 +1552,6 @@ export default class MainScene extends Phaser.Scene {
         moveTracker('right');
         findPath('left', 0, enemy.getData('movement'));
 
-        console.log(this.legalMovement)
       }
 
       //  Attack lowest hp and closest if in range
@@ -1614,9 +1607,6 @@ export default class MainScene extends Phaser.Scene {
           return inRange({x: ally.getData('coordX'), y: ally.getData('coordY')});
         });
         this.enemyPrep = true;
-        console.log("----------------new turn--------------------")
-        console.log(this.alliesInRange)
-        console.log(this.legalMovement)
 
         showEnemyUI();
       }
@@ -1627,7 +1617,6 @@ export default class MainScene extends Phaser.Scene {
           //Check if low health allies are in range
           if (this.alliesInRange.includes(this.closestLowHealthAlly)) {
             // Move towards lowest health ally, and attack
-            console.log("Closest Low Health Ally Move: ", this.closestLowHealthAlly.getData('coordX'), this.closestLowHealthAlly.getData('coordY'));
             const viableMoves = this.legalMovement.filter((move) => {
                 if (
                   move.x === this.closestLowHealthAlly.getData('coordX') + 1 && move.y === this.closestLowHealthAlly.getData('coordY') ||
@@ -1642,7 +1631,6 @@ export default class MainScene extends Phaser.Scene {
             
             //findMovementPath
             this.pathingArray = [];
-            console.log(viableMoves)
             let direction = findDirection(viableMoves[0], {x: enemy.getData('coordX'), y: enemy.getData('coordY')});
             //Decide the starting direction of the findMovementPath algorithm
             const decideOrientation = () => {
@@ -1694,7 +1682,6 @@ export default class MainScene extends Phaser.Scene {
               }
             }
             decideOrientation();
-            console.log(this.pathingArray);
 
             this.tileMoves = this.pathingArray.length - 1;
             this.movingUnit = enemy;
@@ -1703,7 +1690,6 @@ export default class MainScene extends Phaser.Scene {
             this.legalMovement = [];
           } else {
             // Move towards closest ally, and attack
-            console.log("Closest Ally Move: ", this.closestAlly.getData('coordX'), this.closestAlly.getData('coordY'));
             let viableMoves = [];
             let allyNumber = 0;
             while (viableMoves.length < 1) {
@@ -1724,7 +1710,6 @@ export default class MainScene extends Phaser.Scene {
             
             //findMovementPath
             this.pathingArray = [];
-            console.log(viableMoves)
             let direction = findDirection(viableMoves[0], {x: enemy.getData('coordX'), y: enemy.getData('coordY')});
             //Decide the starting direction of the findMovementPath algorithm
             const decideOrientation = () => {
@@ -1776,7 +1761,6 @@ export default class MainScene extends Phaser.Scene {
               }
             }
             decideOrientation();
-            console.log(this.pathingArray);
 
             this.tileMoves = this.pathingArray.length - 1;
             this.movingUnit = enemy;
@@ -1803,9 +1787,7 @@ export default class MainScene extends Phaser.Scene {
                   }
                 }
               }
-              console.log(this.legalMovement)
               this.closestMove = closest;
-              console.log(this.closestMove)
 
               //findMovementPath
             this.pathingArray = [];
@@ -1860,7 +1842,6 @@ export default class MainScene extends Phaser.Scene {
               }
             }
             decideOrientation();
-            console.log(this.pathingArray);
 
             this.tileMoves = this.pathingArray.length - 1;
             this.movingUnit = enemy;
@@ -1945,7 +1926,6 @@ export default class MainScene extends Phaser.Scene {
           const directionToAttack = findDirection({ x: this.closestAlly.getData('coordX'), y: this.closestAlly.getData('coordY') }, { x: attacker.getData('coordX'), y: attacker.getData('coordY') });
           const directionFromAttack = findDirection({ x: attacker.getData('coordX'), y: attacker.getData('coordY') }, { x: this.closestAlly.getData('coordX'), y: this.closestAlly.getData('coordY') });
           // Open the enemy UI, check the UI is open.
-          // console.log("Closest Ally Attack: ", this.closestAlly.getData('coordX'), this.closestAlly.getData('coordY'));
           this.setMeterPercentage1(this.closestAlly.getData("hit_points"));
           this.closestAlly.setData({ hasUiOpen: true });
           this.closestAlly.data.values.allyPortrait.visible = true;
@@ -2038,7 +2018,6 @@ export default class MainScene extends Phaser.Scene {
               this.phase = 'player';
               this.enemyCount = 0;
             }
-            console.log("--------CLEANUP DONE--------");
           }
         });
       }
