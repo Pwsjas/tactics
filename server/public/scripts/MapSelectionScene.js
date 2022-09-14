@@ -43,7 +43,7 @@ export default class MapSelectionScene extends Phaser.Scene {
     //this.bg = this.add.sprite(0,0,'background').scale = 5;
     
     // Rectangle for selection
-    this.r1 = this.add.rectangle(240, 200, 400, 230, 0x6666ff);
+    this.r1 = this.add.rectangle(240, 200, 400, 220, 0x6666ff);
     this.r2 = this.add.rectangle(240, 460, 170, 70);
     this.r2.setStrokeStyle(4, 0x1a65ac);
     this.r3 = this.add.rectangle(640, 610, 160, 60, 0x5DBB63);
@@ -52,9 +52,9 @@ export default class MapSelectionScene extends Phaser.Scene {
     this.waterMap = this.add.sprite(240, 200, 'water-map');
     this.desertMap = this.add.sprite(640, 200, 'desert-map');
     this.lavaMap = this.add.sprite(1040, 200, 'lava-map');
-    this.lavaMap.scale = 0.3;
-    this.waterMap.scale = 0.3;
-    this.desertMap.scale = 0.3;
+    this.lavaMap.scale = 0.33;
+    this.waterMap.scale = 0.33;
+    this.desertMap.scale = 0.33;
 
     //Cursor
     this.player = this.add.sprite(240, 340, 'cursor');

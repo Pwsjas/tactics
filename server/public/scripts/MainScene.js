@@ -554,7 +554,7 @@ export default class MainScene extends Phaser.Scene {
         turn: true,
         selected: false,
         state: null,
-        movement: 3,
+        movement: 5,
         total_hit_points: health,
         hit_points: health,
         hasMoved: false,
@@ -605,42 +605,42 @@ export default class MainScene extends Phaser.Scene {
 
     //Create units based on team selection
     if (this.team === "humans") {
-      this.ally1 = generateUnit('human_fighter', 4, 11, 100);
-      this.ally2 = generateUnit('human_archer', 2, 13, 100);
-      this.ally3 = generateUnit('human_thief', 2, 11, 100);
-      this.ally4 = generateUnit('dragon_knight', 4, 13, 100);
+      this.ally1 = generateUnit('human_fighter', 3, 10, 100);
+      this.ally2 = generateUnit('human_archer', 5, 11, 100);
+      this.ally3 = generateUnit('human_thief', 4, 7, 100);
+      this.ally4 = generateUnit('dragon_knight', 5, 9, 100);
     }
     if (this.team === "dwarfs") {
-      this.ally1 = generateUnit('dwarf_captain', 4, 11, 100);
-      this.ally2 = generateUnit('dwarf_hunter', 2, 13, 100);
-      this.ally3 = generateUnit('dwarf_worker', 2, 11, 100);
-      this.ally4 = generateUnit('dwarf_blacksmith', 4, 13, 100);
+      this.ally1 = generateUnit('dwarf_captain', 3, 10, 100);
+      this.ally2 = generateUnit('dwarf_hunter', 5, 11, 100);
+      this.ally3 = generateUnit('dwarf_worker', 4, 7, 100);
+      this.ally4 = generateUnit('dwarf_blacksmith',5, 9, 100);
     }
     if (this.team === "elves") {
-      this.ally1 = generateUnit('elf_elder', 4, 11, 100);
-      this.ally2 = generateUnit('elf_recruit', 2, 13, 100);
-      this.ally3 = generateUnit('elf_stalker', 2, 11, 100);
-      this.ally4 = generateUnit('elf_warrior', 4, 13, 100);
+      this.ally1 = generateUnit('elf_elder', 2, 13, 100);
+      this.ally2 = generateUnit('elf_recruit', 0, 15, 100);
+      this.ally3 = generateUnit('elf_stalker', 0, 13, 100);
+      this.ally4 = generateUnit('elf_warrior', 2, 15, 100);
     }
 
     //Create enemies based on map selection
     if (this.map === 'water') {
-      this.enemy1 = generateUnit('orc_shogun', 15, 0, 150, 'enemy');
-      this.enemy2 = generateUnit('orc_soldier', 13, 2, 100, 'enemy');
-      this.enemy3 = generateUnit('orc_soldier', 13, 0, 100, 'enemy');
-      this.enemy4 = generateUnit('orc_soldier', 15, 2, 100, 'enemy');
+      this.enemy1 = generateUnit('orc_shogun', 7, 3, 150, 'enemy');
+      this.enemy2 = generateUnit('orc_soldier', 9, 6, 100, 'enemy');
+      this.enemy3 = generateUnit('orc_soldier', 7, 1, 100, 'enemy');
+      this.enemy4 = generateUnit('orc_soldier', 9, 4, 100, 'enemy');
     }
     if (this.map === 'desert') {
-      this.enemy1 = generateUnit('skeleton_shaman', 15, 0, 150, 'enemy');
-      this.enemy2 = generateUnit('skeleton', 13, 2, 100, 'enemy');
-      this.enemy3 = generateUnit('skeleton', 13, 0, 100, 'enemy');
-      this.enemy4 = generateUnit('skeleton', 15, 2, 100, 'enemy');
+      this.enemy1 = generateUnit('skeleton_shaman', 3, 10, 150, 'enemy');
+      this.enemy2 = generateUnit('skeleton', 5, 14, 100, 'enemy');
+      this.enemy3 = generateUnit('skeleton', 1, 10, 100, 'enemy');
+      this.enemy4 = generateUnit('skeleton', 5, 12, 100, 'enemy');
     }
     if (this.map === 'lava') {
-      this.enemy1 = generateUnit('demon_shaman', 15, 0, 150, 'enemy');
-      this.enemy2 = generateUnit('demon_soldier', 13, 2, 100, 'enemy');
-      this.enemy3 = generateUnit('demon_soldier', 13, 0, 100, 'enemy');
-      this.enemy4 = generateUnit('demon_soldier', 15, 2, 100, 'enemy');
+      this.enemy1 = generateUnit('demon_shaman', 7, 5, 150, 'enemy');
+      this.enemy2 = generateUnit('demon_soldier', 9, 6, 100, 'enemy');
+      this.enemy3 = generateUnit('demon_soldier', 7, 1, 100, 'enemy');
+      this.enemy4 = generateUnit('demon_soldier', 9, 4, 100, 'enemy');
     }
 
     this.alliesGroup = this.physics.add.group();
