@@ -20,4 +20,4 @@ app.get('/game', (req, res) => {
 	res.sendFile(__dirname + '/index.html');
 })
 
-app.listen(PORT, () => console.log(`Server is listening on port ${PORT}`));
+app.listen(process.env.PORT || 3000);
