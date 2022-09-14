@@ -27,10 +27,11 @@ body {
   position: relative;
   margin-top: 0.5rem;
   margin-bottom: 3rem;
-  width: 60rem;
-  height: 40rem;
+  width: 50%;
+  height: 50%;
   border: 0.2rem groove grey;
 }
+
 .img {
   position: absolute;
   display: flex;
@@ -72,7 +73,7 @@ body {
   justify-content: space-evenly;
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;
-  width: 60%;
+  width: 90%;
   height: 25%;
 }
 
